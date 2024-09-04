@@ -8,10 +8,12 @@ import {
 	ModelStatic,
 	DataTypes,
 	Utils,
-	ModelOptions
+	ModelOptions,
+	Options
 } from "sequelize";
 import { Dirent } from "fs";
 import * as inflection from "inflection";
+import { SequelizeStorage, Umzug } from "umzug";
 import BaseModule, { ModuleStatus } from "@/BaseModule";
 import DataModuleJob from "./DataModule/DataModuleJob";
 import Job from "@/Job";
@@ -105,13 +107,11 @@ export class DataModule extends BaseModule {
 		await this._stopped();
 	}
 
-	/**
-	 * setupSequelize - Setup sequelize instance
-	 */
-	private async _setupSequelize() {
+	private async _createSequelizeInstance(options: Options = {}) {
 		const { username, password, host, port, database } =
 			config.get<any>("postgres");
-		this._sequelize = new Sequelize(database, username, password, {
+
+		const sequelize = new Sequelize(database, username, password, {
 			host,
 			port,
 			dialect: "postgres",
@@ -121,6 +121,19 @@ export class DataModule extends BaseModule {
 					category: "sql",
 					message
 				}),
+			...options
+		});
+
+		await sequelize.authenticate();
+
+		return sequelize;
+	}
+
+	/**
+	 * setupSequelize - Setup sequelize instance
+	 */
+	private async _setupSequelize() {
+		this._sequelize = await this._createSequelizeInstance({
 			define: {
 				hooks: this._getSequelizeHooks()
 			}
@@ -171,13 +184,7 @@ export class DataModule extends BaseModule {
 
 		await this._sequelize.sync();
 
-		// TODO move to a better spot and improve
-		try {
-			await this._sequelize.query(`DROP TABLE IF EXISTS "minifiedUsers"`);
-		} catch (err) {}
-		await this._sequelize.query(
-			`CREATE OR REPLACE VIEW "minifiedUsers" AS SELECT _id, username, name, role FROM users`
-		);
+		await this._runMigrations();
 	}
 
 	/**
@@ -342,6 +349,35 @@ export class DataModule extends BaseModule {
 
 			this._events[EventClass.getName()] = EventClass;
 		});
+	}
+
+	private async _runMigrations() {
+		const sequelize = await this._createSequelizeInstance({
+			logging: message =>
+				this.log({
+					type: "debug",
+					category: "migrations.sql",
+					message
+				})
+		});
+
+		const migrator = new Umzug({
+			migrations: {
+				glob: [
+					`${this.constructor.name}/migrations/*.ts`,
+					{ cwd: __dirname }
+				]
+			},
+			context: sequelize,
+			storage: new SequelizeStorage({
+				sequelize: sequelize!
+			}),
+			logger: console
+		});
+
+		await migrator.up();
+
+		await sequelize.close();
 	}
 }
 
