@@ -1,21 +1,22 @@
-import { HydratedDocument } from "mongoose";
+import { Model } from "sequelize";
 import User from "../../models/User";
 
 export default (
-	model:
-		| (HydratedDocument<any> & { owner?: any })
-		| (HydratedDocument<any> & { createdBy?: any }),
+	model: (Model & { owner?: any }) | (Model & { createdBy?: any }),
 	user?: User
 ) => {
 	if (!user || !model) return false;
 
 	let ownerAttribute;
 
-	if (model.schema.path("createdBy")) ownerAttribute = "createdBy";
-	else if (model.schema.path("owner")) ownerAttribute = "owner";
+	if (model.dataValues.hasOwnProperty("createdBy"))
+		ownerAttribute = "createdBy";
+	else if (model.dataValues.hasOwnProperty("owner")) ownerAttribute = "owner";
 
 	if (ownerAttribute)
-		return model.get(ownerAttribute)?.toString() === user._id.toString();
+		return (
+			model.dataValues[ownerAttribute].toString() === user._id.toString()
+		);
 
 	return false;
 };

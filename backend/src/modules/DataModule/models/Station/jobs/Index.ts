@@ -1,15 +1,13 @@
-import { HydratedDocument } from "mongoose";
 import { forEachIn } from "@common/utils/forEachIn";
 import Joi from "joi";
-import DataModule from "@/modules/DataModule";
 import DataModuleJob from "@/modules/DataModule/DataModuleJob";
 import isDj from "@/modules/DataModule/permissions/modelPermissions/isDj";
 import isOwner from "@/modules/DataModule/permissions/modelPermissions/isOwner";
 import isPublic from "@/modules/DataModule/permissions/modelPermissions/isPublic";
-import { StationModel, StationSchema } from "../schema";
+import Station from "../../Station";
 
 export default class Index extends DataModuleJob {
-	protected static _modelName = "stations";
+	protected static _model = Station;
 
 	protected static _hasPermission = true;
 
@@ -18,15 +16,13 @@ export default class Index extends DataModuleJob {
 	});
 
 	protected async _execute() {
-		const model = await DataModule.getModel<StationModel>(
-			this.getModelName()
-		);
+		const model = this.getModel();
 
-		const data = await model.find();
+		const data = await model.findAll();
 
 		const user = await this._context.getUser().catch(() => null);
 
-		const stations: HydratedDocument<StationSchema>[] = [];
+		const stations: Station[] = [];
 
 		await forEachIn(data, async station => {
 			if (

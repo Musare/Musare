@@ -1,7 +1,4 @@
-import { HydratedDocument, Schema } from "mongoose";
+import { Model } from "sequelize";
 import User from "../../models/User";
 
-export default <ModelSchemaType extends Schema>(
-	model: HydratedDocument<ModelSchemaType>,
-	user?: User
-) => !!user;
+export default (model: Model, user?: User) => !!user;

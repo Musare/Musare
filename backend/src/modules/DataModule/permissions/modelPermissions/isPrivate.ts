@@ -1,8 +1,5 @@
-import { HydratedDocument, Schema } from "mongoose";
-import { StationPrivacy } from "@/modules/DataModule/models/stations/StationPrivacy";
+import { StationPrivacy } from "@/modules/DataModule/models/Station/StationPrivacy";
+import Station from "../../models/Station";
 
-export default <
-	ModelSchemaType extends Schema & { privacy?: StationPrivacy.PRIVATE }
->(
-	model: HydratedDocument<ModelSchemaType>
-) => model && model?.privacy === StationPrivacy.PRIVATE;
+export default (model: Station) =>
+	model && model?.privacy === StationPrivacy.PRIVATE;

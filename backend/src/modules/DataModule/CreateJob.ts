@@ -1,6 +1,7 @@
 import Joi from "joi";
-import DataModuleJob from "./DataModuleJob";
 import ObjectID from "bson-objectid";
+import DataModuleJob from "./DataModuleJob";
+
 export default abstract class CreateJob extends DataModuleJob {
 	protected static _payloadSchema = Joi.object({
 		query: Joi.object().min(1).required()

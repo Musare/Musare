@@ -1,6 +1,5 @@
-import { HydratedDocument } from "mongoose";
-import { StationPrivacy } from "@/modules/DataModule/models/stations/StationPrivacy";
-import { StationSchema } from "../../models/stations/schema";
+import { StationPrivacy } from "@/modules/DataModule/models/Station/StationPrivacy";
+import Station from "../../models/Station";
 
-export default (model: HydratedDocument<StationSchema>) =>
+export default (model: Station) =>
 	model && model?.privacy === StationPrivacy.PUBLIC;

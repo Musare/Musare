@@ -1,12 +1,13 @@
-import ModelUpdatedEvent from "@/modules/DataModule/ModelUpdatedEvent";
-import isPublic from "@/modules/DataModule/permissions/modelPermissions/isPublic";
+import ModelDeletedEvent from "@/modules/DataModule/ModelDeletedEvent";
 import isUnlisted from "@/modules/DataModule/permissions/modelPermissions/isUnlisted";
+import isPublic from "@/modules/DataModule/permissions/modelPermissions/isPublic";
 import isOwner from "@/modules/DataModule/permissions/modelPermissions/isOwner";
 import isDj from "@/modules/DataModule/permissions/modelPermissions/isDj";
 import isAdmin from "@/modules/DataModule/permissions/isAdmin";
+import Station from "../../Station";
 
-export default abstract class StationUpdatedEvent extends ModelUpdatedEvent {
-	protected static _modelName = "stations";
+export default abstract class StationDeletedEvent extends ModelDeletedEvent {
+	protected static _model = Station;
 
 	protected static _hasPermission = isAdmin;
 

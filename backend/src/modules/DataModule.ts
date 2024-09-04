@@ -169,9 +169,7 @@ export class DataModule extends BaseModule {
 
 		// TODO move to a better spot and improve
 		try {
-			await this._sequelize.query(
-				`DROP TABLE IF EXISTS "minifiedUsers"` 
-			);
+			await this._sequelize.query(`DROP TABLE IF EXISTS "minifiedUsers"`);
 		} catch (err) {}
 		await this._sequelize.query(
 			`CREATE OR REPLACE VIEW "minifiedUsers" AS SELECT _id, username, name, role FROM users`

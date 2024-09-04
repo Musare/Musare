@@ -1,0 +1,169 @@
+import {
+	DataTypes,
+	Model,
+	InferAttributes,
+	InferCreationAttributes,
+	CreationOptional
+} from "sequelize";
+import { ObjectIdType } from "@/modules/DataModule";
+import { StationType } from "./Station/StationType";
+import { StationTheme } from "./Station/StationTheme";
+import { StationPrivacy } from "./Station/StationPrivacy";
+
+export class Station extends Model<
+	InferAttributes<Station>,
+	InferCreationAttributes<Station>
+> {
+	declare _id: CreationOptional<ObjectIdType>;
+
+	declare name: string;
+
+	declare type: StationType;
+
+	declare displayName: string;
+
+	declare description: string;
+
+	declare paused: CreationOptional<boolean>;
+
+	// TODO currentSong
+
+	declare currentSongIndex: CreationOptional<number>;
+
+	declare timePaused: CreationOptional<number>;
+
+	declare pausedAt: CreationOptional<Date>;
+
+	declare startedAt: CreationOptional<Date>;
+
+	declare playlist: ObjectIdType;
+
+	declare privacy: CreationOptional<StationPrivacy>;
+
+	// TODO queue
+
+	declare owner: CreationOptional<ObjectIdType>;
+
+	// TODO requests
+
+	// TODO autofill
+
+	declare theme: CreationOptional<StationTheme>;
+
+	// TODO blacklist
+
+	// TODO djs
+
+	declare skipVoteThreshold: CreationOptional<number>;
+
+	declare createdAt: CreationOptional<Date>;
+
+	declare updatedAt: CreationOptional<Date>;
+}
+
+// TODO validation
+export const schema = {
+	_id: {
+		type: DataTypes.OBJECTID,
+		primaryKey: true,
+		allowNull: false
+	},
+	name: {
+		type: DataTypes.STRING,
+		allowNull: false,
+		unique: true
+	},
+	type: {
+		type: DataTypes.ENUM(...Object.values(StationType)),
+		allowNull: false
+	},
+	displayName: {
+		type: DataTypes.STRING,
+		allowNull: false,
+		unique: true
+	},
+	description: {
+		type: DataTypes.STRING,
+		allowNull: false
+	},
+	paused: {
+		type: DataTypes.BOOLEAN,
+		defaultValue: false,
+		allowNull: false
+	},
+	// // TODO currentSong
+	// currentSongIndex: {
+	// 	type: DataTypes.NUMBER,
+	// 	defaultValue: 0,
+	// 	allowNull: false
+	// },
+	// timePaused: {
+	// 	type: DataTypes.NUMBER,
+	// 	defaultValue: 0,
+	// 	allowNull: false
+	// },
+	// pausedAt: {
+	// 	type: DataTypes.NUMBER,
+	// 	defaultValue: 0,
+	// 	allowNull: false
+	// },
+	// startedAt: {
+	// 	type: DataTypes.NUMBER,
+	// 	defaultValue: 0,
+	// 	allowNull: false
+	// },
+	// playlist: {
+	// 	type: DataTypes.OBJECTID,
+	// 	allowNull: false
+	// },
+	privacy: {
+		type: DataTypes.ENUM(...Object.values(StationPrivacy)),
+		defaultValue: StationPrivacy.PRIVATE,
+		allowNull: false
+	},
+	// // TODO queue
+	// owner: { // Only used for community stations
+	// 	type: DataTypes.OBJECTID
+	// },
+	// // TODO requests
+	// // TODO autofill
+	theme: {
+		type: DataTypes.ENUM(...Object.values(StationTheme)),
+		defaultValue: StationTheme.BLUE,
+		allowNull: false
+	},
+	// // TODO blacklist
+	// // TODO djs
+	// skipVoteThreshold: {
+	// 	type: DataTypes.NUMBER,
+	// 	defaultValue: 50,
+	// 	allowNull: false
+	// },
+
+	createdAt: DataTypes.DATE,
+	updatedAt: DataTypes.DATE,
+	_name: {
+		type: DataTypes.VIRTUAL,
+		get() {
+			return `stations`;
+		}
+	}
+};
+
+export const options = {};
+
+export const setup = async () => {
+	// Station.afterSave(async record => {});
+
+	// Station.afterDestroy(async record => {});
+
+	Station.addHook("afterFind", (station, options) => {
+		console.log("AFTER FIND STATION", station, options);
+	});
+};
+
+export const setupAssociations = () => {
+	// TODO
+};
+
+export default Station;
