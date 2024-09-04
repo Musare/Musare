@@ -113,7 +113,12 @@ export class DataModule extends BaseModule {
 			host,
 			port,
 			dialect: "postgres",
-			logging: message => this.log(message)
+			logging: message =>
+				this.log({
+					type: "debug",
+					category: "sql",
+					message
+				})
 		});
 
 		await this._sequelize.authenticate();

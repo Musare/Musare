@@ -241,18 +241,21 @@ export default abstract class BaseModule {
 	 *
 	 * @param log - Log message or object
 	 */
-	public log(log: string | Omit<Log, "timestamp" | "category">) {
+	public log(log: string | Omit<Log, "timestamp">) {
 		const {
 			message,
 			type = "info",
-			data = {}
+			data = {},
+			category
 		} = {
 			...(typeof log === "string" ? { message: log } : log)
 		};
 		LogBook.log({
 			message,
 			type,
-			category: `modules.${this.getName()}`,
+			category: `modules.${this.getName()}${
+				category ? `.${category}` : ""
+			}`,
 			data: {
 				moduleName: this._name,
 				...data
