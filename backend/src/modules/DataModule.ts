@@ -7,13 +7,15 @@ import {
 	Model as SequelizeModel,
 	ModelStatic,
 	DataTypes,
-	Utils
+	Utils,
+	ModelOptions
 } from "sequelize";
 import { Dirent } from "fs";
 import * as inflection from "inflection";
 import BaseModule, { ModuleStatus } from "@/BaseModule";
 import DataModuleJob from "./DataModule/DataModuleJob";
 import Job from "@/Job";
+import EventsModule from "./EventsModule";
 
 export type ObjectIdType = string;
 
@@ -118,7 +120,10 @@ export class DataModule extends BaseModule {
 					type: "debug",
 					category: "sql",
 					message
-				})
+				}),
+			define: {
+				hooks: this._getSequelizeHooks()
+			}
 		});
 
 		await this._sequelize.authenticate();
@@ -175,62 +180,6 @@ export class DataModule extends BaseModule {
 		);
 	}
 
-	// /**
-	//  * registerEvents - Register events for schema with event module
-	//  */
-	// private async _registerEvents(modelName: string, schema: Schema<any>) {
-	// 	const { enabled, eventCreated, eventUpdated, eventDeleted } =
-	// 		schema.get("patchHistory") ?? {};
-
-	// 	if (!enabled) return;
-
-	// 	Object.entries({
-	// 		created: eventCreated,
-	// 		updated: eventUpdated,
-	// 		deleted: eventDeleted
-	// 	})
-	// 		.filter(([, event]) => !!event)
-	// 		.forEach(([action, event]) => {
-	// 			patchEventEmitter.on(event!, async ({ doc, oldDoc }) => {
-	// 				const modelId = doc?._id ?? oldDoc?._id;
-
-	// 				const Model = await this.getModel(modelName);
-
-	// 				if (doc) doc = Model.hydrate(doc);
-
-	// 				if (oldDoc) oldDoc = Model.hydrate(oldDoc);
-
-	// 				if (!modelId && action !== "created")
-	// 					throw new Error(`Model Id not found for "${event}"`);
-
-	// 				const EventClass = this.getEvent(`${modelName}.${action}`);
-
-	// 				await EventsModule.publish(
-	// 					new EventClass({ doc, oldDoc }, modelId)
-	// 				);
-	// 			});
-	// 		});
-	// }
-
-	// /**
-	//  * registerEvents - Register events for schema with event module
-	//  */
-	// private async _registerEventListeners(schema: Schema<any>) {
-	// 	const eventListeners = schema.get("eventListeners");
-
-	// 	if (
-	// 		typeof eventListeners !== "object" ||
-	// 		Object.keys(eventListeners).length === 0
-	// 	)
-	// 		return;
-
-	// 	await forEachIn(
-	// 		Object.entries(eventListeners),
-	// 		async ([event, callback]) =>
-	// 			EventsModule.pSubscribe(event, callback)
-	// 	);
-	// }
-
 	/**
 	 * getModel - Get model
 	 *
@@ -248,6 +197,76 @@ export class DataModule extends BaseModule {
 		const camelizedName = inflection.singularize(inflection.camelize(name));
 
 		return this._sequelize.model(camelizedName) as ModelStatic<ModelType>; // This fails - news has not been defined
+	}
+
+	private _getSequelizeHooks(): ModelOptions<SequelizeModel>["hooks"] {
+		return {
+			afterSave: console.log,
+			afterCreate: async model => {
+				const modelName = (
+					model.constructor as ModelStatic<any>
+				).getTableName();
+				let EventClass;
+
+				try {
+					EventClass = this.getEvent(`${modelName}.created`);
+				} catch (error) {
+					// TODO: Catch and ignore only event not found
+					return;
+				}
+
+				EventsModule.publish(
+					new EventClass({
+						doc: model.get()
+					})
+				);
+			},
+			afterUpdate: async model => {
+				const modelName = (
+					model.constructor as ModelStatic<any>
+				).getTableName();
+				let EventClass;
+
+				try {
+					EventClass = this.getEvent(`${modelName}.updated`);
+				} catch (error) {
+					// TODO: Catch and ignore only event not found
+					return;
+				}
+
+				EventsModule.publish(
+					new EventClass(
+						{
+							doc: model.get(),
+							oldDoc: model.previous()
+						},
+						model.get("_id") ?? model.previous("_id")
+					)
+				);
+			},
+			afterDestroy: async model => {
+				const modelName = (
+					model.constructor as ModelStatic<any>
+				).getTableName();
+				let EventClass;
+
+				try {
+					EventClass = this.getEvent(`${modelName}.deleted`);
+				} catch (error) {
+					// TODO: Catch and ignore only event not found
+					return;
+				}
+
+				EventsModule.publish(
+					new EventClass(
+						{
+							oldDoc: model.previous()
+						},
+						model.previous("_id")
+					)
+				);
+			}
+		};
 	}
 
 	private async _loadModelJobs(modelClassName: string) {
