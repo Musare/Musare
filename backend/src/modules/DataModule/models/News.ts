@@ -33,8 +33,7 @@ export const schema = {
 	_id: {
 		type: DataTypes.OBJECTID,
 		allowNull: false,
-		primaryKey: true,
-		defaultValue: () => "66d6d2d2065de4fd650278be" // TODO add ObjectId generator
+		primaryKey: true
 	},
 	title: {
 		type: DataTypes.STRING,

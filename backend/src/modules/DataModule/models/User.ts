@@ -29,8 +29,7 @@ export const schema = {
 	_id: {
 		type: DataTypes.OBJECTID,
 		primaryKey: true,
-		allowNull: false,
-		defaultValue: () => "66d6d2d2065de4fd650278be"
+		allowNull: false
 	},
 	username: {
 		type: DataTypes.STRING,

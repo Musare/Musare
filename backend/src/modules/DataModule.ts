@@ -165,9 +165,14 @@ export class DataModule extends BaseModule {
 			setupAssociation();
 		});
 
-		await this._sequelize.sync({ force: true });
+		await this._sequelize.sync();
 
-		// TODO move to a better spot
+		// TODO move to a better spot and improve
+		try {
+			await this._sequelize.query(
+				`DROP TABLE IF EXISTS "minifiedUsers"` 
+			);
+		} catch (err) {}
 		await this._sequelize.query(
 			`CREATE OR REPLACE VIEW "minifiedUsers" AS SELECT _id, username, name, role FROM users`
 		);
