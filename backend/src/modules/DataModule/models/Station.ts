@@ -162,8 +162,4 @@ export const setup = async () => {
 	});
 };
 
-export const setupAssociations = () => {
-	// TODO
-};
-
 export default Station;

@@ -67,6 +67,9 @@ export const schema = {
 export const options = {};
 
 export const setup = async () => {
+	News.belongsTo(User, { foreignKey: "createdBy" });
+	User.hasMany(News, { foreignKey: "createdBy" });
+
 	News.afterSave(async record => {
 		const oldDoc = record.previous();
 		const doc = record.get();
@@ -139,11 +142,6 @@ export const setup = async () => {
 			};
 		});
 	});
-};
-
-export const setupAssociations = () => {
-	News.belongsTo(User, { foreignKey: "createdBy" });
-	User.hasMany(News, { foreignKey: "createdBy" });
 };
 
 export default News;

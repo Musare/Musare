@@ -123,7 +123,7 @@ export class DataModule extends BaseModule {
 
 		await this._sequelize.authenticate();
 
-		const setupAssociationFunctions: Function[] = [];
+		const setupFunctions: Function[] = [];
 
 		await forEachIn(
 			await readdir(
@@ -140,8 +140,7 @@ export class DataModule extends BaseModule {
 					default: ModelClass,
 					schema,
 					options = {},
-					setup,
-					setupAssociations
+					setup
 				} = await import(`${modelFile.path}/${modelFile.name}`);
 
 				const tableName = inflection.camelize(
@@ -155,10 +154,7 @@ export class DataModule extends BaseModule {
 					sequelize: this._sequelize
 				});
 
-				if (typeof setup === "function") await setup();
-
-				if (typeof setupAssociations === "function")
-					setupAssociationFunctions.push(setupAssociations);
+				if (typeof setup === "function") setupFunctions.push(setup);
 
 				await this._loadModelEvents(ModelClass.name);
 
@@ -166,9 +162,7 @@ export class DataModule extends BaseModule {
 			}
 		);
 
-		setupAssociationFunctions.forEach(setupAssociation => {
-			setupAssociation();
-		});
+		await forEachIn(setupFunctions, setup => setup());
 
 		await this._sequelize.sync();
 
