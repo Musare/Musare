@@ -3,9 +3,16 @@ import {
 	Model,
 	InferAttributes,
 	InferCreationAttributes,
-	CreationOptional
+	CreationOptional,
+	ForeignKey,
+	NonAttribute,
+	BelongsToCreateAssociationMixin,
+	BelongsToGetAssociationMixin,
+	BelongsToSetAssociationMixin,
+	Association
 } from "sequelize";
 import { ObjectIdType } from "@/modules/DataModule";
+import User from "./User";
 
 export class Session extends Model<
 	InferAttributes<Session>,
@@ -13,11 +20,23 @@ export class Session extends Model<
 > {
 	declare sessionId: ObjectIdType;
 
-	declare userId: number;
+	declare userId: ForeignKey<User["_id"]>;
 
 	declare createdAt: CreationOptional<Date>;
 
 	declare updatedAt: CreationOptional<Date>;
+
+	declare getUserModel: BelongsToGetAssociationMixin<User>;
+
+	declare setUserModel: BelongsToSetAssociationMixin<User, number>;
+
+	declare createUserModel: BelongsToCreateAssociationMixin<User>;
+
+	declare userModel?: NonAttribute<User>;
+
+	declare static associations: {
+		userModel: Association<Session, User>;
+	};
 }
 
 export const schema = {
@@ -43,6 +62,17 @@ export const schema = {
 export const options = {};
 
 export const setup = async () => {
+	Session.belongsTo(User, {
+		as: "userModel",
+		foreignKey: {
+			name: "userId",
+			type: DataTypes.OBJECTID,
+			allowNull: false
+		},
+		onDelete: "RESTRICT",
+		onUpdate: "RESTRICT"
+	});
+
 	// Session.afterSave(async record => {
 	// });
 	// Session.afterDestroy(async record => {

@@ -75,6 +75,7 @@ ModuleManager.startup().then(async () => {
 
 	console.log(
 		await News.findAll({
+			include: ["createdByModel"],
 			where: {
 				status: NewsStatus.PUBLISHED
 			}

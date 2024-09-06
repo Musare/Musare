@@ -3,7 +3,13 @@ import {
 	Model,
 	InferAttributes,
 	InferCreationAttributes,
-	CreationOptional
+	CreationOptional,
+	ForeignKey,
+	NonAttribute,
+	BelongsToCreateAssociationMixin,
+	BelongsToGetAssociationMixin,
+	BelongsToSetAssociationMixin,
+	Association
 } from "sequelize";
 import { NewsStatus } from "@models/News/NewsStatus";
 import EventsModule from "@/modules/EventsModule";
@@ -24,9 +30,23 @@ export class News extends Model<
 
 	declare showToNewUsers: CreationOptional<boolean>;
 
+	declare createdBy: ForeignKey<User["_id"]>;
+
 	declare createdAt: CreationOptional<Date>;
 
 	declare updatedAt: CreationOptional<Date>;
+
+	declare getCreatedByModel: BelongsToGetAssociationMixin<User>;
+
+	declare setCreatedByModel: BelongsToSetAssociationMixin<User, number>;
+
+	declare createCreatedByModel: BelongsToCreateAssociationMixin<User>;
+
+	declare createdByModel?: NonAttribute<User>;
+
+	declare static associations: {
+		createdByModel: Association<News, User>;
+	};
 }
 
 export const schema = {
@@ -67,8 +87,16 @@ export const schema = {
 export const options = {};
 
 export const setup = async () => {
-	News.belongsTo(User, { foreignKey: "createdBy" });
-	User.hasMany(News, { foreignKey: "createdBy" });
+	News.belongsTo(User, {
+		as: "createdByModel",
+		foreignKey: {
+			name: "createdBy",
+			type: DataTypes.OBJECTID,
+			allowNull: false
+		},
+		onDelete: "RESTRICT",
+		onUpdate: "RESTRICT"
+	});
 
 	News.afterSave(async record => {
 		const oldDoc = record.previous();
