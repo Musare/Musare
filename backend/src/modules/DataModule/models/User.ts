@@ -119,10 +119,6 @@ export const schema = {
 		defaultValue: UserRole.USER,
 		allowNull: false
 	},
-	// createdBy: {
-	// 	type: DataTypes.OBJECTID,
-	// 	allowNull: false
-	// },
 	createdAt: DataTypes.DATE,
 	updatedAt: DataTypes.DATE,
 	_name: {

@@ -4,9 +4,6 @@ import { MigrationParams } from "umzug";
 export const up = async ({
 	context: sequelize
 }: MigrationParams<Sequelize>) => {
-	// TODO: Remove this when sync is no longer used
-	await sequelize.getQueryInterface().dropTable("minifiedUsers");
-
 	await sequelize.query(
 		'CREATE VIEW "minifiedUsers" AS SELECT _id, username, name, role FROM users',
 		{

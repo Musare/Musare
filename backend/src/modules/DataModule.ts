@@ -91,9 +91,9 @@ export class DataModule extends BaseModule {
 	public override async startup() {
 		await super.startup();
 
-		await this._setupSequelize();
+		await this._runMigrations();
 
-		// await this._runMigrations();
+		await this._setupSequelize();
 
 		await super._started();
 	}
@@ -181,10 +181,6 @@ export class DataModule extends BaseModule {
 		);
 
 		await forEachIn(setupFunctions, setup => setup());
-
-		await this._sequelize.sync();
-
-		await this._runMigrations();
 	}
 
 	/**
