@@ -135,9 +135,7 @@ export class DataModule extends BaseModule {
 	 */
 	private async _setupSequelize() {
 		this._sequelize = await this._createSequelizeInstance({
-			define: {
-				hooks: this._getSequelizeHooks()
-			}
+			hooks: this._getSequelizeHooks()
 		});
 
 		await this._sequelize.authenticate();
@@ -203,9 +201,8 @@ export class DataModule extends BaseModule {
 		return this._sequelize.model(camelizedName) as ModelStatic<ModelType>; // This fails - news has not been defined
 	}
 
-	private _getSequelizeHooks(): ModelOptions<SequelizeModel>["hooks"] {
+	private _getSequelizeHooks():  Options["hooks"] {
 		return {
-			afterSave: console.log,
 			afterCreate: async model => {
 				const modelName = (
 					model.constructor as ModelStatic<any>
@@ -219,7 +216,7 @@ export class DataModule extends BaseModule {
 					return;
 				}
 
-				EventsModule.publish(
+				await EventsModule.publish(
 					new EventClass({
 						doc: model.get()
 					})
@@ -238,7 +235,7 @@ export class DataModule extends BaseModule {
 					return;
 				}
 
-				EventsModule.publish(
+				await EventsModule.publish(
 					new EventClass(
 						{
 							doc: model.get(),
@@ -261,7 +258,7 @@ export class DataModule extends BaseModule {
 					return;
 				}
 
-				EventsModule.publish(
+				await EventsModule.publish(
 					new EventClass(
 						{
 							oldDoc: model.previous()
