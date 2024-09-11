@@ -14,6 +14,7 @@ import {
 import { Dirent } from "fs";
 import * as inflection from "inflection";
 import { SequelizeStorage, Umzug } from "umzug";
+import ObjectID from "bson-objectid";
 import BaseModule, { ModuleStatus } from "@/BaseModule";
 import DataModuleJob from "./DataModule/DataModuleJob";
 import Job from "@/Job";
@@ -55,8 +56,8 @@ export class OBJECTID extends DataTypes.ABSTRACT.prototype.constructor {
 	// Optional: value stringifier before sending to database
 	// @ts-ignore
 	_stringify(value) {
-		return value;
-		// return value.toString();
+		if (value instanceof ObjectID) return value.toHexString();
+		return value.toString();
 	}
 
 	// Optional: parser for values received from the database
