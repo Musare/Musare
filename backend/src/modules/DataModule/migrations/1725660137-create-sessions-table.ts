@@ -5,7 +5,7 @@ export const up = async ({
 	context: sequelize
 }: MigrationParams<Sequelize>) => {
 	await sequelize.getQueryInterface().createTable("sessions", {
-		sessionId: {
+		_id: {
 			type: DataTypes.OBJECTID,
 			allowNull: false,
 			primaryKey: true

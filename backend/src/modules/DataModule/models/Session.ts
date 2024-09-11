@@ -18,7 +18,7 @@ export class Session extends Model<
 	InferAttributes<Session>,
 	InferCreationAttributes<Session>
 > {
-	declare sessionId: ObjectIdType;
+	declare _id: ObjectIdType;
 
 	declare userId: ForeignKey<User["_id"]>;
 
@@ -40,7 +40,7 @@ export class Session extends Model<
 }
 
 export const schema = {
-	sessionId: {
+	_id: {
 		type: DataTypes.OBJECTID,
 		allowNull: false,
 		primaryKey: true

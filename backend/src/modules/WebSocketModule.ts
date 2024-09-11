@@ -140,7 +140,7 @@ export class WebSocketModule extends BaseModule {
 				},
 				{
 					where: {
-						sessionId
+						_id: sessionId
 					}
 				}
 			);
@@ -263,7 +263,7 @@ export class WebSocketModule extends BaseModule {
 					},
 					{
 						where: {
-							sessionId: socket.getSessionId()
+							_id: socket.getSessionId()
 						}
 					}
 				);
