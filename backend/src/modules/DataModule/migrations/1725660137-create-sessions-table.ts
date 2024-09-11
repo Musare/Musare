@@ -15,7 +15,7 @@ export const up = async ({
 			allowNull: false
 		},
 		createdAt: DataTypes.DATE,
-		updatedAt: DataTypes.DATE,
+		updatedAt: DataTypes.DATE
 	});
 
 	await sequelize.getQueryInterface().addConstraint("sessions", {
