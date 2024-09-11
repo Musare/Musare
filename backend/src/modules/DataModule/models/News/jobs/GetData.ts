@@ -17,15 +17,28 @@ export default class GetData extends GetDataJob {
 
 	protected _specialQueries?: Record<
 		string,
-		(where: WhereOptions<News>) => WhereOptions<News>
+		(where: WhereOptions<News>) => {
+			query: WhereOptions<News>;
+			includeProperties: string[];
+		}
 	> = {
-		createdBy: where => ({
-			...where,
-			[Op.or]: [
-				{ createdBy: where.createdBy },
-				{ createdByUsername: where.createdBy }
-			],
-			createdBy: undefined
-		})
+		createdBy: where => {
+			const createdBy =
+				where.createdBy instanceof RegExp
+					? where.createdBy.source
+					: where.createdBy;
+			// See https://sequelize.org/docs/v6/advanced-association-concepts/eager-loading/#complex-where-clauses-at-the-top-level for more info
+			return {
+				query: {
+					[Op.or]: [
+						{ createdBy },
+						{ "$createdByModel.username$": createdBy }
+					]
+				},
+				includeProperties: ["createdByModel"]
+			};
+		}
 	};
 }
+
+// TODO createdBy should not allow contains/RegExp? Maybe. Or only allow searching for username if it's exact

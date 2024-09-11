@@ -35,11 +35,24 @@ export default abstract class GetDataJob extends DataModuleJob {
 			.items(
 				Joi.object({
 					filter: Joi.object({
-						property: Joi.string().required()
+						name: Joi.string().optional(), // Remove eventually
+						displayName: Joi.string().optional(), // Remove eventually
+						property: Joi.string().required(),
+						filterTypes: Joi.array()
+							.items(
+								Joi.string()
+									.valid(...Object.values(FilterType))
+									.required()
+							)
+							.optional(), // Remove eventually
+						defaultFilterType: Joi.string()
+							.valid(...Object.values(FilterType))
+							.required() // Remove eventually
 					}).required(),
 					filterType: Joi.string()
 						.valid(...Object.values(FilterType))
-						.required()
+						.required(),
+					data: Joi.string().required()
 				})
 			)
 			.required(),
@@ -60,7 +73,10 @@ export default abstract class GetDataJob extends DataModuleJob {
 
 	protected _specialQueries?: Record<
 		string,
-		(query: WhereOptions) => WhereOptions
+		(query: WhereOptions) => {
+			query: WhereOptions;
+			includeProperties: string[];
+		}
 	>;
 
 	protected async _execute() {
@@ -110,6 +126,9 @@ export default abstract class GetDataJob extends DataModuleJob {
 					findQuery = modifyQuery(findQuery);
 				}
 			);
+
+		// Properties that we need to include (join) with Sequelize, e.g. createdByModel
+		const includePropertiesSet = new Set();
 
 		// Adds where stage to query, which is responsible for filtering
 		const filterQueries = queries.flatMap(query => {
@@ -174,7 +193,15 @@ export default abstract class GetDataJob extends DataModuleJob {
 			}
 
 			if (typeof this._specialQueries?.[filter.property] === "function") {
-				return this._specialQueries[filter.property](newQuery);
+				const { query, includeProperties } =
+					this._specialQueries[filter.property](newQuery);
+
+				// Keep track of what property/properties Sequelize will have to include (join) for the special query to work
+				includeProperties.forEach(includeProperty => {
+					includePropertiesSet.add(includeProperty);
+				});
+
+				return query;
 			}
 
 			return newQuery;
@@ -201,12 +228,27 @@ export default abstract class GetDataJob extends DataModuleJob {
 		findQuery.offset = pageSize * (page - 1);
 		findQuery.limit = pageSize;
 
+		// We need to tell Sequalize that some associated tables are used and must be included (joined)
+		const includeProperties = Array.from(includePropertiesSet);
+		findQuery.include = includeProperties.map(includeProperty => {
+			const association = this.getModel().associations[includeProperty];
+			const targetModel = association.target;
+
+			return {
+				model: targetModel, // E.g. User
+				as: includeProperty, // e.g. "createdByModel"
+				attributes: [] // We do not want to return any data from anything we include
+			};
+		});
+
 		// Executes the query
 		const { rows, count } = await this.getModel().findAndCountAll(
 			findQuery
 		);
 
 		const data = rows.map(model => model.toJSON()); // TODO: Review generally
+
+		// TODO make absolutely sure createdByModel and similar here have been removed or aren't included, if they've been included at all
 
 		return { data, count };
 	}
