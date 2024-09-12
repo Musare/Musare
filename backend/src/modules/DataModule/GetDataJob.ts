@@ -1,5 +1,5 @@
 import Joi from "joi";
-import { FindOptions, WhereOptions, Op } from "sequelize";
+import { FindOptions, WhereOptions, Op, IncludeOptions } from "sequelize";
 import DataModuleJob from "./DataModuleJob";
 
 export enum FilterType {
@@ -16,6 +16,27 @@ export enum FilterType {
 	BOOLEAN = "boolean",
 	SPECIAL = "special"
 }
+
+interface Sort {
+	[property: string]: "ascending" | "descending";
+}
+
+interface Query {
+	filter: {
+		property: string;
+	};
+	filterType: FilterType;
+	data: string;
+}
+
+type Payload = {
+	page: number;
+	pageSize: number;
+	properties: string[];
+	sort: Sort;
+	queries: Query[];
+	operator: "and" | "or" | "nor";
+};
 
 export default abstract class GetDataJob extends DataModuleJob {
 	protected static _payloadSchema = Joi.object({
@@ -52,7 +73,13 @@ export default abstract class GetDataJob extends DataModuleJob {
 					filterType: Joi.string()
 						.valid(...Object.values(FilterType))
 						.required(),
-					data: Joi.string().required()
+					data: Joi.alternatives()
+						.try(
+							Joi.boolean(),
+							Joi.string()
+							// Joi.number(),
+						)
+						.required()
 				})
 			)
 			.required(),
@@ -73,20 +100,20 @@ export default abstract class GetDataJob extends DataModuleJob {
 
 	protected _specialQueries?: Record<
 		string,
-		(query: WhereOptions) => {
+		(query: Record<string, WhereOptions>) => {
 			query: WhereOptions;
 			includeProperties: string[];
 		}
 	>;
 
 	protected async _execute() {
-		const { page, pageSize, properties, sort, queries, operator } =
-			this._payload;
+		const { page, pageSize, properties, sort, queries, operator } = this
+			._payload as Payload;
 
 		let findQuery: FindOptions = {};
 
 		// If a query filter property or sort property is blacklisted, throw error
-		if (this._blacklistedProperties?.length ?? 0 > 0) {
+		if (this._blacklistedProperties?.length) {
 			if (
 				queries.some(query =>
 					this._blacklistedProperties!.some(blacklistedProperty =>
@@ -128,7 +155,7 @@ export default abstract class GetDataJob extends DataModuleJob {
 			);
 
 		// Properties that we need to include (join) with Sequelize, e.g. createdByModel
-		const includePropertiesSet = new Set();
+		const includePropertiesSet = new Set<string>();
 
 		// Adds where stage to query, which is responsible for filtering
 		const filterQueries = queries.flatMap(query => {
@@ -138,16 +165,14 @@ export default abstract class GetDataJob extends DataModuleJob {
 			const newQuery: any = {};
 			switch (filterType) {
 				case FilterType.REGEX:
-					newQuery[property] = new RegExp(
-						`${data.slice(1, data.length - 1)}`,
-						"i"
-					);
+					newQuery[property] = {
+						[Op.iRegexp]: data
+					};
 					break;
 				case FilterType.CONTAINS:
-					newQuery[property] = new RegExp(
-						`${data.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&")}`,
-						"i"
-					);
+					newQuery[property] = {
+						[Op.like]: `%${data}%`
+					};
 					break;
 				case FilterType.EXACT:
 					newQuery[property] = data.toString();
@@ -207,10 +232,19 @@ export default abstract class GetDataJob extends DataModuleJob {
 			return newQuery;
 		});
 
-		if (filterQueries.length > 0)
-			findQuery.where = {
-				[Op[operator]]: filterQueries
-			};
+		if (filterQueries.length > 0) {
+			if (operator === "nor") {
+				findQuery.where = {
+					[Op.not]: {
+						[Op.or]: filterQueries
+					}
+				};
+			} else {
+				findQuery.where = {
+					[Op[operator]]: filterQueries
+				};
+			}
+		}
 
 		// Adds order stage to query if there is at least one column being sorted, responsible for sorting data
 		if (Object.keys(sort).length > 0)
@@ -238,7 +272,7 @@ export default abstract class GetDataJob extends DataModuleJob {
 				model: targetModel, // E.g. User
 				as: includeProperty, // e.g. "createdByModel"
 				attributes: [] // We do not want to return any data from anything we include
-			};
+			} as IncludeOptions;
 		});
 
 		// Executes the query

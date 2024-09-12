@@ -17,7 +17,9 @@ import User from "./User";
 import { ObjectIdType } from "@/modules/DataModule";
 
 export class News extends Model<
+	// eslint-disable-next-line no-use-before-define
 	InferAttributes<News>,
+	// eslint-disable-next-line no-use-before-define
 	InferCreationAttributes<News>
 > {
 	declare _id: CreationOptional<ObjectIdType>;
@@ -30,7 +32,12 @@ export class News extends Model<
 
 	declare showToNewUsers: CreationOptional<boolean>;
 
-	declare createdBy: ForeignKey<User["_id"]>;
+	declare createdBy:
+		| ForeignKey<User["_id"]>
+		| {
+				_id: ForeignKey<User["_id"]>;
+				_name: "minifiedUsers";
+		  };
 
 	declare createdAt: CreationOptional<Date>;
 
@@ -45,6 +52,7 @@ export class News extends Model<
 	declare createdByModel?: NonAttribute<User>;
 
 	declare static associations: {
+		// eslint-disable-next-line no-use-before-define
 		createdByModel: Association<News, User>;
 	};
 }
@@ -140,7 +148,7 @@ export const setup = async () => {
 		}
 	});
 
-	News.addHook("afterFind", (_news, options) => {
+	News.addHook("afterFind", _news => {
 		if (!_news) return;
 
 		// TODO improve TS
@@ -160,12 +168,13 @@ export const setup = async () => {
 		>[] = [];
 
 		if (Array.isArray(_news)) news = _news;
+		// eslint-disable-next-line
 		// @ts-ignore - possibly not needed after TS update
 		else news.push(_news);
 
 		news.forEach(news => {
 			news.dataValues.createdBy = {
-				_id: news.dataValues.createdBy,
+				_id: news.dataValues.createdBy.toString(),
 				_name: "minifiedUsers"
 			};
 		});

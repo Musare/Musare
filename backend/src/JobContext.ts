@@ -1,5 +1,4 @@
 import { forEachIn } from "@common/utils/forEachIn";
-import { SessionSchema } from "@/modules/DataModule/models/sessions/schema";
 import Job, { JobOptions } from "@/Job";
 import { Log } from "@/LogBook";
 import DataModule from "@/modules/DataModule";
@@ -11,6 +10,7 @@ import {
 } from "./modules/DataModule/models/User/jobs/GetModelPermissions";
 import { GetPermissionsResult } from "./modules/DataModule/models/User/jobs/GetPermissions";
 import User from "./modules/DataModule/models/User";
+import Session from "./modules/DataModule/models/Session";
 
 const permissionRegex =
 	// eslint-disable-next-line max-len
@@ -19,7 +19,7 @@ const permissionRegex =
 export default class JobContext {
 	public readonly job: Job;
 
-	private _session?: SessionSchema;
+	private _session?: Session;
 
 	private readonly _socketId?: string;
 
@@ -28,7 +28,7 @@ export default class JobContext {
 	public constructor(
 		job: Job,
 		options?: {
-			session?: SessionSchema;
+			session?: Session;
 			socketId?: string;
 			callbackRef?: string;
 		}
@@ -52,7 +52,7 @@ export default class JobContext {
 		return this._session;
 	}
 
-	public setSession(session?: SessionSchema) {
+	public setSession(session?: Session) {
 		this._session = session;
 	}
 

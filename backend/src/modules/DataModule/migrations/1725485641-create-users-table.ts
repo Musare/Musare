@@ -6,6 +6,8 @@ export const up = async ({
 }: MigrationParams<Sequelize>) => {
 	await sequelize.getQueryInterface().createTable("users", {
 		_id: {
+			// eslint-disable-next-line
+			// @ts-ignore
 			type: DataTypes.OBJECTID,
 			primaryKey: true,
 			allowNull: false

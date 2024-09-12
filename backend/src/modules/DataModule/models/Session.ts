@@ -15,7 +15,9 @@ import { ObjectIdType } from "@/modules/DataModule";
 import User from "./User";
 
 export class Session extends Model<
+	// eslint-disable-next-line no-use-before-define
 	InferAttributes<Session>,
+	// eslint-disable-next-line no-use-before-define
 	InferCreationAttributes<Session>
 > {
 	declare _id: ObjectIdType;
@@ -35,6 +37,7 @@ export class Session extends Model<
 	declare userModel?: NonAttribute<User>;
 
 	declare static associations: {
+		// eslint-disable-next-line no-use-before-define
 		userModel: Association<Session, User>;
 	};
 }

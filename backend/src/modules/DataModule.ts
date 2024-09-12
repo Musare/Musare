@@ -8,7 +8,6 @@ import {
 	ModelStatic,
 	DataTypes,
 	Utils,
-	ModelOptions,
 	Options
 } from "sequelize";
 import { Dirent } from "fs";
@@ -27,7 +26,7 @@ export type ObjectIdType = string;
 // TODO move to a better spot
 // Strange behavior would result if we extended DataTypes.ABSTRACT because
 // it's a class wrapped in a Proxy by Utils.classToInvokable.
-export class OBJECTID extends DataTypes.ABSTRACT.prototype.constructor {
+export class OBJECTID extends DataTypes.ABSTRACT {
 	// Mandatory: set the type key
 	static key = "OBJECTID";
 
@@ -39,13 +38,16 @@ export class OBJECTID extends DataTypes.ABSTRACT.prototype.constructor {
 	}
 
 	// Optional: validator function
+	// eslint-disable-next-line
 	// @ts-ignore
-	validate(value, options) {
+	validate() {
+		// value, options
 		return true;
 		// return (typeof value === 'number') && (!Number.isNaN(value));
 	}
 
 	// Optional: sanitizer
+	// eslint-disable-next-line
 	// @ts-ignore
 	_sanitize(value) {
 		return value;
@@ -54,6 +56,7 @@ export class OBJECTID extends DataTypes.ABSTRACT.prototype.constructor {
 	}
 
 	// Optional: value stringifier before sending to database
+	// eslint-disable-next-line
 	// @ts-ignore
 	_stringify(value) {
 		if (value instanceof ObjectID) return value.toHexString();
@@ -61,6 +64,7 @@ export class OBJECTID extends DataTypes.ABSTRACT.prototype.constructor {
 	}
 
 	// Optional: parser for values received from the database
+	// eslint-disable-next-line
 	// @ts-ignore
 	static parse(value) {
 		return value;
@@ -140,7 +144,7 @@ export class DataModule extends BaseModule {
 
 		await this._sequelize.authenticate();
 
-		const setupFunctions: Function[] = [];
+		const setupFunctions: (() => Promise<void>)[] = [];
 
 		await forEachIn(
 			await readdir(
@@ -201,7 +205,7 @@ export class DataModule extends BaseModule {
 		return this._sequelize.model(camelizedName) as ModelStatic<ModelType>; // This fails - news has not been defined
 	}
 
-	private _getSequelizeHooks():  Options["hooks"] {
+	private _getSequelizeHooks(): Options["hooks"] {
 		return {
 			afterCreate: async model => {
 				const modelName = (

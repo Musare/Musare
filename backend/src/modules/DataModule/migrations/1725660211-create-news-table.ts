@@ -6,6 +6,8 @@ export const up = async ({
 }: MigrationParams<Sequelize>) => {
 	await sequelize.getQueryInterface().createTable("news", {
 		_id: {
+			// eslint-disable-next-line
+			// @ts-ignore
 			type: DataTypes.OBJECTID,
 			allowNull: false,
 			primaryKey: true
@@ -29,6 +31,8 @@ export const up = async ({
 			allowNull: false
 		},
 		createdBy: {
+			// eslint-disable-next-line
+			// @ts-ignore
 			type: DataTypes.OBJECTID,
 			allowNull: false
 		},

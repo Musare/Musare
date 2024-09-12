@@ -11,7 +11,9 @@ import { StationTheme } from "./Station/StationTheme";
 import { StationPrivacy } from "./Station/StationPrivacy";
 
 export class Station extends Model<
+	// eslint-disable-next-line no-use-before-define
 	InferAttributes<Station>,
+	// eslint-disable-next-line no-use-before-define
 	InferCreationAttributes<Station>
 > {
 	declare _id: CreationOptional<ObjectIdType>;

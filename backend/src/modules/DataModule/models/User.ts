@@ -23,7 +23,9 @@ import Session from "./Session";
 import News from "./News";
 
 export class User extends Model<
+	// eslint-disable-next-line no-use-before-define
 	InferAttributes<User>,
+	// eslint-disable-next-line no-use-before-define
 	InferCreationAttributes<User>
 > {
 	declare _id: CreationOptional<ObjectIdType>;
@@ -95,7 +97,9 @@ export class User extends Model<
 	declare createdNewsModels?: NonAttribute<News[]>;
 
 	declare static associations: {
+		// eslint-disable-next-line no-use-before-define
 		sessionModels: Association<User, Session>;
+		// eslint-disable-next-line no-use-before-define
 		createdNewsModels: Association<User, News>;
 	};
 }

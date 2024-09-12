@@ -118,7 +118,9 @@ export default class GetModelPermissions extends DataModuleJob {
 		// Loop through the modelIds that were not cached, and get the permissions for each one individually
 		await forEachIn(uncachedModelIds, async modelId => {
 			const model = uncachedModels.find(
-				model => model._id.toString() === modelId.toString()
+				model =>
+					model.dataValues[Model.primaryKeyAttribute] ===
+					modelId.toString()
 			);
 			if (!model) throw new Error(`No model found for ${modelId}.`);
 

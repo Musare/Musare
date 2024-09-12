@@ -9,9 +9,10 @@ export default (
 
 	let ownerAttribute;
 
-	if (model.dataValues.hasOwnProperty("createdBy"))
+	if (Object.prototype.hasOwnProperty.call(model.dataValues, "createdBy"))
 		ownerAttribute = "createdBy";
-	else if (model.dataValues.hasOwnProperty("owner")) ownerAttribute = "owner";
+	else if (Object.prototype.hasOwnProperty.call(model.dataValues, "owner"))
+		ownerAttribute = "owner";
 
 	if (ownerAttribute)
 		return (

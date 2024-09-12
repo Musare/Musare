@@ -10,7 +10,9 @@ import { UserRole } from "./User/UserRole";
 import { schema as userSchema } from "./User";
 
 export class MinifiedUser extends Model<
+	// eslint-disable-next-line no-use-before-define
 	InferAttributes<MinifiedUser>,
+	// eslint-disable-next-line no-use-before-define
 	InferCreationAttributes<MinifiedUser>
 > {
 	declare _id: CreationOptional<ObjectIdType>;

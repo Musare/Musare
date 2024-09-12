@@ -1,4 +1,3 @@
-import { SessionSchema } from "@models/sessions/schema";
 import { getErrorMessage } from "@common/utils/getErrorMessage";
 import { generateUuid } from "@common/utils/generateUuid";
 import Joi from "joi";
@@ -10,6 +9,7 @@ import BaseModule from "./BaseModule";
 import EventsModule from "./modules/EventsModule";
 import JobCompletedEvent from "./modules/EventsModule/events/JobCompletedEvent";
 import User from "./modules/DataModule/models/User";
+import Session from "./modules/DataModule/models/Session";
 
 export enum JobStatus {
 	QUEUED = "QUEUED",
@@ -21,7 +21,7 @@ export enum JobStatus {
 export type JobOptions = {
 	priority?: number;
 	longJob?: string;
-	session?: SessionSchema;
+	session?: Session;
 	socketId?: string;
 	callbackRef?: string;
 };

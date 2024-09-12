@@ -1,11 +1,11 @@
 import "@/tests/support/setup";
 import sinon from "sinon";
-import mongoose from "mongoose";
-import news from "logic/db/schemas/news";
 import NewsCreatedEvent from "@models/News/events/NewsCreatedEvent";
 import NewsUpdatedEvent from "@models/News/events/NewsUpdatedEvent";
 import NewsDeletedEvent from "@models/News/events/NewsDeletedEvent";
 import { NewsStatus } from "@models/News/NewsStatus";
+import { Sequelize } from "sequelize";
+import ObjectID from "bson-objectid";
 import { TestModule } from "@/tests/support/TestModule";
 import Subscribe from "@/modules/EventsModule/jobs/Subscribe";
 import DataModule from "@/modules/DataModule";
@@ -15,6 +15,8 @@ import JobContext from "@/JobContext";
 import { UserRole } from "@/modules/DataModule/models/User/UserRole";
 import GetPermissions from "@/modules/DataModule/models/User/jobs/GetPermissions";
 import CacheModule from "@/modules/CacheModule";
+import News, { schema as NewsSchema } from "@/modules/DataModule/models/News";
+import User from "@/modules/DataModule/models/User";
 
 describe("Subscribe job", async function () {
 	describe("execute", function () {
@@ -57,9 +59,17 @@ describe("Subscribe job", async function () {
 				"execute"
 			);
 
-			modelFindByIdStub;
+			userGetTableName = sinon.stub(User, "getTableName");
+
+			sequelizeQueryStub;
+
+			modelGetTableNameStub;
+
+			newsFindByPkStub;
 
 			Model;
+
+			sequelize;
 
 			restore() {
 				this.jobContextGetSocketIdStub.restore();
@@ -73,16 +83,29 @@ describe("Subscribe job", async function () {
 				this.eventsModuleGetEventStub.restore();
 				this.eventsModuleSubscribeSocketStub.restore();
 				this.getPermissionsExecute.restore();
+				this.userGetTableName.restore();
+				this.sequelizeQueryStub.restore();
+				this.modelGetTableNameStub.restore();
+				this.newsFindByPkStub.restore();
 			}
 
-			constructor(Model: mongoose.Model<any>, modelFindByIdStub: any) {
+			constructor(
+				sequelize: Sequelize,
+				Model: typeof News,
+				sequelizeQueryStub: any,
+				modelGetTableNameStub: any,
+				newsFindByPkStub: any
+			) {
+				this.sequelize = sequelize;
 				this.Model = Model;
-				this.modelFindByIdStub = modelFindByIdStub;
+				this.sequelizeQueryStub = sequelizeQueryStub;
+				this.modelGetTableNameStub = modelGetTableNameStub;
+				this.newsFindByPkStub = newsFindByPkStub;
 			}
 		}
 		let th: TypeHelper;
 
-		const fakeUserId = new mongoose.Types.ObjectId();
+		const fakeUserId = ObjectID();
 		// const userGuest = undefined;
 		const userNormal = {
 			_id: fakeUserId,
@@ -97,26 +120,46 @@ describe("Subscribe job", async function () {
 			role: UserRole.ADMIN
 		};
 
-		function createDocument(
-			modelId: mongoose.Types.ObjectId,
-			status: NewsStatus
-		) {
-			const news = new th.Model({
-				_id: modelId,
-				status
+		async function createDocument(modelId: ObjectID, status: NewsStatus) {
+			const news = await th.Model.build({
+				_id: modelId.toHexString(),
+				status,
+				title: "Dummy",
+				markdown: "Dummy",
+				createdBy: "Dummy"
 			});
-			// @ts-ignore
-			th.modelFindByIdStub.withArgs(modelId.toString()).returns(news);
+			th.newsFindByPkStub.withArgs(modelId.toHexString()).returns(news);
 		}
 
-		beforeEach(() => {
-			if (mongoose.modelNames().includes("news"))
-				mongoose.deleteModel("news");
-			const schema = new mongoose.Schema(news);
-			const Model = mongoose.model("news", schema);
-			const modelFindByIdStub = sinon.stub(Model, "findById");
+		beforeEach(async () => {
+			const sequelize = new Sequelize("fake", "fake", "fake", {
+				host: "fake",
+				port: 0,
+				dialect: "postgres"
+			});
 
-			th = new TypeHelper(Model, modelFindByIdStub);
+			const sequelizeQueryStub = sinon.stub(sequelize, "query");
+
+			// @ts-ignore
+			const Model = News.init(NewsSchema, {
+				tableName: "News",
+				...News.options,
+				sequelize
+			});
+
+			const modelGetTableNameStub = sinon
+				.stub(News, "getTableName")
+				.returns("news");
+
+			const newsFindByPkStub = sinon.stub(News, "findByPk");
+
+			th = new TypeHelper(
+				sequelize,
+				Model,
+				sequelizeQueryStub,
+				modelGetTableNameStub,
+				newsFindByPkStub
+			);
 
 			th.cacheModuleGetStub.resolves(null);
 			// th.cacheModuleSetStub.resolves(null);
@@ -150,6 +193,7 @@ describe("Subscribe job", async function () {
 				.withArgs("news.deleted")
 				// @ts-ignore
 				.returns(NewsDeletedEvent);
+			th.userGetTableName.returns("users");
 
 			Reflect.set(
 				DataModule,
@@ -247,7 +291,7 @@ describe("Subscribe job", async function () {
 
 		// eslint-disable-next-line no-template-curly-in-string
 		describe("data.news.updated:${modelId}", function () {
-			const modelId = new mongoose.Types.ObjectId();
+			const modelId = ObjectID();
 			const channel = `data.news.updated:${modelId}`;
 			const permission = `event.data.news.updated:${modelId}`;
 
@@ -261,7 +305,7 @@ describe("Subscribe job", async function () {
 					"event.data.news.updated": true
 				});
 
-				createDocument(modelId, NewsStatus.DRAFT);
+				await createDocument(modelId, NewsStatus.DRAFT);
 
 				th.jobContextGetSocketIdStub.returns("SomeSocketId");
 
@@ -278,7 +322,7 @@ describe("Subscribe job", async function () {
 				th.jobContextGetUserStub.resolves(userNormal);
 				th.getPermissionsExecute.resolves({});
 
-				createDocument(modelId, NewsStatus.PUBLISHED);
+				await createDocument(modelId, NewsStatus.PUBLISHED);
 
 				th.jobContextGetSocketIdStub.returns("SomeSocketId");
 
@@ -295,7 +339,7 @@ describe("Subscribe job", async function () {
 				th.jobContextGetUserStub.resolves(userNormal);
 				th.getPermissionsExecute.resolves({});
 
-				createDocument(modelId, NewsStatus.DRAFT);
+				await createDocument(modelId, NewsStatus.DRAFT);
 
 				th.jobContextGetSocketIdStub.returns("SomeSocketId");
 
@@ -311,7 +355,7 @@ describe("Subscribe job", async function () {
 
 		// eslint-disable-next-line no-template-curly-in-string
 		describe("data.news.deleted:${modelId}", function () {
-			const modelId = new mongoose.Types.ObjectId();
+			const modelId = ObjectID();
 			const channel = `data.news.deleted:${modelId}`;
 			const permission = `event.data.news.deleted:${modelId}`;
 
@@ -325,7 +369,7 @@ describe("Subscribe job", async function () {
 					"event.data.news.deleted": true
 				});
 
-				createDocument(modelId, NewsStatus.DRAFT);
+				await createDocument(modelId, NewsStatus.DRAFT);
 
 				th.jobContextGetSocketIdStub.returns("SomeSocketId");
 
@@ -342,7 +386,7 @@ describe("Subscribe job", async function () {
 				th.jobContextGetUserStub.resolves(userNormal);
 				th.getPermissionsExecute.resolves({});
 
-				createDocument(modelId, NewsStatus.PUBLISHED);
+				await createDocument(modelId, NewsStatus.PUBLISHED);
 
 				th.jobContextGetSocketIdStub.returns("SomeSocketId");
 
@@ -359,7 +403,7 @@ describe("Subscribe job", async function () {
 				th.jobContextGetUserStub.resolves(userNormal);
 				th.getPermissionsExecute.resolves({});
 
-				createDocument(modelId, NewsStatus.DRAFT);
+				await createDocument(modelId, NewsStatus.DRAFT);
 
 				th.jobContextGetSocketIdStub.returns("SomeSocketId");
 
@@ -394,7 +438,7 @@ describe("Subscribe job", async function () {
 
 		// eslint-disable-next-line no-template-curly-in-string
 		describe("data.news.unpublished:${modelId}", function () {
-			// const modelId = new mongoose.Types.ObjectId();
+			// const modelId = ObjectID();
 			// const channel = `data.news.unpublished:${modelId}`;
 			// const permission = `event.data.news.unpublished:${modelId}`;
 
@@ -406,7 +450,7 @@ describe("Subscribe job", async function () {
 			// 	// @ts-ignore
 			// 	th.jobContextGetUserStub.resolves(userAdmin);
 
-			// 	createDocument(modelId, NewsStatus.DRAFT);
+			// 	await createDocument(modelId, NewsStatus.DRAFT);
 
 			// 	th.jobContextGetSocketIdStub.returns("SomeSocketId");
 
@@ -423,7 +467,7 @@ describe("Subscribe job", async function () {
 			// 	// @ts-ignore
 			// 	th.jobContextGetUserStub.resolves(userNormal);
 
-			// 	createDocument(modelId, NewsStatus.PUBLISHED);
+			// 	await createDocument(modelId, NewsStatus.PUBLISHED);
 
 			// 	th.jobContextGetSocketIdStub.returns("SomeSocketId");
 
@@ -440,7 +484,7 @@ describe("Subscribe job", async function () {
 			// 	// @ts-ignore
 			// 	th.jobContextGetUserStub.resolves(userNormal);
 
-			// 	createDocument(modelId, NewsStatus.DRAFT);
+			// 	await createDocument(modelId, NewsStatus.DRAFT);
 
 			// 	th.jobContextGetSocketIdStub.returns("SomeSocketId");
 
@@ -451,6 +495,7 @@ describe("Subscribe job", async function () {
 		});
 
 		afterEach(() => {
+			th.sequelize.close();
 			th.restore();
 		});
 	});

@@ -10,5 +10,6 @@ declare module "sequelize/types/associations/base" {
 }
 
 declare module "sequelize/types/data-types" {
-	export const OBJECTID = ObjectIdClass;
+	// eslint-disable-next-line
+	export let OBJECTID = ObjectIdClass;
 }
