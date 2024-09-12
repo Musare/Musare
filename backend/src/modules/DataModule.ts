@@ -266,6 +266,13 @@ export class DataModule extends BaseModule {
 						model.previous("_id")
 					)
 				);
+			},
+			beforeValidate: async model => {
+				if (model.isNewRecord) {
+					const key = (model.constructor as ModelStatic<any>)
+						.primaryKeyAttribute;
+					model.dataValues[key] ??= ObjectID();
+				}
 			}
 		};
 	}

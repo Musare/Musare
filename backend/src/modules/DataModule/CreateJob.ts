@@ -1,5 +1,4 @@
 import Joi from "joi";
-import ObjectID from "bson-objectid";
 import DataModuleJob from "./DataModuleJob";
 
 export default abstract class CreateJob extends DataModuleJob {
@@ -14,8 +13,6 @@ export default abstract class CreateJob extends DataModuleJob {
 
 		if (Object.hasOwn(model.getAttributes(), "createdBy"))
 			query.createdBy = (await this._context.getUser())._id;
-
-		query[model.primaryKeyAttribute] = ObjectID();
 
 		return model.create(query);
 	}
