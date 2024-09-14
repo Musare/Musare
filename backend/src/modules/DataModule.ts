@@ -26,7 +26,7 @@ export type ObjectIdType = string;
 // TODO move to a better spot
 // Strange behavior would result if we extended DataTypes.ABSTRACT because
 // it's a class wrapped in a Proxy by Utils.classToInvokable.
-export class OBJECTID extends DataTypes.ABSTRACT {
+export class OBJECTID extends DataTypes.ABSTRACT.prototype.constructor {
 	// Mandatory: set the type key
 	static key = "OBJECTID";
 

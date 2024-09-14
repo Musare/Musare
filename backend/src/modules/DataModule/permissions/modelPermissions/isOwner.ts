@@ -14,7 +14,7 @@ export default (
 	else if (Object.prototype.hasOwnProperty.call(model.dataValues, "owner"))
 		ownerAttribute = "owner";
 
-	if (ownerAttribute)
+	if (ownerAttribute && model.dataValues[ownerAttribute])
 		return (
 			model.dataValues[ownerAttribute].toString() === user._id.toString()
 		);

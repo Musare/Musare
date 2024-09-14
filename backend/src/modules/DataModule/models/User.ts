@@ -130,6 +130,13 @@ export const schema = {
 		get() {
 			return `users`;
 		}
+	},
+	// Temporary
+	favoriteStations: {
+		type: DataTypes.VIRTUAL,
+		get() {
+			return [];
+		}
 	}
 };
 

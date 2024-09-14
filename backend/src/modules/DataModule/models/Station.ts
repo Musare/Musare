@@ -93,27 +93,27 @@ export const schema = {
 		defaultValue: false,
 		allowNull: false
 	},
-	// // TODO currentSong
-	// currentSongIndex: {
-	// 	type: DataTypes.NUMBER,
-	// 	defaultValue: 0,
-	// 	allowNull: false
-	// },
-	// timePaused: {
-	// 	type: DataTypes.NUMBER,
-	// 	defaultValue: 0,
-	// 	allowNull: false
-	// },
-	// pausedAt: {
-	// 	type: DataTypes.NUMBER,
-	// 	defaultValue: 0,
-	// 	allowNull: false
-	// },
-	// startedAt: {
-	// 	type: DataTypes.NUMBER,
-	// 	defaultValue: 0,
-	// 	allowNull: false
-	// },
+	// TODO currentSong
+	currentSongIndex: {
+		type: DataTypes.SMALLINT, // TODO check if max is checked against, and if we need custom validation to not go over the max
+		defaultValue: 0,
+		allowNull: false
+	},
+	timePaused: {
+		type: DataTypes.INTEGER, // TODO do we need to care about 2038?
+		defaultValue: 0,
+		allowNull: false
+	},
+	pausedAt: {
+		type: DataTypes.INTEGER,
+		defaultValue: 0,
+		allowNull: false
+	},
+	startedAt: {
+		type: DataTypes.INTEGER,
+		defaultValue: 0,
+		allowNull: false
+	},
 	// playlist: {
 	// 	type: DataTypes.OBJECTID,
 	// 	allowNull: false
@@ -123,24 +123,24 @@ export const schema = {
 		defaultValue: StationPrivacy.PRIVATE,
 		allowNull: false
 	},
-	// // TODO queue
+	// TODO queue
 	// owner: { // Only used for community stations
 	// 	type: DataTypes.OBJECTID
-	// },
-	// // TODO requests
-	// // TODO autofill
+	// }, // TODO add validator to make sure owner is required for community stations, see https://sequelize.org/docs/v6/core-concepts/validations-and-constraints/#model-wide-validations
+	// TODO requests
+	// TODO autofill
 	theme: {
 		type: DataTypes.ENUM(...Object.values(StationTheme)),
 		defaultValue: StationTheme.BLUE,
 		allowNull: false
 	},
-	// // TODO blacklist
-	// // TODO djs
-	// skipVoteThreshold: {
-	// 	type: DataTypes.NUMBER,
-	// 	defaultValue: 50,
-	// 	allowNull: false
-	// },
+	// TODO blacklist
+	// TODO djs
+	skipVoteThreshold: {
+		type: DataTypes.SMALLINT,
+		defaultValue: 50,
+		allowNull: false
+	},
 
 	createdAt: DataTypes.DATE,
 	updatedAt: DataTypes.DATE,
@@ -148,6 +148,13 @@ export const schema = {
 		type: DataTypes.VIRTUAL,
 		get() {
 			return `stations`;
+		}
+	},
+	// Temporary
+	djs: {
+		type: DataTypes.VIRTUAL,
+		get() {
+			return [];
 		}
 	}
 };
