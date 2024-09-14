@@ -18,9 +18,11 @@ import {
 	Association
 } from "sequelize";
 import { UserRole } from "./User/UserRole";
-import { ObjectIdType } from "@/modules/DataModule";
-import Session from "./Session";
+import { UserAvatarColor } from "./User/UserAvatarColor";
+import { UserAvatarType } from "./User/UserAvatarType";
 import News from "./News";
+import Session from "./Session";
+import { ObjectIdType } from "@/modules/DataModule";
 
 export class User extends Model<
 	// eslint-disable-next-line no-use-before-define
@@ -30,11 +32,57 @@ export class User extends Model<
 > {
 	declare _id: CreationOptional<ObjectIdType>;
 
-	declare username: string;
-
 	declare name: string;
 
-	declare role: CreationOptional<UserRole>;
+	declare username: string;
+
+	declare role: UserRole;
+
+	declare emailAddress: string;
+
+	declare emailVerifiedAt: CreationOptional<Date | null>;
+
+	declare emailVerificationToken: CreationOptional<string | null>;
+
+	declare avatarType: UserAvatarType;
+
+	declare avatarColor: CreationOptional<UserAvatarColor | null>;
+
+	declare avatarUrl: CreationOptional<string | null>;
+
+	declare password: string;
+
+	declare passwordResetToken: CreationOptional<string | null>;
+
+	declare passwordResetExpiresAt: CreationOptional<Date | null>;
+
+	declare githubId: CreationOptional<number | null>;
+
+	declare githubAccessToken: CreationOptional<string | null>;
+
+	declare songsRequested: CreationOptional<number>;
+
+	// declare likedSongsPlaylist: Types.ObjectId;
+
+	// declare dislikedSongsPlaylist: Types.ObjectId;
+
+	// declare favoriteStations: Types.ObjectId[];
+
+	declare location: CreationOptional<string | null>;
+
+	declare bio: CreationOptional<string | null>;
+
+	// declare orderOfPlaylists: Types.ObjectId[];
+
+	declare nightmode: CreationOptional<boolean>;
+
+	declare autoSkipDisliked: CreationOptional<boolean>;
+
+	declare activityLogPublic: CreationOptional<boolean>;
+
+	declare anonymousSongRequests: CreationOptional<boolean>;
+
+	declare activityWatch: CreationOptional<boolean>;
 
 	declare createdAt: CreationOptional<Date>;
 
@@ -107,21 +155,102 @@ export class User extends Model<
 export const schema = {
 	_id: {
 		type: DataTypes.OBJECTID,
-		primaryKey: true,
+		autoNull: false,
+		primaryKey: true
+	},
+	name: {
+		type: DataTypes.STRING,
 		allowNull: false
 	},
 	username: {
 		type: DataTypes.STRING,
 		allowNull: false
 	},
-	name: {
+	role: {
+		type: DataTypes.ENUM(...Object.values(UserRole)),
+		allowNull: false
+	},
+	emailAddress: {
 		type: DataTypes.STRING,
 		allowNull: false
 	},
-	role: {
-		type: DataTypes.ENUM(...Object.values(UserRole)),
-		defaultValue: UserRole.USER,
+	emailVerifiedAt: {
+		type: DataTypes.DATE,
+		allowNull: true
+	},
+	emailVerificationToken: {
+		type: DataTypes.STRING,
+		allowNull: true
+	},
+	avatarType: {
+		type: DataTypes.ENUM(...Object.values(UserAvatarType)),
 		allowNull: false
+	},
+	avatarColor: {
+		type: DataTypes.ENUM(...Object.values(UserAvatarColor)),
+		allowNull: true
+	},
+	avatarUrl: {
+		type: DataTypes.STRING,
+		allowNull: true
+	},
+	password: {
+		type: DataTypes.STRING,
+		allowNull: false
+	},
+	passwordResetToken: {
+		type: DataTypes.STRING,
+		allowNull: true
+	},
+	passwordResetExpiresAt: {
+		type: DataTypes.DATE,
+		allowNull: true
+	},
+	githubId: {
+		type: DataTypes.BIGINT,
+		allowNull: true
+	},
+	githubAccessToken: {
+		type: DataTypes.STRING,
+		allowNull: true
+	},
+	songsRequested: {
+		type: DataTypes.BIGINT,
+		allowNull: false,
+		defaultValue: 0
+	},
+	location: {
+		type: DataTypes.STRING,
+		allowNull: true
+	},
+	bio: {
+		type: DataTypes.STRING,
+		allowNull: true
+	},
+	nightmode: {
+		type: DataTypes.BOOLEAN,
+		allowNull: false,
+		defaultValue: false
+	},
+	autoSkipDisliked: {
+		type: DataTypes.BOOLEAN,
+		allowNull: false,
+		defaultValue: true
+	},
+	activityLogPublic: {
+		type: DataTypes.BOOLEAN,
+		allowNull: false,
+		defaultValue: false
+	},
+	anonymousSongRequests: {
+		type: DataTypes.BOOLEAN,
+		allowNull: false,
+		defaultValue: false
+	},
+	activityWatch: {
+		type: DataTypes.BOOLEAN,
+		allowNull: false,
+		defaultValue: false
 	},
 	createdAt: DataTypes.DATE,
 	updatedAt: DataTypes.DATE,
