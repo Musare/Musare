@@ -12,10 +12,6 @@ export const up = async ({
 			autoNull: false,
 			primaryKey: true
 		},
-		name: {
-			type: DataTypes.STRING,
-			allowNull: false
-		},
 		username: {
 			type: DataTypes.STRING,
 			allowNull: false
@@ -24,21 +20,26 @@ export const up = async ({
 			type: DataTypes.ENUM("admin", "moderator", "user"),
 			allowNull: false
 		},
-		emailAddress: {
-			type: DataTypes.STRING,
-			allowNull: false
-		},
-		emailVerifiedAt: {
-			type: DataTypes.DATE,
-			allowNull: true
+		emailVerified: {
+			type: DataTypes.BOOLEAN,
+			allowNull: true,
+			defaultValue: false
 		},
 		emailVerificationToken: {
 			type: DataTypes.STRING,
 			allowNull: true
 		},
+		emailAddress: {
+			type: DataTypes.STRING,
+			allowNull: false
+		},
 		avatarType: {
 			type: DataTypes.ENUM("gravatar", "initials"),
 			allowNull: false
+		},
+		avatarUrl: {
+			type: DataTypes.STRING,
+			allowNull: true
 		},
 		avatarColor: {
 			type: DataTypes.ENUM(
@@ -51,19 +52,23 @@ export const up = async ({
 			),
 			allowNull: true
 		},
-		avatarUrl: {
-			type: DataTypes.STRING,
-			allowNull: true
-		},
 		password: {
 			type: DataTypes.STRING,
 			allowNull: false
 		},
-		passwordResetToken: {
+		passwordResetCode: {
 			type: DataTypes.STRING,
 			allowNull: true
 		},
 		passwordResetExpiresAt: {
+			type: DataTypes.DATE,
+			allowNull: true
+		},
+		passwordSetCode: {
+			type: DataTypes.STRING,
+			allowNull: true
+		},
+		passwordSetExpiresAt: {
 			type: DataTypes.DATE,
 			allowNull: true
 		},
@@ -79,6 +84,10 @@ export const up = async ({
 			type: DataTypes.BIGINT,
 			allowNull: false,
 			defaultValue: 0
+		},
+		name: {
+			type: DataTypes.STRING,
+			allowNull: false
 		},
 		location: {
 			type: DataTypes.STRING,

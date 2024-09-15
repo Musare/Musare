@@ -32,35 +32,41 @@ export class User extends Model<
 > {
 	declare _id: CreationOptional<ObjectIdType>;
 
-	declare name: string;
-
 	declare username: string;
 
 	declare role: UserRole;
 
-	declare emailAddress: string;
-
-	declare emailVerifiedAt: CreationOptional<Date | null>;
+	declare emailVerified: CreationOptional<boolean>;
 
 	declare emailVerificationToken: CreationOptional<string | null>;
 
-	declare avatarType: UserAvatarType;
+	declare emailAddress: string;
 
-	declare avatarColor: CreationOptional<UserAvatarColor | null>;
+	declare avatarType: UserAvatarType;
 
 	declare avatarUrl: CreationOptional<string | null>;
 
+	declare avatarColor: CreationOptional<UserAvatarColor | null>;
+
+	// Services
 	declare password: string;
 
-	declare passwordResetToken: CreationOptional<string | null>;
+	declare passwordResetCode: CreationOptional<string | null>;
 
 	declare passwordResetExpiresAt: CreationOptional<Date | null>;
+
+	declare passwordSetCode: CreationOptional<string | null>;
+
+	declare passwordSetExpiresAt: CreationOptional<Date | null>;
 
 	declare githubId: CreationOptional<number | null>;
 
 	declare githubAccessToken: CreationOptional<string | null>;
+	// End services
 
+	// Statistics
 	declare songsRequested: CreationOptional<number>;
+	// End statistics
 
 	// declare likedSongsPlaylist: Types.ObjectId;
 
@@ -68,10 +74,13 @@ export class User extends Model<
 
 	// declare favoriteStations: Types.ObjectId[];
 
+	declare name: string;
+
 	declare location: CreationOptional<string | null>;
 
 	declare bio: CreationOptional<string | null>;
 
+	// Preferences
 	// declare orderOfPlaylists: Types.ObjectId[];
 
 	declare nightmode: CreationOptional<boolean>;
@@ -83,6 +92,7 @@ export class User extends Model<
 	declare anonymousSongRequests: CreationOptional<boolean>;
 
 	declare activityWatch: CreationOptional<boolean>;
+	// End preferences
 
 	declare createdAt: CreationOptional<Date>;
 
@@ -152,15 +162,12 @@ export class User extends Model<
 	};
 }
 
+// TODO add validation
 export const schema = {
 	_id: {
 		type: DataTypes.OBJECTID,
 		autoNull: false,
 		primaryKey: true
-	},
-	name: {
-		type: DataTypes.STRING,
-		allowNull: false
 	},
 	username: {
 		type: DataTypes.STRING,
@@ -170,39 +177,48 @@ export const schema = {
 		type: DataTypes.ENUM(...Object.values(UserRole)),
 		allowNull: false
 	},
-	emailAddress: {
-		type: DataTypes.STRING,
-		allowNull: false
-	},
-	emailVerifiedAt: {
-		type: DataTypes.DATE,
-		allowNull: true
+	emailVerified: {
+		type: DataTypes.BOOLEAN,
+		allowNull: true,
+		defaultValue: false
 	},
 	emailVerificationToken: {
 		type: DataTypes.STRING,
 		allowNull: true
 	},
+	emailAddress: {
+		type: DataTypes.STRING,
+		allowNull: false
+	},
 	avatarType: {
 		type: DataTypes.ENUM(...Object.values(UserAvatarType)),
 		allowNull: false
 	},
-	avatarColor: {
-		type: DataTypes.ENUM(...Object.values(UserAvatarColor)),
-		allowNull: true
-	},
 	avatarUrl: {
 		type: DataTypes.STRING,
+		allowNull: true
+	},
+	avatarColor: {
+		type: DataTypes.ENUM(...Object.values(UserAvatarColor)),
 		allowNull: true
 	},
 	password: {
 		type: DataTypes.STRING,
 		allowNull: false
 	},
-	passwordResetToken: {
+	passwordResetCode: {
 		type: DataTypes.STRING,
 		allowNull: true
 	},
 	passwordResetExpiresAt: {
+		type: DataTypes.DATE,
+		allowNull: true
+	},
+	passwordSetCode: {
+		type: DataTypes.STRING,
+		allowNull: true
+	},
+	passwordSetExpiresAt: {
 		type: DataTypes.DATE,
 		allowNull: true
 	},
@@ -218,6 +234,10 @@ export const schema = {
 		type: DataTypes.BIGINT,
 		allowNull: false,
 		defaultValue: 0
+	},
+	name: {
+		type: DataTypes.STRING,
+		allowNull: false
 	},
 	location: {
 		type: DataTypes.STRING,
