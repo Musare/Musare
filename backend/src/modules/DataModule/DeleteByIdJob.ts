@@ -12,7 +12,8 @@ export default abstract class DeleteByIdJob extends DataModuleJob {
 		const { _id } = this._payload;
 
 		return this.getModel().destroy({
-			where: { _id }
+			where: { _id },
+			individualHooks: true
 		});
 	}
 }

@@ -280,10 +280,8 @@ export default abstract class GetDataJob extends DataModuleJob {
 			findQuery
 		);
 
-		const data = rows.map(model => model.toJSON()); // TODO: Review generally
-
 		// TODO make absolutely sure createdByModel and similar here have been removed or aren't included, if they've been included at all
 
-		return { data, count };
+		return { data: rows, count };
 	}
 }

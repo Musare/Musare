@@ -13,7 +13,8 @@ export default abstract class UpdateByIdJob extends DataModuleJob {
 		const { _id, query } = this._payload;
 
 		return this.getModel().update(query, {
-			where: { _id }
+			where: { _id },
+			individualHooks: true
 		});
 	}
 }

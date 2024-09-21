@@ -19,7 +19,10 @@ export default abstract class DeleteManyByIdJob extends DataModuleJob {
 		const { _ids } = this._payload;
 
 		return this.getModel().destroy({
-			where: { _id: _ids }
+			where: {
+				_id: _ids,
+				individualHooks: true
+			}
 		});
 	}
 }

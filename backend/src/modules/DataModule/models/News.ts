@@ -87,7 +87,16 @@ export const schema = {
 	_name: {
 		type: DataTypes.VIRTUAL,
 		get() {
-			return `news`;
+			return "news";
+		}
+	},
+
+	_associations: {
+		type: DataTypes.VIRTUAL,
+		get() {
+			return {
+				createdBy: "minifiedUsers"
+			};
 		}
 	}
 };
@@ -107,77 +116,51 @@ export const setup = async () => {
 	});
 
 	News.afterSave(async record => {
-		const oldDoc = record.previous();
 		const doc = record.get();
 
-		if (oldDoc.status === doc.status) return;
+		const oldStatus = record.previous("status");
+		const newStatus = record.get("status");
 
-		if (doc.status === NewsStatus.PUBLISHED) {
+		if (oldStatus === newStatus) return;
+
+		if (newStatus === NewsStatus.PUBLISHED) {
 			const EventClass = EventsModule.getEvent(`data.news.published`);
 			await EventsModule.publish(
 				new EventClass({
-					doc
+					doc: record
 				})
 			);
-		} else if (oldDoc.status === NewsStatus.PUBLISHED) {
+		} else if (oldStatus === NewsStatus.PUBLISHED) {
 			const EventClass = EventsModule.getEvent(`data.news.unpublished`);
 			await EventsModule.publish(
 				new EventClass(
 					{
-						oldDoc
+						oldDoc: {
+							_id: doc._id.toString()
+						}
 					},
-					oldDoc._id!.toString()
+					doc._id.toString()
 				)
 			);
 		}
 	});
 
 	News.afterDestroy(async record => {
-		const oldDoc = record.previous();
+		const doc = record.get();
 
-		if (oldDoc.status === NewsStatus.PUBLISHED) {
+		if (doc.status === NewsStatus.PUBLISHED) {
 			const EventClass = EventsModule.getEvent(`data.news.unpublished`);
 			await EventsModule.publish(
 				new EventClass(
 					{
-						oldDoc
+						oldDoc: {
+							_id: doc._id.toString()
+						}
 					},
-					oldDoc._id!.toString()
+					doc._id.toString()
 				)
 			);
 		}
-	});
-
-	News.addHook("afterFind", _news => {
-		if (!_news) return;
-
-		// TODO improve TS
-		let news: Model<
-			InferAttributes<
-				News,
-				{
-					omit: never;
-				}
-			>,
-			InferCreationAttributes<
-				News,
-				{
-					omit: never;
-				}
-			>
-		>[] = [];
-
-		if (Array.isArray(_news)) news = _news;
-		// eslint-disable-next-line
-		// @ts-ignore - possibly not needed after TS update
-		else news.push(_news);
-
-		news.forEach(news => {
-			news.dataValues.createdBy = {
-				_id: news.dataValues.createdBy.toString(),
-				_name: "minifiedUsers"
-			};
-		});
 	});
 };
 

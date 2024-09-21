@@ -18,6 +18,7 @@ import BaseModule, { ModuleStatus } from "@/BaseModule";
 import DataModuleJob from "./DataModule/DataModuleJob";
 import Job from "@/Job";
 import EventsModule from "./EventsModule";
+import { EventClass } from "./EventsModule/Event";
 
 export type ObjectIdType = string;
 
@@ -134,15 +135,91 @@ export class DataModule extends BaseModule {
 		return sequelize;
 	}
 
+	private _setupSequelizeHooks() {
+		const getEventFromModel = (
+			model: SequelizeModel<any, any>,
+			suffix: string
+		): EventClass | null => {
+			const modelName = (
+				model.constructor as ModelStatic<any>
+			).getTableName();
+			let EventClass;
+
+			try {
+				EventClass = this.getEvent(`${modelName}.${suffix}`);
+			} catch (error) {
+				// TODO: Catch and ignore only event not found
+				return null;
+			}
+
+			return EventClass;
+		};
+
+		this._sequelize!.addHook("afterCreate", async model => {
+			const EventClass = getEventFromModel(model, "created");
+			if (!EventClass) return;
+
+			await EventsModule.publish(
+				new EventClass({
+					doc: model
+				})
+			);
+		});
+
+		this._sequelize!.addHook("afterUpdate", async model => {
+			const EventClass = getEventFromModel(model, "updated");
+			if (!EventClass) return;
+
+			await EventsModule.publish(
+				new EventClass(
+					{
+						doc: model,
+						oldDoc: {
+							_id: model.get("_id")
+						}
+					},
+					model.get("_id")!.toString()
+				)
+			);
+		});
+
+		this._sequelize!.addHook("afterDestroy", async model => {
+			const EventClass = getEventFromModel(model, "deleted");
+			if (!EventClass) return;
+
+			await EventsModule.publish(
+				new EventClass(
+					{
+						oldDoc: {
+							_id: model.get("_id")
+						}
+					},
+					model.get("_id")!.toString()
+				)
+			);
+		});
+
+		// Make sure every update/destroy has individualhooks
+
+		this._sequelize!.addHook("beforeValidate", async model => {
+			// TODO review
+			if (model.isNewRecord) {
+				const key = (model.constructor as ModelStatic<any>)
+					.primaryKeyAttribute;
+				model.dataValues[key] ??= ObjectID();
+			}
+		});
+	}
+
 	/**
 	 * setupSequelize - Setup sequelize instance
 	 */
 	private async _setupSequelize() {
-		this._sequelize = await this._createSequelizeInstance({
-			hooks: this._getSequelizeHooks()
-		});
+		this._sequelize = await this._createSequelizeInstance({});
 
 		await this._sequelize.authenticate();
+
+		this._setupSequelizeHooks();
 
 		const setupFunctions: (() => Promise<void>)[] = [];
 
@@ -203,82 +280,6 @@ export class DataModule extends BaseModule {
 		const camelizedName = inflection.singularize(inflection.camelize(name));
 
 		return this._sequelize.model(camelizedName) as ModelStatic<ModelType>; // This fails - news has not been defined
-	}
-
-	private _getSequelizeHooks(): Options["hooks"] {
-		return {
-			afterCreate: async model => {
-				const modelName = (
-					model.constructor as ModelStatic<any>
-				).getTableName();
-				let EventClass;
-
-				try {
-					EventClass = this.getEvent(`${modelName}.created`);
-				} catch (error) {
-					// TODO: Catch and ignore only event not found
-					return;
-				}
-
-				await EventsModule.publish(
-					new EventClass({
-						doc: model.get()
-					})
-				);
-			},
-			afterUpdate: async model => {
-				const modelName = (
-					model.constructor as ModelStatic<any>
-				).getTableName();
-				let EventClass;
-
-				try {
-					EventClass = this.getEvent(`${modelName}.updated`);
-				} catch (error) {
-					// TODO: Catch and ignore only event not found
-					return;
-				}
-
-				await EventsModule.publish(
-					new EventClass(
-						{
-							doc: model.get(),
-							oldDoc: model.previous()
-						},
-						model.get("_id") ?? model.previous("_id")
-					)
-				);
-			},
-			afterDestroy: async model => {
-				const modelName = (
-					model.constructor as ModelStatic<any>
-				).getTableName();
-				let EventClass;
-
-				try {
-					EventClass = this.getEvent(`${modelName}.deleted`);
-				} catch (error) {
-					// TODO: Catch and ignore only event not found
-					return;
-				}
-
-				await EventsModule.publish(
-					new EventClass(
-						{
-							oldDoc: model.previous()
-						},
-						model.previous("_id")
-					)
-				);
-			},
-			beforeValidate: async model => {
-				if (model.isNewRecord) {
-					const key = (model.constructor as ModelStatic<any>)
-						.primaryKeyAttribute;
-					model.dataValues[key] ??= ObjectID();
-				}
-			}
-		};
 	}
 
 	private async _loadModelJobs(modelClassName: string) {

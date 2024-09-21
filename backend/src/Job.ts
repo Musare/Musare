@@ -233,6 +233,9 @@ export default abstract class Job {
 
 	protected abstract _execute(): Promise<unknown>;
 
+	protected _transformResponse: null | ((response: unknown) => unknown) =
+		null;
+
 	/**
 	 * execute - Execute job
 	 *
@@ -259,7 +262,10 @@ export default abstract class Job {
 
 			await this._authorize();
 
-			const data = await this._execute();
+			let response = await this._execute();
+
+			if (this._transformResponse)
+				response = this._transformResponse(response);
 
 			const socketId = this._context.getSocketId();
 			const callbackRef = this._context.getCallbackRef();
@@ -271,7 +277,7 @@ export default abstract class Job {
 							socketId,
 							callbackRef,
 							status: "success",
-							data
+							data: response
 						},
 						this.getUuid()
 					)
@@ -288,7 +294,7 @@ export default abstract class Job {
 				JobStatisticsType.SUCCESSFUL
 			);
 
-			return data;
+			return response;
 		} catch (error: unknown) {
 			const message = getErrorMessage(error);
 

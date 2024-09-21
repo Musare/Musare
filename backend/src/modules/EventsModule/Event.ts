@@ -1,3 +1,4 @@
+import transformModels from "@/utils/transformModels";
 import User from "../DataModule/models/User";
 
 export default abstract class Event {
@@ -12,7 +13,7 @@ export default abstract class Event {
 	protected _scope?: string;
 
 	public constructor(data: any, scope?: string) {
-		this._data = data;
+		this._data = transformModels(data);
 		this._scope = scope;
 	}
 

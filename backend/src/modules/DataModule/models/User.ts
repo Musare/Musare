@@ -317,10 +317,6 @@ export const setup = async () => {
 	// User.afterSave(async record => {});
 
 	// User.afterDestroy(async record => {});
-
-	User.addHook("afterFind", (user, options) => {
-		console.log("AFTER FIND USER", user, options);
-	});
 };
 
 export default User;

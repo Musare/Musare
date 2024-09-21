@@ -150,6 +150,14 @@ export const schema = {
 			return `stations`;
 		}
 	},
+	_associations: {
+		type: DataTypes.VIRTUAL,
+		get() {
+			return {
+				owner: "minifiedUsers"
+			};
+		}
+	},
 	// Temporary
 	djs: {
 		type: DataTypes.VIRTUAL,
@@ -163,12 +171,7 @@ export const options = {};
 
 export const setup = async () => {
 	// Station.afterSave(async record => {});
-
 	// Station.afterDestroy(async record => {});
-
-	Station.addHook("afterFind", (station, options) => {
-		console.log("AFTER FIND STATION", station, options);
-	});
 };
 
 export default Station;

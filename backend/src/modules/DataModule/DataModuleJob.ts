@@ -2,6 +2,7 @@ import { isValidObjectId } from "mongoose";
 import { Model, ModelStatic } from "sequelize";
 import Job, { JobOptions } from "@/Job";
 import DataModule from "../DataModule";
+import transformModels from "@/utils/transformModels";
 
 export default abstract class DataModuleJob extends Job {
 	protected static _model: ModelStatic<any>;
@@ -91,4 +92,7 @@ export default abstract class DataModuleJob extends Job {
 
 		await this._context.assertPermission(this.getPath());
 	}
+
+	protected _transformResponse = (response: unknown) =>
+		transformModels(response);
 }
