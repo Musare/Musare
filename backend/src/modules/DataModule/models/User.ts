@@ -274,6 +274,10 @@ export const schema = {
 	},
 	createdAt: DataTypes.DATE,
 	updatedAt: DataTypes.DATE,
+	hasPassword: {
+		type: DataTypes.BOOLEAN,
+		readonly: true
+	},
 	_name: {
 		type: DataTypes.VIRTUAL,
 		get() {

@@ -125,6 +125,14 @@ export const up = async ({
 		createdAt: DataTypes.DATE,
 		updatedAt: DataTypes.DATE
 	});
+
+	await sequelize.query(
+		"ALTER TABLE users " +
+			'ADD COLUMN "hasPassword" ' +
+			"BOOLEAN GENERATED ALWAYS AS " +
+			'("password" IS NOT NULL) ' +
+			"STORED"
+	);
 };
 
 export const down = async ({
