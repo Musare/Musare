@@ -37,7 +37,7 @@ const columns = ref<TableColumn[]>([
 	{
 		name: "profilePicture",
 		displayName: "Image",
-		properties: ["avatar", "name", "username"],
+		properties: ["avatarType", "name", "username"],
 		sortable: false,
 		resizable: false,
 		minWidth: 71,
@@ -66,8 +66,8 @@ const columns = ref<TableColumn[]>([
 	{
 		name: "githubId",
 		displayName: "GitHub ID",
-		properties: ["services.github.id"],
-		sortProperty: "services.github.id",
+		properties: ["githubId"],
+		sortProperty: "githubId",
 		minWidth: 115,
 		defaultWidth: 115
 	},
@@ -88,15 +88,15 @@ const columns = ref<TableColumn[]>([
 	{
 		name: "emailAddress",
 		displayName: "Email Address",
-		properties: ["email.address"],
-		sortProperty: "email.address",
+		properties: ["emailAddress"],
+		sortProperty: "emailAddress",
 		defaultVisibility: "hidden"
 	},
 	{
 		name: "emailVerified",
 		displayName: "Email Verified",
-		properties: ["email.verified"],
-		sortProperty: "email.verified",
+		properties: ["emailVerified"],
+		sortProperty: "emailVerified",
 		defaultVisibility: "hidden",
 		minWidth: 140,
 		defaultWidth: 140
@@ -104,8 +104,8 @@ const columns = ref<TableColumn[]>([
 	{
 		name: "songsRequested",
 		displayName: "Songs Requested",
-		properties: ["statistics.songsRequested"],
-		sortProperty: "statistics.songsRequested",
+		properties: ["songsRequested"],
+		sortProperty: "songsRequested",
 		minWidth: 170,
 		defaultWidth: 170
 	}
@@ -243,7 +243,9 @@ onMounted(() => {
 			</template>
 			<template #column-profilePicture="slotProps">
 				<profile-picture
-					:avatar="slotProps.item.avatar"
+					:type="slotProps.item.avatarType"
+					:color="slotProps.item.avatarColor"
+					:url="slotProps.item.avatarUrl"
 					:name="
 						slotProps.item.name
 							? slotProps.item.name
@@ -268,9 +270,9 @@ onMounted(() => {
 			</template>
 			<template #column-githubId="slotProps">
 				<span
-					v-if="slotProps.item.services.github"
-					:title="slotProps.item.services.github.id"
-					>{{ slotProps.item.services.github.id }}</span
+					v-if="slotProps.item.githubId"
+					:title="slotProps.item.githubId"
+					>{{ slotProps.item.githubId }}</span
 				>
 			</template>
 			<template #column-hasPassword="slotProps">
@@ -284,18 +286,18 @@ onMounted(() => {
 				}}</span>
 			</template>
 			<template #column-emailAddress="slotProps">
-				<span :title="slotProps.item.email.address">{{
-					slotProps.item.email.address
+				<span :title="slotProps.item.emailAddress">{{
+					slotProps.item.emailAddress
 				}}</span>
 			</template>
 			<template #column-emailVerified="slotProps">
-				<span :title="slotProps.item.email.verified">{{
-					slotProps.item.email.verified
+				<span :title="slotProps.item.emailVerified">{{
+					slotProps.item.emailVerified
 				}}</span>
 			</template>
 			<template #column-songsRequested="slotProps">
-				<span :title="slotProps.item.statistics.songsRequested">{{
-					slotProps.item.statistics.songsRequested
+				<span :title="slotProps.item.songsRequested">{{
+					slotProps.item.songsRequested
 				}}</span>
 			</template>
 		</advanced-table>
