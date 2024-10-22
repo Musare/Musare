@@ -3,7 +3,7 @@ import { computed, ref } from "vue";
 import validation from "@/validation";
 import { useWebsocketStore } from "@/stores/websocket";
 import { useConfigStore } from "@/stores/config";
-import { User } from "@/types/user";
+import Model from "@/Model";
 
 export const useUserAuthStore = defineStore("userAuth", () => {
 	const configStore = useConfigStore();
@@ -19,7 +19,7 @@ export const useUserAuthStore = defineStore("userAuth", () => {
 			((basicUser: { name: string; username: string }) => void)[]
 		>
 	>({});
-	const currentUser = ref<User | null>();
+	const currentUser = ref<Model | null>();
 	const banned = ref(false);
 	const ban = ref<{
 		reason?: string;

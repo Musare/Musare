@@ -4,7 +4,6 @@ import { defineAsyncComponent, ref, watch, onMounted } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { GenericResponse } from "@musare_types/actions/GenericActions";
-import { GetPreferencesResponse } from "@musare_types/actions/UsersActions";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useConfigStore } from "@/stores/config";
 import { useUserAuthStore } from "@/stores/userAuth";
@@ -41,14 +40,10 @@ const broadcastChannel = ref({
 const disconnectedMessage = ref();
 
 const { christmas } = storeToRefs(configStore);
-const { loggedIn, banned } = storeToRefs(userAuthStore);
+const { currentUser, loggedIn, banned } = storeToRefs(userAuthStore);
 const { nightmode, activityWatch } = storeToRefs(userPreferencesStore);
 const {
 	changeNightmode,
-	changeAutoSkipDisliked,
-	changeActivityLogPublic,
-	changeAnonymousSongRequests,
-	changeActivityWatch
 } = userPreferencesStore;
 const { activeModals } = storeToRefs(modalsStore);
 const { openModal, closeCurrentModal } = modalsStore;
@@ -101,6 +96,11 @@ watch(activityWatch, enabled => {
 watch(christmas, enabled => {
 	if (enabled) enableChristmasMode();
 	else disableChristmasMode();
+});
+watch(currentUser, user => {
+	if (!user) return;
+
+	changeNightmode(user.nightmode);
 });
 
 onMounted(async () => {
@@ -182,23 +182,6 @@ onMounted(async () => {
 					closeCurrentModal();
 			}
 		});
-
-		socket.dispatch(
-			"users.getPreferences",
-			(res: GetPreferencesResponse) => {
-				if (res.status === "success") {
-					const { preferences } = res.data;
-
-					changeAutoSkipDisliked(preferences.autoSkipDisliked);
-					changeNightmode(preferences.nightmode);
-					changeActivityLogPublic(preferences.activityLogPublic);
-					changeAnonymousSongRequests(
-						preferences.anonymousSongRequests
-					);
-					changeActivityWatch(preferences.activityWatch);
-				}
-			}
-		);
 
 		openModal("whatIsNew");
 

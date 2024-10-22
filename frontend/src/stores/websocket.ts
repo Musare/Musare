@@ -5,6 +5,7 @@ import { forEachIn } from "@common/utils/forEachIn";
 import { useConfigStore } from "./config";
 import { useUserAuthStore } from "./userAuth";
 import ms from "@/ms";
+import { useModelStore } from "./model";
 
 export const useWebsocketStore = defineStore("websocket", () => {
 	const configStore = useConfigStore();
@@ -182,7 +183,13 @@ export const useWebsocketStore = defineStore("websocket", () => {
 	subscribe("ready", async data => {
 		configStore.$patch(data.config);
 
-		userAuthStore.currentUser = data.user;
+		const modelStore = useModelStore();
+
+		ready.value = true;
+
+		userAuthStore.currentUser = data.user
+			? await modelStore.registerModel(data.user)
+			: null;
 		userAuthStore.gotData = true;
 
 		if (userAuthStore.loggedIn) {
@@ -191,8 +198,6 @@ export const useWebsocketStore = defineStore("websocket", () => {
 
 		if (configStore.experimental.media_session) ms.initialize();
 		else ms.uninitialize();
-
-		ready.value = true;
 
 		await userAuthStore.updatePermissions();
 
