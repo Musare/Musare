@@ -317,7 +317,11 @@ export class DataModule extends BaseModule {
 				`${jobFile.path}/${jobFile.name}`
 			);
 
-			this._jobs[JobClass.getName()] = JobClass;
+			const jobName = JobClass.getName();
+			if (this._jobs[jobName]) {
+				throw new Error(`Two jobs with the same name: ${jobName}`);
+			}
+			this._jobs[jobName] = JobClass;
 		});
 	}
 
