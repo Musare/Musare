@@ -293,7 +293,19 @@ export const schema = {
 	}
 };
 
-export const options = {};
+export const options = {
+	defaultScope: {
+		attributes: {
+			exclude: [
+				"emailVerificationToken",
+				"password",
+				"passwordResetCode",
+				"passwordSetCode",
+				"githubAccessToken"
+			]
+		}
+	}
+};
 
 export const setup = async () => {
 	User.hasMany(Session, {
