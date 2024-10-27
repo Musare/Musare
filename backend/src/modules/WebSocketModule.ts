@@ -2,7 +2,7 @@ import config from "config";
 import express from "express";
 import http, { Server, IncomingMessage } from "node:http";
 import { RawData, WebSocketServer } from "ws";
-import { Types, isObjectIdOrHexString } from "mongoose";
+import { isObjectIdOrHexString } from "mongoose";
 import { forEachIn } from "@common/utils/forEachIn";
 import { getErrorMessage } from "@common/utils/getErrorMessage";
 import BaseModule from "@/BaseModule";
@@ -300,19 +300,17 @@ export class WebSocketModule extends BaseModule {
 	}
 
 	/**
-	 * getSocket - Get websocket client
+	 * getSocket - Get websocket client by id
 	 */
-	public async getSocket(socketId?: string, sessionId?: Types.ObjectId) {
+	public async getSocketById(socketId: string) {
 		if (!this._wsServer) return null;
 
 		for (const clients of this._wsServer.clients.entries() as IterableIterator<
 			[WebSocket, WebSocket]
 		>) {
-			const socket = clients.find(socket => {
-				if (socket.getSocketId() === socketId) return true;
-				if (socket.getSessionId() === sessionId) return true;
-				return false;
-			});
+			const socket = clients.find(
+				socket => socket.getSocketId() === socketId
+			);
 
 			if (socket) return socket;
 		}
@@ -328,7 +326,7 @@ export class WebSocketModule extends BaseModule {
 		channel: string,
 		...values: unknown[]
 	) {
-		const socket = await this.getSocket(socketId);
+		const socket = await this.getSocketById(socketId);
 
 		if (!socket) return;
 
