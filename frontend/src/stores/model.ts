@@ -254,7 +254,7 @@ export const useModelStore = defineStore("model", () => {
 
 			model.removeUse();
 
-			if (model.getUses() > 1) return;
+			if (model.getUses() > 0) return;
 
 			// TODO only do this after a grace period
 			removeModels.push(model);
