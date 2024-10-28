@@ -3,9 +3,19 @@ import { ref, computed, onMounted } from "vue";
 import { useConfigStore } from "@/stores/config";
 
 const props = defineProps({
-	avatar: {
-		type: Object,
-		default: () => {}
+	type: {
+		type: String,
+		default: "initials"
+	},
+	color: {
+		type: String,
+		required: false,
+		default: "blue"
+	},
+	url: {
+		type: String,
+		required: false,
+		default: null
 	},
 	name: {
 		type: String,
@@ -36,13 +46,11 @@ onMounted(async () => {
 <template>
 	<img
 		class="profile-picture using-gravatar"
-		v-if="avatar.type === 'gravatar'"
-		:src="
-			avatar.url ? `${avatar.url}?d=${notes}&s=250` : '/assets/notes.png'
-		"
+		v-if="type === 'gravatar'"
+		:src="url ? `${url}?d=${notes}&s=250` : '/assets/notes.png'"
 		onerror="this.src='/assets/notes.png'; this.onerror=''"
 	/>
-	<div class="profile-picture using-initials" :class="avatar.color" v-else>
+	<div class="profile-picture using-initials" :class="color" v-else>
 		<span>{{ initials }}</span>
 	</div>
 </template>
