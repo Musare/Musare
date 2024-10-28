@@ -105,28 +105,33 @@ export const useForm = (
 		);
 	};
 
-	const validate = () => {
+	const validate = (keys: string | string[] = []) => {
+		const inputNames = Array.isArray(keys) ? keys : [keys];
 		const invalid: Record<string, string[]> = {};
-		Object.entries(inputs.value).forEach(([name, input]) => {
-			input.errors = [];
-			if (
-				input.required &&
-				(input.value === undefined ||
-					input.value === "" ||
-					input.value === null)
+		Object.entries(inputs.value)
+			.filter(
+				([name]) => inputNames.length === 0 || inputNames.includes(name)
 			)
-				input.errors.push(`Invalid ${name}. Please provide value`);
-			if (input.validate) {
-				const valid = input.validate(input.value, inputs);
-				if (valid !== true) {
-					input.errors.push(
-						valid === false ? `Invalid ${name}` : valid
-					);
+			.forEach(([name, input]) => {
+				input.errors = [];
+				if (
+					input.required &&
+					(input.value === undefined ||
+						input.value === "" ||
+						input.value === null)
+				)
+					input.errors.push(`Invalid ${name}. Please provide value`);
+				if (input.validate) {
+					const valid = input.validate(input.value, inputs);
+					if (valid !== true) {
+						input.errors.push(
+							valid === false ? `Invalid ${name}` : valid
+						);
+					}
 				}
-			}
-			if (input.errors.length > 0)
-				invalid[name] = input.errors.join(", ");
-		});
+				if (input.errors.length > 0)
+					invalid[name] = input.errors.join(", ");
+			});
 		return invalid;
 	};
 
@@ -267,6 +272,7 @@ export const useForm = (
 		inputs,
 		unsavedChanges,
 		saveButton,
+		validate,
 		save,
 		setValue,
 		setOriginalValue,
