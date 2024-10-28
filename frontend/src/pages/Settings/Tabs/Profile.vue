@@ -1,11 +1,13 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref } from "vue";
+import { defineAsyncComponent, onMounted } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
-import { useSettingsStore } from "@/stores/settings";
-import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
 import validation from "@/validation";
+import { useForm } from "@/composables/useForm";
+import { useEvents } from "@/composables/useEvents";
+import { useModels } from "@/composables/useModels";
+import { useWebsocketStore } from "@/stores/websocket";
 
 const ProfilePicture = defineAsyncComponent(
 	() => import("@/components/ProfilePicture.vue")
@@ -14,164 +16,81 @@ const SaveButton = defineAsyncComponent(
 	() => import("@/components/SaveButton.vue")
 );
 
-const settingsStore = useSettingsStore();
+const { runJob } = useWebsocketStore();
+const { onReady } = useEvents();
+const { registerModel } = useModels();
+
 const userAuthStore = useUserAuthStore();
 
-const { socket } = useWebsocketsStore();
-
-const saveButton = ref();
-
 const { currentUser } = storeToRefs(userAuthStore);
-const { originalUser, modifiedUser } = settingsStore;
 
-const { updateOriginalUser } = settingsStore;
-
-const changeName = () => {
-	modifiedUser.name = modifiedUser.name.replaceAll(/ +/g, " ").trim();
-	const { name } = modifiedUser;
-
-	if (!validation.isLength(name, 1, 64))
-		return new Toast("Name must have between 1 and 64 characters.");
-
-	if (!validation.regex.name.test(name))
-		return new Toast(
-			"Invalid name format. Only letters, numbers, spaces, apostrophes, underscores and hyphens are allowed."
-		);
-	if (name.replaceAll(/[ .'_-]/g, "").length === 0)
-		return new Toast(
-			"Invalid name format. Only letters, numbers, spaces, apostrophes, underscores and hyphens are allowed, and there has to be at least one letter or number."
-		);
-
-	saveButton.value.status = "disabled";
-
-	return socket.dispatch(
-		"users.updateName",
-		currentUser.value?._id,
-		name,
-		res => {
-			if (res.status !== "success") {
-				new Toast(res.message);
-				saveButton.value.handleFailedSave();
-			} else {
-				new Toast("Successfully changed name");
-
-				updateOriginalUser({
-					property: "name",
-					value: name
-				});
-
-				saveButton.value.handleSuccessfulSave();
+const { inputs, saveButton, save, setModelValues } = useForm(
+	{
+		name: {
+			value: null,
+			validate: (value: string) => {
+				if (!validation.isLength(value, 1, 64))
+					return "Name must have between 1 and 64 characters.";
+				if (!validation.regex.name.test(value))
+					return "Invalid name format. Only letters, numbers, spaces, apostrophes, underscores and hyphens are allowed.";
+				if (value.replaceAll(/[ .'_-]/g, "").length === 0)
+					return "Invalid name format. Only letters, numbers, spaces, apostrophes, underscores and hyphens are allowed, and there has to be at least one letter or number.";
+				return true;
 			}
-		}
-	);
-};
-
-const changeLocation = () => {
-	const { location } = modifiedUser;
-
-	if (!validation.isLength(location, 0, 50))
-		return new Toast("Location must have between 0 and 50 characters.");
-
-	saveButton.value.status = "disabled";
-
-	return socket.dispatch(
-		"users.updateLocation",
-		currentUser.value?._id,
-		location,
-		res => {
-			if (res.status !== "success") {
-				new Toast(res.message);
-				saveButton.value.handleFailedSave();
-			} else {
-				new Toast("Successfully changed location");
-
-				updateOriginalUser({
-					property: "location",
-					value: location
-				});
-
-				saveButton.value.handleSuccessfulSave();
+		},
+		location: {
+			value: null,
+			required: false,
+			validate: (value?: string) => {
+				if (value === null) return true;
+				if (!validation.isLength(value, 0, 50))
+					return "Location must be less than 50 characters.";
+				return true;
 			}
-		}
-	);
-};
-
-const changeBio = () => {
-	const { bio } = modifiedUser;
-
-	if (!validation.isLength(bio, 0, 200))
-		return new Toast("Bio must have between 0 and 200 characters.");
-
-	saveButton.value.status = "disabled";
-
-	return socket.dispatch(
-		"users.updateBio",
-		currentUser.value?._id,
-		bio,
-		res => {
-			if (res.status !== "success") {
-				new Toast(res.message);
-				saveButton.value.handleFailedSave();
-			} else {
-				new Toast("Successfully changed bio");
-
-				updateOriginalUser({
-					property: "bio",
-					value: bio
-				});
-
-				saveButton.value.handleSuccessfulSave();
+		},
+		bio: {
+			value: null,
+			required: false,
+			validate: (value?: string) => {
+				if (value === null) return true;
+				if (!validation.isLength(value, 0, 200))
+					return "Bio must be less than 200 characters.";
+				return true;
 			}
-		}
-	);
-};
-
-const changeAvatar = () => {
-	const { avatar } = modifiedUser;
-
-	saveButton.value.status = "disabled";
-
-	return socket.dispatch(
-		"users.updateAvatar",
-		currentUser.value?._id,
-		avatar,
-		res => {
-			if (res.status !== "success") {
-				new Toast(res.message);
-				saveButton.value.handleFailedSave();
-			} else {
-				new Toast("Successfully updated avatar");
-
-				updateOriginalUser({
-					property: "avatar",
-					value: avatar
+		},
+		avatarType: "initials",
+		avatarColor: "blue"
+	},
+	({ status, messages, values }, resolve, reject) => {
+		if (status === "success") {
+			runJob(`data.users.updateById`, {
+				_id: currentUser.value._id,
+				query: values
+			})
+				.then(resolve)
+				.catch(reject);
+		} else {
+			if (status === "unchanged") new Toast(messages.unchanged);
+			else if (status === "error")
+				Object.values(messages).forEach(message => {
+					new Toast({ content: message, timeout: 8000 });
 				});
-
-				saveButton.value.handleSuccessfulSave();
-			}
+			resolve();
 		}
-	);
-};
-
-const saveChanges = () => {
-	const nameChanged = modifiedUser.name !== originalUser.name;
-	const locationChanged = modifiedUser.location !== originalUser.location;
-	const bioChanged = modifiedUser.bio !== originalUser.bio;
-	const avatarChanged =
-		modifiedUser.avatar.type !== originalUser.avatar.type ||
-		modifiedUser.avatar.color !== originalUser.avatar.color;
-
-	if (nameChanged) changeName();
-	if (locationChanged) changeLocation();
-	if (bioChanged) changeBio();
-	if (avatarChanged) changeAvatar();
-
-	if (!avatarChanged && !bioChanged && !locationChanged && !nameChanged) {
-		saveButton.value.handleFailedSave();
-
-		new Toast("Please make a change before saving.");
 	}
-};
+);
+
+onMounted(async () => {
+	await onReady(async () => {
+		setModelValues(await registerModel(currentUser.value), [
+			"name",
+			"location",
+			"bio",
+			"avatarType",
+			"avatarColor"
+		]);
+	});
+});
 </script>
 
 <template>
@@ -183,31 +102,30 @@ const saveChanges = () => {
 
 		<hr class="section-horizontal-rule" />
 
-		<div
-			class="control is-expanded avatar-selection-outer-container"
-			v-if="modifiedUser.avatar"
-		>
+		<div class="control is-expanded avatar-selection-outer-container">
 			<label>Avatar</label>
 			<div id="avatar-selection-inner-container">
 				<profile-picture
-					:avatar="modifiedUser.avatar"
+					:type="inputs.avatarType.value"
+					:color="inputs.avatarColor.value"
+					:url="currentUser.avatarUrl"
 					:name="
-						modifiedUser.name
-							? modifiedUser.name
-							: modifiedUser.username
+						currentUser.name
+							? currentUser.name
+							: currentUser.username
 					"
 				/>
 				<div class="select">
-					<select v-model="modifiedUser.avatar.type">
+					<select v-model="inputs.avatarType.value">
 						<option value="gravatar">Using Gravatar</option>
 						<option value="initials">Based on initials</option>
 					</select>
 				</div>
 				<div
 					class="select"
-					v-if="modifiedUser.avatar.type === 'initials'"
+					v-if="inputs.avatarType.value === 'initials'"
 				>
-					<select v-model="modifiedUser.avatar.color">
+					<select v-model="inputs.avatarColor.value">
 						<option value="blue">Blue</option>
 						<option value="orange">Orange</option>
 						<option value="green">Green</option>
@@ -225,11 +143,11 @@ const saveChanges = () => {
 				type="text"
 				placeholder="Enter name here..."
 				maxlength="64"
-				v-model="modifiedUser.name"
+				v-model="inputs.name.value"
 			/>
-			<span v-if="modifiedUser.name" class="character-counter"
-				>{{ modifiedUser.name.length }}/64</span
-			>
+			<span v-if="inputs.name.value" class="character-counter">
+				{{ inputs.name.value.length }}/64
+			</span>
 		</p>
 		<p class="control is-expanded">
 			<label for="location">Location</label>
@@ -239,11 +157,11 @@ const saveChanges = () => {
 				type="text"
 				placeholder="Enter location here..."
 				maxlength="50"
-				v-model="modifiedUser.location"
+				v-model="inputs.location.value"
 			/>
-			<span v-if="modifiedUser.location" class="character-counter"
-				>{{ modifiedUser.location.length }}/50</span
-			>
+			<span v-if="inputs.location.value" class="character-counter">
+				{{ inputs.location.value.length }}/50
+			</span>
 		</p>
 		<p class="control is-expanded">
 			<label for="bio">Bio</label>
@@ -253,14 +171,14 @@ const saveChanges = () => {
 				placeholder="Enter bio here..."
 				maxlength="200"
 				autocomplete="off"
-				v-model="modifiedUser.bio"
+				v-model="inputs.bio.value"
 			/>
-			<span v-if="modifiedUser.bio" class="character-counter"
-				>{{ modifiedUser.bio.length }}/200</span
-			>
+			<span v-if="inputs.bio.value" class="character-counter">
+				{{ inputs.bio.value.length }}/200
+			</span>
 		</p>
 
-		<SaveButton ref="saveButton" @clicked="saveChanges()" />
+		<SaveButton ref="saveButton" @clicked="save()" />
 	</div>
 </template>
 

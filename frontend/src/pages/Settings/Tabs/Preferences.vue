@@ -1,103 +1,61 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, onMounted } from "vue";
+import { defineAsyncComponent, onMounted } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
-import { useWebsocketsStore } from "@/stores/websockets";
-import { useUserPreferencesStore } from "@/stores/userPreferences";
+import { useForm } from "@/composables/useForm";
+import { useEvents } from "@/composables/useEvents";
+import { useModels } from "@/composables/useModels";
+import { useWebsocketStore } from "@/stores/websocket";
+import { useUserAuthStore } from "@/stores/userAuth";
 
 const SaveButton = defineAsyncComponent(
 	() => import("@/components/SaveButton.vue")
 );
 
-const { socket } = useWebsocketsStore();
-const userPreferencesStore = useUserPreferencesStore();
+const { runJob } = useWebsocketStore();
+const { onReady } = useEvents();
+const { registerModel } = useModels();
 
-const saveButton = ref();
+const userAuthStore = useUserAuthStore();
 
-const localNightmode = ref(false);
-const localAutoSkipDisliked = ref(false);
-const localActivityLogPublic = ref(false);
-const localAnonymousSongRequests = ref(false);
-const localActivityWatch = ref(false);
+const { currentUser } = storeToRefs(userAuthStore);
 
-const {
-	nightmode,
-	autoSkipDisliked,
-	activityLogPublic,
-	anonymousSongRequests,
-	activityWatch
-} = storeToRefs(userPreferencesStore);
-
-const saveChanges = () => {
-	if (
-		localNightmode.value === nightmode.value &&
-		localAutoSkipDisliked.value === autoSkipDisliked.value &&
-		localActivityLogPublic.value === activityLogPublic.value &&
-		localAnonymousSongRequests.value === anonymousSongRequests.value &&
-		localActivityWatch.value === activityWatch.value
-	) {
-		new Toast("Please make a change before saving.");
-
-		return saveButton.value.handleFailedSave();
-	}
-
-	saveButton.value.status = "disabled";
-
-	return socket.dispatch(
-		"users.updatePreferences",
-		{
-			nightmode: localNightmode.value,
-			autoSkipDisliked: localAutoSkipDisliked.value,
-			activityLogPublic: localActivityLogPublic.value,
-			anonymousSongRequests: localAnonymousSongRequests.value,
-			activityWatch: localActivityWatch.value
-		},
-		res => {
-			if (res.status !== "success") {
-				new Toast(res.message);
-				return saveButton.value.handleFailedSave();
-			}
-
-			new Toast("Successfully updated preferences");
-			return saveButton.value.handleSuccessfulSave();
+const { inputs, saveButton, save, setModelValues } = useForm(
+	{
+		nightmode: false,
+		autoSkipDisliked: false,
+		activityLogPublic: false,
+		anonymousSongRequests: false,
+		activityWatch: false
+	},
+	({ status, messages, values }, resolve, reject) => {
+		if (status === "success") {
+			runJob(`data.users.updateById`, {
+				_id: currentUser.value._id,
+				query: values
+			})
+				.then(resolve)
+				.catch(reject);
+		} else {
+			if (status === "unchanged") new Toast(messages.unchanged);
+			else if (status === "error")
+				Object.values(messages).forEach(message => {
+					new Toast({ content: message, timeout: 8000 });
+				});
+			resolve();
 		}
-	);
-};
+	}
+);
 
-onMounted(() => {
-	socket.onConnect(() => {
-		socket.dispatch("users.getPreferences", res => {
-			const { preferences } = res.data;
-
-			if (res.status === "success") {
-				localNightmode.value = preferences.nightmode;
-				localAutoSkipDisliked.value = preferences.autoSkipDisliked;
-				localActivityLogPublic.value = preferences.activityLogPublic;
-				localAnonymousSongRequests.value =
-					preferences.anonymousSongRequests;
-				localActivityWatch.value = preferences.activityWatch;
-			}
-		});
-	});
-
-	socket.on("keep.event:user.preferences.updated", res => {
-		const { preferences } = res.data;
-
-		if (preferences.nightmode !== undefined)
-			localNightmode.value = preferences.nightmode;
-
-		if (preferences.autoSkipDisliked !== undefined)
-			localAutoSkipDisliked.value = preferences.autoSkipDisliked;
-
-		if (preferences.activityLogPublic !== undefined)
-			localActivityLogPublic.value = preferences.activityLogPublic;
-
-		if (preferences.anonymousSongRequests !== undefined)
-			localAnonymousSongRequests.value =
-				preferences.anonymousSongRequests;
-
-		if (preferences.activityWatch !== undefined)
-			localActivityWatch.value = preferences.activityWatch;
+onMounted(async () => {
+	await onReady(async () => {
+		setModelValues(await registerModel(currentUser.value), [
+			"nightmode",
+			"autoSkipDisliked",
+			"activityLogPublic",
+			"anonymousSongRequests",
+			"activityWatch"
+		]);
 	});
 });
 </script>
@@ -115,7 +73,7 @@ onMounted(() => {
 				<input
 					type="checkbox"
 					id="nightmode"
-					v-model="localNightmode"
+					v-model="inputs.nightmode.value"
 				/>
 				<span class="slider round"></span>
 			</label>
@@ -130,7 +88,7 @@ onMounted(() => {
 				<input
 					type="checkbox"
 					id="autoSkipDisliked"
-					v-model="localAutoSkipDisliked"
+					v-model="inputs.autoSkipDisliked.value"
 				/>
 				<span class="slider round"></span>
 			</label>
@@ -145,7 +103,7 @@ onMounted(() => {
 				<input
 					type="checkbox"
 					id="activityLogPublic"
-					v-model="localActivityLogPublic"
+					v-model="inputs.activityLogPublic.value"
 				/>
 				<span class="slider round"></span>
 			</label>
@@ -160,7 +118,7 @@ onMounted(() => {
 				<input
 					type="checkbox"
 					id="anonymousSongRequests"
-					v-model="localAnonymousSongRequests"
+					v-model="inputs.anonymousSongRequests.value"
 				/>
 				<span class="slider round"></span>
 			</label>
@@ -176,7 +134,7 @@ onMounted(() => {
 				<input
 					type="checkbox"
 					id="activityWatch"
-					v-model="localActivityWatch"
+					v-model="inputs.activityWatch.value"
 				/>
 				<span class="slider round"></span>
 			</label>
@@ -187,6 +145,6 @@ onMounted(() => {
 			</label>
 		</p>
 
-		<SaveButton ref="saveButton" @clicked="saveChanges()" />
+		<SaveButton ref="saveButton" @clicked="save()" />
 	</div>
 </template>

@@ -1,9 +1,6 @@
 <script setup lang="ts">
 import { useRoute } from "vue-router";
 import { onMounted, defineAsyncComponent } from "vue";
-import Toast from "toasters";
-import { useSettingsStore } from "@/stores/settings";
-import { useWebsocketsStore } from "@/stores/websockets";
 import { useTabQueryHandler } from "@/composables/useTabQueryHandler";
 
 const MainHeader = defineAsyncComponent(
@@ -25,15 +22,10 @@ const PreferencesSettings = defineAsyncComponent(
 	() => import("./Tabs/Preferences.vue")
 );
 
-const settingsStore = useSettingsStore();
 const route = useRoute();
 const { tab, showTab } = useTabQueryHandler("");
 
-const { socket } = useWebsocketsStore();
-
-const { setUser, updateOriginalUser } = settingsStore;
-
-onMounted(() => {
+onMounted(async () => {
 	if (
 		route.query.tab === "profile" ||
 		route.query.tab === "security" ||
@@ -42,43 +34,6 @@ onMounted(() => {
 	)
 		tab.value = route.query.tab;
 	else tab.value = "profile";
-
-	// this.localNightmode = this.nightmode;
-
-	socket.onConnect(() => {
-		socket.dispatch("users.findBySession", res => {
-			if (res.status === "success") setUser(res.data.user);
-			else new Toast("You're not currently signed in.");
-		});
-	});
-
-	socket.on("event:user.password.linked", () =>
-		updateOriginalUser({
-			property: "password",
-			value: true
-		})
-	);
-
-	socket.on("event:user.password.unlinked", () =>
-		updateOriginalUser({
-			property: "password",
-			value: false
-		})
-	);
-
-	socket.on("event:user.github.linked", () =>
-		updateOriginalUser({
-			property: "github",
-			value: true
-		})
-	);
-
-	socket.on("event:user.github.unlinked", () =>
-		updateOriginalUser({
-			property: "github",
-			value: false
-		})
-	);
 });
 </script>
 
