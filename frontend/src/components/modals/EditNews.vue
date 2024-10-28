@@ -64,7 +64,7 @@ const getTitle = () => {
 	return title;
 };
 
-const { inputs, save, setModelValues } = useForm(
+const { inputs, saveButton, save, setModelValues } = useForm(
 	{
 		markdown: {
 			value: "# Header\n## Sub-Header\n- **So**\n- _Many_\n- ~Points~\n\nOther things you want to say and [link](https://example.com).\n\n### Sub-Sub-Header\n> Oh look, a quote!\n\n`lil code`\n\n```\nbig code\n```\n",
@@ -156,23 +156,21 @@ onMounted(async () => {
 		<template #body>
 			<div class="left-section" v-show="canShow">
 				<p><strong>Markdown</strong></p>
-				<textarea v-model="inputs['markdown'].value"></textarea>
+				<textarea v-model="inputs.markdown.value"></textarea>
 			</div>
 			<div class="right-section" v-show="canShow">
 				<p><strong>Preview</strong></p>
 				<div
 					class="news-item"
 					id="preview"
-					v-html="
-						DOMPurify.sanitize(marked(inputs['markdown'].value))
-					"
+					v-html="DOMPurify.sanitize(marked(inputs.markdown.value))"
 				></div>
 			</div>
 		</template>
 		<template #footer>
 			<div>
 				<p class="control select">
-					<select v-model="inputs['status'].value">
+					<select v-model="inputs.status.value">
 						<option value="draft">Draft</option>
 						<option value="published" selected>Publish</option>
 					</select>
@@ -183,7 +181,7 @@ onMounted(async () => {
 						<input
 							type="checkbox"
 							id="show-to-new-users"
-							v-model="inputs['showToNewUsers'].value"
+							v-model="inputs.showToNewUsers.value"
 						/>
 						<span class="slider round"></span>
 					</label>
@@ -193,17 +191,18 @@ onMounted(async () => {
 					</label>
 				</p>
 
-				<save-button
-					ref="saveButton"
+				<SaveButton
 					v-if="createNews"
+					ref="saveButton"
 					@clicked="save()"
 				/>
 
-				<save-button
+				<SaveButton
 					ref="saveAndCloseButton"
 					default-message="Save and close"
 					@clicked="save(closeCurrentModal)"
 				/>
+
 				<div class="right" v-if="createdAt > 0">
 					<span>
 						By&nbsp;

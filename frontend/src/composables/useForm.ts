@@ -72,6 +72,8 @@ export const useForm = (
 		return _sourceChanged;
 	});
 
+	const saveButton = ref();
+
 	const useCallback = (status: string, messages?: Record<string, string>) =>
 		new Promise((resolve, reject: (reason: Error) => void) => {
 			cb(
@@ -129,17 +131,25 @@ export const useForm = (
 	};
 
 	const save = (saveCb?: () => void) => {
+		if (saveButton.value) saveButton.value.status = "disabled";
+
 		const errors = validate();
 		const errorCount = Object.keys(errors).length;
+
 		if (errorCount === 0 && unsavedChanges.value.length > 0) {
 			const onSave = () => {
 				useCallback("success")
 					.then(() => {
 						resetOriginalValues();
 						if (saveCb) saveCb();
+						saveButton.value?.handleSuccessfulSave();
 					})
 					.catch((err: Error) =>
-						useCallback("error", { error: err.message })
+						useCallback("error", { error: err.message }).then(
+							() => {
+								saveButton.value?.handleFailedSave();
+							}
+						)
 					);
 			};
 			if (sourceChanged.value.length > 0)
@@ -156,9 +166,12 @@ export const useForm = (
 			useCallback("unchanged", { unchanged: "No changes have been made" })
 				.then(() => {
 					if (saveCb) saveCb();
+					saveButton.value?.handleSuccessfulSave();
 				})
 				.catch((err: Error) =>
-					useCallback("error", { error: err.message })
+					useCallback("error", { error: err.message }).then(() => {
+						saveButton.value?.handleFailedSave();
+					})
 				);
 		} else {
 			useCallback("error", {
@@ -166,6 +179,8 @@ export const useForm = (
 				error: `${errorCount} ${
 					errorCount === 1 ? "input" : "inputs"
 				} failed validation.`
+			}).then(() => {
+				saveButton.value?.handleFailedSave();
 			});
 		}
 	};
@@ -251,6 +266,7 @@ export const useForm = (
 	return {
 		inputs,
 		unsavedChanges,
+		saveButton,
 		save,
 		setValue,
 		setOriginalValue,
