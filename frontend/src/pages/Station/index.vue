@@ -132,8 +132,8 @@ const { activeModals } = storeToRefs(modalsStore);
 // TODO fix this if it still has some use, as this is no longer accurate
 // const video = computed(() => store.state.modals.editSong);
 
-const { loggedIn, currentUser } = storeToRefs(userAuthStore);
-const { nightmode, autoSkipDisliked } = storeToRefs(userPreferencesStore);
+const { loggedIn, currentUser, nightmode } = storeToRefs(userAuthStore);
+const { autoSkipDisliked } = storeToRefs(userPreferencesStore);
 const {
 	station,
 	currentSong,

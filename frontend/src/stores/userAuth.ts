@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
-import { computed, ref } from "vue";
+import { computed, ref, watch } from "vue";
+import Toast from "toasters";
 import validation from "@/validation";
 import { useWebsocketStore } from "@/stores/websocket";
 import { useConfigStore } from "@/stores/config";
@@ -31,6 +32,7 @@ export const useUserAuthStore = defineStore("userAuth", () => {
 	const gotData = ref(false);
 	const gotPermissions = ref(false);
 	const permissions = ref<Record<string, boolean>>({});
+	const nightmode = ref(false);
 
 	const loggedIn = computed(() => !!currentUser.value);
 
@@ -119,9 +121,11 @@ export const useUserAuthStore = defineStore("userAuth", () => {
 			data.SID
 		}; expires=${date.toUTCString()}; ${domain}${secure}path=/`;
 
-		const bc = new BroadcastChannel(`${configStore.cookie}.user_login`);
-		bc.postMessage(true);
-		bc.close();
+		const loginBroadcastChannel = new BroadcastChannel(
+			`${configStore.cookie}.user_login`
+		);
+		loginBroadcastChannel.postMessage(true);
+		loginBroadcastChannel.close();
 	};
 
 	const logout = async () => {
@@ -232,6 +236,39 @@ export const useUserAuthStore = defineStore("userAuth", () => {
 		}; expires=${date.toUTCString()}; ${domain}${secure}path=/`;
 	};
 
+	const toggleNightmode = async () => {
+		if (loggedIn.value) {
+			try {
+				await websocketStore.runJob(`data.users.updateById`, {
+					_id: currentUser.value._id,
+					query: {
+						nightmode: !nightmode.value
+					}
+				});
+			} catch (error) {
+				new Toast(error.message);
+			}
+		} else {
+			nightmode.value = !nightmode.value;
+
+			const nightmodeBroadcastChannel = new BroadcastChannel(
+				`${configStore.cookie}.nightmode`
+			);
+			nightmodeBroadcastChannel.postMessage(nightmode.value);
+			nightmodeBroadcastChannel.close();
+		}
+	};
+
+	watch(
+		currentUser,
+		user => {
+			if (!user) return;
+
+			nightmode.value = user.nightmode;
+		},
+		{ deep: true }
+	);
+
 	return {
 		userIdMap,
 		userIdRequested,
@@ -242,6 +279,7 @@ export const useUserAuthStore = defineStore("userAuth", () => {
 		gotData,
 		gotPermissions,
 		permissions,
+		nightmode,
 		loggedIn,
 		register,
 		login,
@@ -254,6 +292,7 @@ export const useUserAuthStore = defineStore("userAuth", () => {
 		banUser,
 		hasPermission,
 		updatePermissions,
-		resetCookieExpiration
+		resetCookieExpiration,
+		toggleNightmode
 	};
 });

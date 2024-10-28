@@ -3,12 +3,11 @@ import { useRouter } from "vue-router";
 import { defineAsyncComponent, ref, watch, onMounted } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
-import { GenericResponse } from "@musare_types/actions/GenericActions";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useConfigStore } from "@/stores/config";
 import { useUserAuthStore } from "@/stores/userAuth";
-import { useUserPreferencesStore } from "@/stores/userPreferences";
 import { useModalsStore } from "@/stores/modals";
+import { useEvents } from "@/composables/useEvents";
 import aw from "@/aw";
 import keyboardShortcuts from "@/keyboardShortcuts";
 
@@ -28,7 +27,6 @@ const router = useRouter();
 const { socket } = useWebsocketsStore();
 const configStore = useConfigStore();
 const userAuthStore = useUserAuthStore();
-const userPreferencesStore = useUserPreferencesStore();
 const modalsStore = useModalsStore();
 
 const socketConnected = ref(true);
@@ -40,27 +38,10 @@ const broadcastChannel = ref({
 const disconnectedMessage = ref();
 
 const { christmas } = storeToRefs(configStore);
-const { currentUser, loggedIn, banned } = storeToRefs(userAuthStore);
-const { nightmode, activityWatch } = storeToRefs(userPreferencesStore);
-const {
-	changeNightmode,
-} = userPreferencesStore;
+const { currentUser, loggedIn, banned, nightmode } = storeToRefs(userAuthStore);
 const { activeModals } = storeToRefs(modalsStore);
 const { openModal, closeCurrentModal } = modalsStore;
-
-const toggleNightMode = () => {
-	if (loggedIn.value) {
-		socket.dispatch(
-			"users.updatePreferences",
-			{ nightmode: !nightmode.value },
-			(res: GenericResponse) => {
-				if (res.status !== "success") new Toast(res.message);
-			}
-		);
-	} else {
-		broadcastChannel.value.nightmode.postMessage(!nightmode.value);
-	}
-};
+const { onReady } = useEvents();
 
 const enableNightmode = () => {
 	document.getElementsByTagName("html")[0].classList.add("night-mode");
@@ -85,22 +66,22 @@ watch(socketConnected, connected => {
 watch(banned, () => {
 	disconnectedMessage.value.hide();
 });
-watch(nightmode, enabled => {
-	if (enabled) enableNightmode();
+watch(nightmode, value => {
+	if (value) enableNightmode();
 	else disableNightmode();
+
+	localStorage.setItem("nightmode", value.toString());
 });
-watch(activityWatch, enabled => {
-	if (enabled) aw.enable();
-	else aw.disable();
-});
+watch(
+	() => currentUser.value?.activityWatch,
+	enabled => {
+		if (enabled) aw.enable();
+		else aw.disable();
+	}
+);
 watch(christmas, enabled => {
 	if (enabled) enableChristmasMode();
 	else disableChristmasMode();
-});
-watch(currentUser, user => {
-	if (!user) return;
-
-	changeNightmode(user.nightmode);
 });
 
 onMounted(async () => {
@@ -110,7 +91,7 @@ onMounted(async () => {
 	window
 		.matchMedia("(prefers-color-scheme: dark)")
 		.addEventListener("change", e => {
-			if (e.matches === !nightmode.value) changeNightmode(true);
+			if (e.matches === !nightmode.value) nightmode.value = true;
 		});
 
 	disconnectedMessage.value = new Toast({
@@ -121,7 +102,7 @@ onMounted(async () => {
 
 	disconnectedMessage.value.hide();
 
-	socket.onConnect(() => {
+	await onReady(async () => {
 		socketConnected.value = true;
 
 		document.getElementsByTagName("html")[0].style.cssText =
@@ -142,7 +123,7 @@ onMounted(async () => {
 				`${configStore.cookie}.nightmode`
 			);
 			broadcastChannel.value.nightmode.onmessage = res => {
-				changeNightmode(!!res.data);
+				nightmode.value = !!res.data;
 			};
 		}
 
@@ -170,7 +151,7 @@ onMounted(async () => {
 			keyCode: 78,
 			ctrl: true,
 			alt: true,
-			handler: () => toggleNightMode()
+			handler: userAuthStore.toggleNightmode
 		});
 
 		keyboardShortcuts.registerShortcut("closeModal", {
@@ -194,7 +175,7 @@ onMounted(async () => {
 				localStorage.removeItem("github_redirect");
 			}
 		});
-	}, true);
+	});
 
 	socket.onDisconnect(() => {
 		socketConnected.value = false;
@@ -204,9 +185,7 @@ onMounted(async () => {
 		window.location.reload()
 	);
 
-	if (localStorage.getItem("nightmode") === "true") {
-		changeNightmode(true);
-	} else changeNightmode(false);
+	nightmode.value = localStorage.getItem("nightmode") === "true";
 });
 </script>
 

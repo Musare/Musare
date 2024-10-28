@@ -1,4 +1,4 @@
-import { defineStore } from "pinia";
+import { defineStore, storeToRefs } from "pinia";
 import { ref } from "vue";
 import { generateUuid } from "@common/utils/generateUuid";
 import { forEachIn } from "@common/utils/forEachIn";
@@ -187,14 +187,14 @@ export const useWebsocketStore = defineStore("websocket", () => {
 
 		ready.value = true;
 
-		userAuthStore.currentUser = data.user
+		const { currentUser, gotData, loggedIn } = storeToRefs(userAuthStore);
+
+		currentUser.value = data.user
 			? await modelStore.registerModel(data.user)
 			: null;
-		userAuthStore.gotData = true;
+		gotData.value = true;
 
-		if (userAuthStore.loggedIn) {
-			userAuthStore.resetCookieExpiration();
-		}
+		if (loggedIn.value) userAuthStore.resetCookieExpiration();
 
 		if (configStore.experimental.media_session) ms.initialize();
 		else ms.uninitialize();

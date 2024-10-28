@@ -1,11 +1,8 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, onMounted, watch, nextTick } from "vue";
-import Toast from "toasters";
+import { defineAsyncComponent, ref, onMounted, nextTick } from "vue";
 import { storeToRefs } from "pinia";
-import { useWebsocketsStore } from "@/stores/websockets";
 import { useConfigStore } from "@/stores/config";
 import { useUserAuthStore } from "@/stores/userAuth";
-import { useUserPreferencesStore } from "@/stores/userPreferences";
 import { useModalsStore } from "@/stores/modals";
 
 const ChristmasLights = defineAsyncComponent(
@@ -20,57 +17,25 @@ defineProps({
 
 const userAuthStore = useUserAuthStore();
 
-const localNightmode = ref(false);
 const isMobile = ref(false);
 const windowWidth = ref(0);
-const broadcastChannel = ref();
-
-const { socket } = useWebsocketsStore();
 
 const configStore = useConfigStore();
-const { cookie, sitename, registrationDisabled, christmas } =
-	storeToRefs(configStore);
+const { sitename, registrationDisabled, christmas } = storeToRefs(configStore);
 
-const { loggedIn, currentUser } = storeToRefs(userAuthStore);
-const { logout, hasPermission } = userAuthStore;
-const userPreferencesStore = useUserPreferencesStore();
-const { nightmode } = storeToRefs(userPreferencesStore);
+const { loggedIn, currentUser, nightmode } = storeToRefs(userAuthStore);
+const { logout, hasPermission, toggleNightmode } = userAuthStore;
 
 const { openModal } = useModalsStore();
-
-const toggleNightmode = toggle => {
-	localNightmode.value =
-		toggle === undefined ? !localNightmode.value : toggle;
-
-	if (loggedIn.value) {
-		socket.dispatch(
-			"users.updatePreferences",
-			{ nightmode: localNightmode.value },
-			res => {
-				if (res.status !== "success") new Toast(res.message);
-			}
-		);
-	} else {
-		broadcastChannel.value.postMessage(localNightmode.value);
-	}
-};
 
 const onResize = () => {
 	windowWidth.value = window.innerWidth;
 };
 
-watch(nightmode, value => {
-	localNightmode.value = value;
-});
-
 onMounted(async () => {
-	localNightmode.value = nightmode.value;
-
 	await nextTick();
 	onResize();
 	window.addEventListener("resize", onResize);
-
-	broadcastChannel.value = new BroadcastChannel(`${cookie.value}.nightmode`);
 });
 </script>
 
@@ -107,20 +72,18 @@ onMounted(async () => {
 			<div
 				class="nav-item"
 				id="nightmode-toggle"
-				@click="toggleNightmode(!localNightmode)"
+				@click="toggleNightmode"
 			>
 				<span
 					:class="{
 						'material-icons': true,
 						'night-mode-toggle': true,
-						'night-mode-on': localNightmode
+						'night-mode-on': nightmode
 					}"
-					:content="`${
-						localNightmode ? 'Disable' : 'Enable'
-					} Nightmode`"
+					:content="`${nightmode ? 'Disable' : 'Enable'} Nightmode`"
 					v-tippy
 				>
-					{{ localNightmode ? "dark_mode" : "light_mode" }}
+					{{ nightmode ? "dark_mode" : "light_mode" }}
 				</span>
 				<span class="night-mode-label">Toggle Nightmode</span>
 			</div>
