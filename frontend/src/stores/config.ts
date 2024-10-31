@@ -64,12 +64,12 @@ export const useConfigStore = defineStore("config", {
 	},
 	getters: {
 		urls() {
-			const { protocol, host } = document.location;
+			const { protocol, host, hostname, port } = document.location;
 			const secure = protocol !== "http:";
 			const client = `${protocol}//${host}`;
 			const api = `${client}/backend`;
 			const ws = `${secure ? "wss" : "ws"}://${host}/backend/ws`;
-			return { client, api, ws, host, secure };
+			return { client, api, ws, host, hostname, port, secure };
 		}
 	}
 });

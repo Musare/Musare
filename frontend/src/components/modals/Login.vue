@@ -6,16 +6,18 @@ import { storeToRefs } from "pinia";
 import { useConfigStore } from "@/stores/config";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useModalsStore } from "@/stores/modals";
+import { useWebsocketStore } from "@/stores/websocket";
+import { useForm } from "@/composables/useForm";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 
+const props = defineProps({
+	modalUuid: { type: String, required: true }
+});
+
 const route = useRoute();
 
-const email = ref("");
-const password = ref({
-	value: "",
-	visible: false
-});
+const passwordVisible = ref(false);
 const passwordElement = ref();
 
 const configStore = useConfigStore();
@@ -23,21 +25,37 @@ const { githubAuthentication, registrationDisabled } = storeToRefs(configStore);
 const { login } = useUserAuthStore();
 
 const { openModal, closeCurrentModal } = useModalsStore();
+const { runJob } = useWebsocketStore();
 
-const submitModal = () => {
-	if (!email.value || !password.value.value) return;
+const { inputs, save: submitModal } = useForm(
+	{
+		identifier: "",
+		password: ""
+	},
+	({ status, messages, values }, resolve, reject) => {
+		if (status === "success") {
+			runJob("data.users.login", {
+				query: values
+			})
+				.then(({ sessionId }) => login(sessionId))
+				.then(resolve)
+				.catch(reject);
+		} else {
+			if (status === "unchanged") new Toast(messages.unchanged);
+			else if (status === "error")
+				Object.values(messages).forEach(message => {
+					new Toast({ content: message, timeout: 8000 });
+				});
+			resolve();
+		}
+	},
+	{
+		modalUuid: props.modalUuid,
+		preventCloseUnsaved: false
+	}
+);
 
-	login({
-		email: email.value,
-		password: password.value.value
-	})
-		.then((res: any) => {
-			if (res.status === "success") window.location.reload();
-		})
-		.catch(err => new Toast(err.message));
-};
-
-const checkForAutofill = (type, event) => {
+const checkForAutofill = event => {
 	if (
 		event.target.value !== "" &&
 		event.inputType === undefined &&
@@ -51,10 +69,10 @@ const checkForAutofill = (type, event) => {
 const togglePasswordVisibility = () => {
 	if (passwordElement.value.type === "password") {
 		passwordElement.value.type = "text";
-		password.value.visible = true;
+		passwordVisible.value = true;
 	} else {
 		passwordElement.value.type = "password";
-		password.value.visible = false;
+		passwordVisible.value = false;
 	}
 };
 
@@ -82,12 +100,12 @@ const githubRedirect = () => {
 					<p class="control">
 						<label class="label">Username/Email</label>
 						<input
-							v-model="email"
+							v-model="inputs.identifier.value"
 							class="input"
 							type="email"
 							autocomplete="username"
 							placeholder="Username/Email..."
-							@input="checkForAutofill('email', $event)"
+							@input="checkForAutofill"
 							@keyup.enter="submitModal()"
 						/>
 					</p>
@@ -99,19 +117,19 @@ const githubRedirect = () => {
 
 					<div id="password-visibility-container">
 						<input
-							v-model="password.value"
+							v-model="inputs.password.value"
 							class="input"
 							type="password"
 							autocomplete="current-password"
 							ref="passwordElement"
 							placeholder="Password..."
-							@input="checkForAutofill('password', $event)"
+							@input="checkForAutofill"
 							@keyup.enter="submitModal()"
 						/>
 						<a @click="togglePasswordVisibility()">
 							<i class="material-icons">
 								{{
-									!password.visible
+									!passwordVisible
 										? "visibility"
 										: "visibility_off"
 								}}

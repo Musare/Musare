@@ -86,40 +86,21 @@ export const useUserAuthStore = defineStore("userAuth", () => {
 
 		if (!data?.SID) throw new Error("You must login");
 
-		const date = new Date();
-		date.setTime(new Date().getTime() + 2 * 365 * 24 * 60 * 60 * 1000);
-
-		const secure = configStore.urls.secure ? "secure=true; " : "";
-
-		let domain = "";
-		if (configStore.urls.host !== "localhost")
-			domain = ` domain=${configStore.urls.host};`;
-
-		document.cookie = `${configStore.cookie}=${
-			data.SID
-		}; expires=${date.toUTCString()}; ${domain}${secure}path=/`;
+		await login(data.SID);
 	};
 
-	const login = async (user: { email: string; password: string }) => {
-		const { email, password } = user;
-
-		const data = await websocketStore.runJob("users.login", {
-			email,
-			password
-		});
-
+	const login = async (sessionId: string) => {
 		const date = new Date();
 		date.setTime(new Date().getTime() + 2 * 365 * 24 * 60 * 60 * 1000);
 
-		const secure = configStore.urls.secure ? "secure=true; " : "";
+		let cookie = `${configStore.cookie}=${sessionId};`;
+		cookie += `expires=${date.toUTCString()};`;
+		if (configStore.urls.hostname !== "localhost")
+			cookie += `domain=${configStore.urls.hostname};`;
+		if (configStore.urls.secure) cookie += `secure=true;`;
+		cookie += "path=/;";
 
-		let domain = "";
-		if (configStore.urls.host !== "localhost")
-			domain = ` domain=${configStore.urls.host};`;
-
-		document.cookie = `${configStore.cookie}=${
-			data.SID
-		}; expires=${date.toUTCString()}; ${domain}${secure}path=/`;
+		document.cookie = cookie;
 
 		const loginBroadcastChannel = new BroadcastChannel(
 			`${configStore.cookie}.user_login`
