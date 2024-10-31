@@ -54,7 +54,7 @@ export const up = async ({
 		},
 		password: {
 			type: DataTypes.STRING,
-			allowNull: false
+			allowNull: true
 		},
 		passwordResetCode: {
 			type: DataTypes.STRING,

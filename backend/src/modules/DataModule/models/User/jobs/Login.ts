@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import sha256 from "sha256";
 import isLoggedOut from "@/modules/DataModule/permissions/isLoggedOut";
 import DataModuleJob from "@/modules/DataModule/DataModuleJob";
+import { Op } from "sequelize";
 
 export default class Login extends DataModuleJob {
 	protected static _model = User;
@@ -20,23 +21,24 @@ export default class Login extends DataModuleJob {
 	protected async _execute() {
 		const { query } = this._payload;
 
-		const where: Record<string, string> = {};
-
-		if (query.identifier.includes("@")) {
-			where.emailAddress = query.identifier;
-		} else {
-			where.username = query.identifier;
-		}
+		const attribute = query.identifier.includes("@")
+			? 'emailAddress'
+			: 'username';
 
 		const user = await User.unscoped().findOne({
-			where
+			where: {
+				[attribute]: query.identifier,
+				password: {
+					[Op.not]: null
+				}
+			}
 		});
 
 		if (!user) throw new Error("User not found with provided credentials");
 
 		const isValid = await bcrypt.compare(
 			sha256(query.password),
-			user.password
+			user.password!
 		);
 
 		if (!isValid)

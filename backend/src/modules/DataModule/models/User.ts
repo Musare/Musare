@@ -49,7 +49,7 @@ export class User extends Model<
 	declare avatarColor: CreationOptional<UserAvatarColor | null>;
 
 	// Services
-	declare password: string;
+	declare password: CreationOptional<string | null>;
 
 	declare passwordResetCode: CreationOptional<string | null>;
 
@@ -204,7 +204,7 @@ export const schema = {
 	},
 	password: {
 		type: DataTypes.STRING,
-		allowNull: false
+		allowNull: true
 	},
 	passwordResetCode: {
 		type: DataTypes.STRING,
