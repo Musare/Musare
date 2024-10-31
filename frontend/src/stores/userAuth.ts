@@ -129,11 +129,7 @@ export const useUserAuthStore = defineStore("userAuth", () => {
 	};
 
 	const logout = async () => {
-		await websocketStore.runJob("users.logout", {});
-
-		document.cookie = `${configStore.cookie}=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
-
-		window.location.reload();
+		await websocketStore.runJob("data.users.logout"); // TODO: Deal with socket closing before callback received
 	};
 
 	const mapUserId = (data: {

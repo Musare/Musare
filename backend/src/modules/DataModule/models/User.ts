@@ -332,7 +332,15 @@ export const setup = async () => {
 
 	// User.afterSave(async record => {});
 
-	// User.afterDestroy(async record => {});
+	User.addHook("beforeDestroy", async (record: User, options) => {
+		await Session.destroy({
+			where: {
+				userId: user._id
+			},
+			individualHooks: true,
+			transaction: options.transaction
+		});
+	});
 };
 
 export default User;

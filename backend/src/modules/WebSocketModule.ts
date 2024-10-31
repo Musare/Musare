@@ -72,6 +72,26 @@ export class WebSocketModule extends BaseModule {
 			this.dispatch(socketId, "jobCallback", callbackRef, data);
 		});
 
+		await EventsModule.pSubscribe(
+			"data.sessions.deleted:*",
+			async event => {
+				// assertEventDerived(event);
+				const { oldDoc } = event.getData();
+
+				for (const clients of this._wsServer!.clients.entries() as IterableIterator<
+					[WebSocket, WebSocket]
+				>) {
+					const socket = clients.find(
+						socket => socket.getSessionId() === oldDoc._id
+					);
+
+					if (!socket) continue;
+
+					socket.close(1000, "logout");
+				}
+			}
+		);
+
 		await super._started();
 	}
 
@@ -300,7 +320,7 @@ export class WebSocketModule extends BaseModule {
 	}
 
 	/**
-	 * getSocket - Get websocket client by id
+	 * getSocketById - Get websocket client by id
 	 */
 	public async getSocketById(socketId: string) {
 		if (!this._wsServer) return null;

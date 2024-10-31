@@ -244,8 +244,16 @@ export const useWebsocketStore = defineStore("websocket", () => {
 		);
 	};
 
-	const onClose = () => {
+	const onClose = (event: CloseEvent) => {
 		ready.value = false;
+
+		if (event.reason === "logout") {
+			document.cookie = `${configStore.cookie}=;expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
+
+			window.location.reload();
+
+			return;
+		}
 
 		// try to reconnect every 1000ms, if the user isn't banned
 		// eslint-disable-next-line no-use-before-define

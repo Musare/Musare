@@ -4,6 +4,7 @@ import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { useConfigStore } from "@/stores/config";
 import { useSettingsStore } from "@/stores/settings";
+import { useWebsocketStore } from "@/stores/websocket";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
 import _validation from "@/validation";
@@ -19,6 +20,7 @@ const configStore = useConfigStore();
 const { githubAuthentication, sitename } = storeToRefs(configStore);
 const settingsStore = useSettingsStore();
 const userAuthStore = useUserAuthStore();
+const { runJob } = useWebsocketStore();
 
 const { socket } = useWebsocketsStore();
 
@@ -90,10 +92,10 @@ const unlinkGitHub = () => {
 		new Toast(res.message);
 	});
 };
-const removeSessions = () => {
-	socket.dispatch(`users.removeSessions`, currentUser.value?._id, res => {
-		new Toast(res.message);
-	});
+const removeSessions = async () => {
+	await runJob("data.users.logoutAll");
+
+	new Toast("Successfully logged out of all sessions");
 };
 
 watch(validation, newValidation => {
