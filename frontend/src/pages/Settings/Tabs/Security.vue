@@ -189,22 +189,6 @@ watch(validation, newValidation => {
 			<div class="section-margin-bottom" />
 		</div>
 
-		<div v-if="!isPasswordLinked">
-			<h4 class="section-title">Add a password</h4>
-			<p class="section-description">
-				Add a password, as an alternative to signing in with GitHub
-			</p>
-
-			<hr class="section-horizontal-rule" />
-
-			<router-link to="/set_password" class="button is-default"
-				><i class="material-icons icon-with-button">create</i>Set
-				Password
-			</router-link>
-
-			<div class="section-margin-bottom" />
-		</div>
-
 		<div>
 			<h4 class="section-title">Log out everywhere</h4>
 			<p class="section-description">

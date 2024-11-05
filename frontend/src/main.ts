@@ -150,15 +150,6 @@ const router = createRouter({
 			}
 		},
 		{
-			path: "/set_password",
-			props: { mode: "set" },
-			component: () => import("@/pages/ResetPassword.vue"),
-			meta: {
-				configRequired: "mailEnabled",
-				loginRequired: true
-			}
-		},
-		{
 			path: "/admin",
 			name: "admin",
 			component: () => import("@/pages/Admin/index.vue"),
