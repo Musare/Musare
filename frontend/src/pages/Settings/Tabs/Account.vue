@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { defineAsyncComponent, onMounted } from "vue";
-import { useRoute } from "vue-router";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
@@ -21,8 +20,6 @@ const SaveButton = defineAsyncComponent(
 const QuickConfirm = defineAsyncComponent(
 	() => import("@/components/QuickConfirm.vue")
 );
-
-const route = useRoute();
 
 const { socket } = useWebsocketsStore();
 
@@ -89,6 +86,24 @@ const removeActivities = () => {
 	});
 };
 
+const removeAccount = () => {
+	openModal({
+		modal: "confirm",
+		props: {
+			message: 'Are you sure you would like to delete your account and all associated data?',
+			onCompleted: async () => {
+				try {
+					await runJob('data.users.deleteById', {
+						_id: currentUser.value._id
+					});
+				} catch (error) {
+					new Toast(error.message);
+				}
+			}
+		}
+	});
+};
+
 onMounted(async () => {
 	await onReady(async () => {
 		setModelValues(await registerModel(currentUser.value), [
@@ -96,16 +111,6 @@ onMounted(async () => {
 			"emailAddress"
 		]);
 	});
-
-	if (
-		route.query.removeAccount === "relinked-github" &&
-		!localStorage.getItem("github_redirect")
-	) {
-		openModal({
-			modal: "removeAccount",
-			props: { githubLinkConfirmed: true }
-		});
-	}
 });
 </script>
 
@@ -185,7 +190,7 @@ onMounted(async () => {
 				</a>
 			</quick-confirm>
 
-			<a class="button is-danger" @click="openModal('removeAccount')">
+			<a class="button is-danger" @click="removeAccount()">
 				<i class="material-icons icon-with-button">delete</i>
 				Remove my account
 			</a>
