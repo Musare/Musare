@@ -47,11 +47,6 @@
 			"requestTimeout": 5000,
 			"retryAmount": 2
 		},
-		"recaptcha": {
-			"enabled": false,
-			"key": "",
-			"secret": ""
-		},
 		"github": {
 			"enabled": false,
 			"client": "",

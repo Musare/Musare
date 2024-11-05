@@ -35,11 +35,6 @@ export const useModalsStore = defineStore("modals", {
 		closeModal(uuid: string, force = false) {
 			Object.entries(this.modals).forEach(([_uuid, modal]) => {
 				if (uuid === _uuid) {
-					if (modal.modal === "register") {
-						const configStore = useConfigStore();
-						if (configStore.recaptcha.enabled)
-							window.location.reload();
-					}
 					const close = () => {
 						const { socket } = useWebsocketsStore();
 						socket.destroyModalListeners(uuid);

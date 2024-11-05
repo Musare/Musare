@@ -89,9 +89,6 @@ For more information on configuration files please refer to the
 | `apis.soundcloud.rateLimit` | Minimum interval between SoundCloud API requests in milliseconds. |
 | `apis.soundcloud.requestTimeout` | SoundCloud API requests timeout in milliseconds. |
 | `apis.soundcloud.retryAmount` | The amount of retries to perform of a failed SoundCloud API request. |
-| `apis.recaptcha.enabled` | Whether to enable ReCaptcha in the regular (email) registration form. |
-| `apis.recaptcha.key` | ReCaptcha Site v3 key, obtained from [here](https://www.google.com/recaptcha/admin). |
-| `apis.recaptcha.secret` | ReCaptcha Site v3 secret, obtained with key. |
 | `apis.github.enabled` | Whether to enable GitHub authentication. |
 | `apis.github.client` | GitHub OAuth Application client, obtained from [here](https://github.com/settings/developers). |
 | `apis.github.secret` | GitHub OAuth Application secret, obtained with client. |

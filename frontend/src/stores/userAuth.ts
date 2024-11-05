@@ -40,9 +40,8 @@ export const useUserAuthStore = defineStore("userAuth", () => {
 		username: string;
 		email: string;
 		password: string;
-		recaptchaToken: string;
 	}) => {
-		const { username, email, password, recaptchaToken } = user;
+		const { username, email, password } = user;
 
 		if (!email || !username || !password)
 			throw new Error("Please fill in all fields");
@@ -80,8 +79,7 @@ export const useUserAuthStore = defineStore("userAuth", () => {
 		const data = await websocketStore.runJob("users.register", {
 			username,
 			email,
-			password,
-			recaptchaToken
+			password
 		});
 
 		if (!data?.SID) throw new Error("You must login");

@@ -4,10 +4,6 @@ export const useConfigStore = defineStore("config", {
 	state: (): {
 		cookie: string;
 		sitename: string;
-		recaptcha: {
-			enabled: boolean;
-			key: string;
-		};
 		githubAuthentication: boolean;
 		messages: Record<string, string>;
 		christmas: boolean;
@@ -28,10 +24,6 @@ export const useConfigStore = defineStore("config", {
 	} => ({
 		cookie: "musareSID",
 		sitename: MUSARE_SITENAME,
-		recaptcha: {
-			enabled: false,
-			key: ""
-		},
 		githubAuthentication: false,
 		messages: {
 			accountRemoval:

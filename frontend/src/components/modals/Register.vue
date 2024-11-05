@@ -35,7 +35,6 @@ const password = ref({
 	message:
 		"Include at least one lowercase letter, one uppercase letter, one number and one special character."
 });
-const recaptchaToken = ref("");
 const passwordElement = ref();
 
 const { register } = useUserAuthStore();
@@ -53,7 +52,6 @@ const submitModal = () => {
 		username: username.value.value,
 		email: email.value.value,
 		password: password.value.value,
-		recaptchaToken: recaptchaToken.value
 	})
 		.then((res: any) => {
 			if (res.status === "success") window.location.reload();
@@ -145,27 +143,6 @@ onMounted(async () => {
 	if (registrationDisabled.value) {
 		new Toast("Registration is disabled.");
 		closeCurrentModal();
-	}
-
-	if (recaptcha.value.enabled) {
-		const recaptchaScript = document.createElement("script");
-		recaptchaScript.onload = () => {
-			grecaptcha.ready(() => {
-				grecaptcha
-					.execute(recaptcha.value.key, {
-						action: "login"
-					})
-					.then(token => {
-						recaptchaToken.value = token;
-					});
-			});
-		};
-
-		recaptchaScript.setAttribute(
-			"src",
-			`https://www.google.com/recaptcha/api.js?render=${recaptcha.value.key}`
-		);
-		document.head.appendChild(recaptchaScript);
 	}
 });
 </script>
@@ -342,17 +319,7 @@ onMounted(async () => {
 	filter: brightness(5);
 }
 
-#recaptcha {
-	padding: 10px 0;
-}
-
 a {
 	color: var(--primary-color);
-}
-</style>
-
-<style lang="less">
-.grecaptcha-badge {
-	z-index: 2000;
 }
 </style>

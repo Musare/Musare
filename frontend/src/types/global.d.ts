@@ -5,7 +5,6 @@ declare global {
 	var stationInterval: number;
 	var YT: any;
 	var stationNextSongTimeout: any;
-	var grecaptcha: any;
 	var addToPlaylistDropdown: any;
 	var scrollDebounceId: any;
 	var focusedElementBefore: any;

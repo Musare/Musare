@@ -177,10 +177,6 @@ export class WebSocketModule extends BaseModule {
 			config: {
 				cookie: config.get("cookie"),
 				sitename: config.get("sitename"),
-				recaptcha: {
-					enabled: config.get("apis.recaptcha.enabled"),
-					key: config.get("apis.recaptcha.key")
-				},
 				githubAuthentication: config.get("apis.github.enabled"),
 				messages: config.get("messages"),
 				christmas: config.get("christmas"),
