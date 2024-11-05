@@ -335,7 +335,7 @@ export const setup = async () => {
 	User.addHook("beforeDestroy", async (record: User, options) => {
 		await Session.destroy({
 			where: {
-				userId: user._id
+				userId: record._id
 			},
 			individualHooks: true,
 			transaction: options.transaction
