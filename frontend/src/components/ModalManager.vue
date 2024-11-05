@@ -22,7 +22,6 @@ const modalComponents = shallowRef(
 		bulkActions: "BulkActions.vue",
 		viewApiRequest: "ViewApiRequest.vue",
 		viewPunishment: "ViewPunishment.vue",
-		removeAccount: "RemoveAccount.vue",
 		importAlbum: "ImportAlbum.vue",
 		importArtist: "ImportArtist.vue",
 		confirm: "Confirm.vue",
