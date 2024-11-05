@@ -59,9 +59,6 @@ export class User extends Model<
 
 	declare passwordSetExpiresAt: CreationOptional<Date | null>;
 
-	declare githubId: CreationOptional<number | null>;
-
-	declare githubAccessToken: CreationOptional<string | null>;
 	// End services
 
 	// Statistics
@@ -222,14 +219,6 @@ export const schema = {
 		type: DataTypes.DATE,
 		allowNull: true
 	},
-	githubId: {
-		type: DataTypes.BIGINT,
-		allowNull: true
-	},
-	githubAccessToken: {
-		type: DataTypes.STRING,
-		allowNull: true
-	},
 	songsRequested: {
 		type: DataTypes.BIGINT,
 		allowNull: false,
@@ -301,7 +290,6 @@ export const options = {
 				"password",
 				"passwordResetCode",
 				"passwordSetCode",
-				"githubAccessToken"
 			]
 		}
 	}

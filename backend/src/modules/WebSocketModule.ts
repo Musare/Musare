@@ -177,7 +177,6 @@ export class WebSocketModule extends BaseModule {
 			config: {
 				cookie: config.get("cookie"),
 				sitename: config.get("sitename"),
-				githubAuthentication: config.get("apis.github.enabled"),
 				messages: config.get("messages"),
 				christmas: config.get("christmas"),
 				footerLinks: config.get("footerLinks"),

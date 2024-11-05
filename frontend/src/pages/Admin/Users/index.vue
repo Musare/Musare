@@ -64,14 +64,6 @@ const columns = ref<TableColumn[]>([
 		defaultWidth: 230
 	},
 	{
-		name: "githubId",
-		displayName: "GitHub ID",
-		properties: ["githubId"],
-		sortProperty: "githubId",
-		minWidth: 115,
-		defaultWidth: 115
-	},
-	{
 		name: "hasPassword",
 		displayName: "Has Password",
 		properties: ["hasPassword"],
@@ -129,13 +121,6 @@ const filters = ref<TableFilter[]>([
 		name: "username",
 		displayName: "Username",
 		property: "username",
-		filterTypes: ["contains", "exact", "regex"],
-		defaultFilterType: "contains"
-	},
-	{
-		name: "githubId",
-		displayName: "GitHub ID",
-		property: "services.github.id",
 		filterTypes: ["contains", "exact", "regex"],
 		defaultFilterType: "contains"
 	},
@@ -267,13 +252,6 @@ onMounted(() => {
 				<span :title="slotProps.item._id">{{
 					slotProps.item._id
 				}}</span>
-			</template>
-			<template #column-githubId="slotProps">
-				<span
-					v-if="slotProps.item.githubId"
-					:title="slotProps.item.githubId"
-					>{{ slotProps.item.githubId }}</span
-				>
 			</template>
 			<template #column-hasPassword="slotProps">
 				<span :title="slotProps.item.hasPassword">{{

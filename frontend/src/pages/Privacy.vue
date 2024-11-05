@@ -34,11 +34,10 @@ const MainFooter = defineAsyncComponent(
 				address, mailing address, phone number, photo, username from
 				other social media sites, gender, date of birth, or other
 				relevant information. In addition, we utilize third party API’s
-				like GitHub Authentication, and other API’s that allow you to
-				transfer your profile information from those Sites to ours
-				depending on your settings on those Sites. We are not
-				responsible for any information that does not transfer or if any
-				information is inaccurate.
+				that allow you to transfer your profile information from those
+				Sites to ours depending on your settings on those Sites. We are
+				not responsible for any information that does not transfer or if
+				any information is inaccurate.
 			</p>
 
 			<p>

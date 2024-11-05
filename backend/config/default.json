@@ -47,12 +47,6 @@
 			"requestTimeout": 5000,
 			"retryAmount": 2
 		},
-		"github": {
-			"enabled": false,
-			"client": "",
-			"secret": "",
-			"redirect_uri": ""
-		},
 		"discogs": {
 			"enabled": false,
 			"client": "",

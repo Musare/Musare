@@ -6,7 +6,6 @@ export default {
 		"services.password.reset.expires",
 		"services.password.set.code",
 		"services.password.set.expires",
-		"services.github.access_token",
 		"email.verificationToken"
 	],
 	specialProperties: {

@@ -72,14 +72,6 @@ export const up = async ({
 			type: DataTypes.DATE,
 			allowNull: true
 		},
-		githubId: {
-			type: DataTypes.BIGINT,
-			allowNull: true
-		},
-		githubAccessToken: {
-			type: DataTypes.STRING,
-			allowNull: true
-		},
 		songsRequested: {
 			type: DataTypes.BIGINT,
 			allowNull: false,

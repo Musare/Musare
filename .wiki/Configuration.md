@@ -89,10 +89,6 @@ For more information on configuration files please refer to the
 | `apis.soundcloud.rateLimit` | Minimum interval between SoundCloud API requests in milliseconds. |
 | `apis.soundcloud.requestTimeout` | SoundCloud API requests timeout in milliseconds. |
 | `apis.soundcloud.retryAmount` | The amount of retries to perform of a failed SoundCloud API request. |
-| `apis.github.enabled` | Whether to enable GitHub authentication. |
-| `apis.github.client` | GitHub OAuth Application client, obtained from [here](https://github.com/settings/developers). |
-| `apis.github.secret` | GitHub OAuth Application secret, obtained with client. |
-| `apis.github.redirect_uri` | The backend url with `/auth/github/authorize/callback` appended, for example `http://localhost/backend/auth/github/authorize/callback`. This is configured based on the `url` config option by default. |
 | `apis.discogs.enabled` | Whether to enable Discogs API usage. |
 | `apis.discogs.client` | Discogs Application client, obtained from [here](https://www.discogs.com/settings/developers). |
 | `apis.discogs.secret` | Discogs Application secret, obtained with client. |

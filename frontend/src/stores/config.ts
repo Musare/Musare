@@ -4,7 +4,6 @@ export const useConfigStore = defineStore("config", {
 	state: (): {
 		cookie: string;
 		sitename: string;
-		githubAuthentication: boolean;
 		messages: Record<string, string>;
 		christmas: boolean;
 		footerLinks: Record<string, string | boolean>;
@@ -24,7 +23,6 @@ export const useConfigStore = defineStore("config", {
 	} => ({
 		cookie: "musareSID",
 		sitename: MUSARE_SITENAME,
-		githubAuthentication: false,
 		messages: {
 			accountRemoval:
 				"Your account will be deactivated instantly and your data will shortly be deleted by an admin."

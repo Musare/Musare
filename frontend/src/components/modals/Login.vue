@@ -21,7 +21,7 @@ const passwordVisible = ref(false);
 const passwordElement = ref();
 
 const configStore = useConfigStore();
-const { githubAuthentication, registrationDisabled } = storeToRefs(configStore);
+const { registrationDisabled } = storeToRefs(configStore);
 const { login } = useUserAuthStore();
 
 const { openModal, closeCurrentModal } = useModalsStore();
@@ -79,10 +79,6 @@ const togglePasswordVisibility = () => {
 const changeToRegisterModal = () => {
 	closeCurrentModal();
 	openModal("register");
-};
-
-const githubRedirect = () => {
-	localStorage.setItem("github_redirect", route.path);
 };
 </script>
 
@@ -168,20 +164,6 @@ const githubRedirect = () => {
 					<button class="button is-primary" @click="submitModal()">
 						Login
 					</button>
-					<a
-						v-if="githubAuthentication"
-						class="button is-github"
-						:href="configStore.urls.api + '/auth/github/authorize'"
-						@click="githubRedirect()"
-					>
-						<div class="icon">
-							<img
-								class="invert"
-								src="/assets/social/github.svg"
-							/>
-						</div>
-						&nbsp;&nbsp;Login with GitHub
-					</a>
 				</div>
 
 				<p
@@ -220,18 +202,6 @@ const githubRedirect = () => {
 	.content-box-optional-helper {
 		margin-top: 0;
 	}
-}
-
-.button.is-github {
-	background-color: var(--dark-grey-2);
-	color: var(--white) !important;
-}
-
-.is-github:focus {
-	background-color: var(--dark-grey-4);
-}
-.is-primary:focus {
-	background-color: var(--primary-color) !important;
 }
 
 .invert {

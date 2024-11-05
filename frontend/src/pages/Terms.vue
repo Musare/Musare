@@ -75,13 +75,12 @@ const MainFooter = defineAsyncComponent(
 			</p>
 			<p>
 				We may also allow you to use a third party API to sign up for
-				our Site, like GitHub Authentication. Whenever you use this
-				feature, certain information will be transferred from the third
-				party account and will populate your profile here at Musare. It
-				is important to read and understand that third parties privacy
-				and information sharing practices and principles. More
-				importantly, you will be making certain information publicly
-				viewable.
+				our Site. Whenever you use this feature, certain information will
+				be transferred from the third party account and will populate your
+				profile here at Musare. It is important to read and understand that
+				third parties privacy and information sharing practices and
+				principles. More importantly, you will be making certain information
+				publicly viewable.
 			</p>
 			<p>
 				If you register for any feature that requires a password and/or

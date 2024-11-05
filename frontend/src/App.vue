@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useRouter } from "vue-router";
 import { defineAsyncComponent, ref, watch, onMounted } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
@@ -21,8 +20,6 @@ const BannedPage = defineAsyncComponent(() => import("@/pages/Banned.vue"));
 const FallingSnow = defineAsyncComponent(
 	() => import("@/components/FallingSnow.vue")
 );
-
-const router = useRouter();
 
 const { socket } = useWebsocketsStore();
 const configStore = useConfigStore();
@@ -165,16 +162,6 @@ onMounted(async () => {
 		});
 
 		openModal("whatIsNew");
-
-		router.isReady().then(() => {
-			if (
-				configStore.githubAuthentication &&
-				localStorage.getItem("github_redirect")
-			) {
-				router.push(localStorage.getItem("github_redirect"));
-				localStorage.removeItem("github_redirect");
-			}
-		});
 	});
 
 	socket.onDisconnect(() => {

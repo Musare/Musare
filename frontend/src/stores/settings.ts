@@ -30,7 +30,6 @@ export const useSettingsStore = defineStore("settings", {
 		}
 	},
 	getters: {
-		isGithubLinked: state => state.originalUser.github,
 		isPasswordLinked: state => state.originalUser.password
 	}
 });

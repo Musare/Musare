@@ -17,7 +17,7 @@ const QuickConfirm = defineAsyncComponent(
 );
 
 const configStore = useConfigStore();
-const { githubAuthentication, sitename } = storeToRefs(configStore);
+const { sitename } = storeToRefs(configStore);
 const settingsStore = useSettingsStore();
 const userAuthStore = useUserAuthStore();
 const { runJob } = useWebsocketStore();
@@ -42,7 +42,7 @@ const validation = reactive({
 const newPassword = ref();
 const oldPassword = ref();
 
-const { isPasswordLinked, isGithubLinked } = settingsStore;
+const { isPasswordLinked } = settingsStore;
 const { currentUser } = storeToRefs(userAuthStore);
 
 const togglePasswordVisibility = refName => {
@@ -81,16 +81,6 @@ const changePassword = () => {
 			}
 		}
 	);
-};
-const unlinkPassword = () => {
-	socket.dispatch("users.unlinkPassword", res => {
-		new Toast(res.message);
-	});
-};
-const unlinkGitHub = () => {
-	socket.dispatch("users.unlinkGitHub", res => {
-		new Toast(res.message);
-	});
 };
 const removeSessions = async () => {
 	await runJob("data.users.logoutAll");
@@ -211,56 +201,6 @@ watch(validation, newValidation => {
 				><i class="material-icons icon-with-button">create</i>Set
 				Password
 			</router-link>
-
-			<div class="section-margin-bottom" />
-		</div>
-
-		<div v-if="!isGithubLinked && githubAuthentication">
-			<h4 class="section-title">Link your GitHub account</h4>
-			<p class="section-description">
-				Link your {{ sitename }} account with GitHub
-			</p>
-
-			<hr class="section-horizontal-rule" />
-
-			<a
-				class="button is-github"
-				:href="`${configStore.urls.api}/auth/github/link`"
-			>
-				<div class="icon">
-					<img class="invert" src="/assets/social/github.svg" />
-				</div>
-				&nbsp; Link GitHub to account
-			</a>
-
-			<div class="section-margin-bottom" />
-		</div>
-
-		<div v-if="isPasswordLinked && isGithubLinked">
-			<h4 class="section-title">Remove login methods</h4>
-			<p class="section-description">
-				Remove your password as a login method or unlink GitHub
-			</p>
-
-			<hr class="section-horizontal-rule" />
-
-			<div class="row">
-				<quick-confirm
-					v-if="isPasswordLinked && githubAuthentication"
-					@confirm="unlinkPassword()"
-				>
-					<a class="button is-danger">
-						<i class="material-icons icon-with-button">close</i>
-						Remove password
-					</a>
-				</quick-confirm>
-				<quick-confirm v-if="isGithubLinked" @confirm="unlinkGitHub()">
-					<a class="button is-danger">
-						<i class="material-icons icon-with-button">link_off</i>
-						Remove GitHub from account
-					</a>
-				</quick-confirm>
-			</div>
 
 			<div class="section-margin-bottom" />
 		</div>
