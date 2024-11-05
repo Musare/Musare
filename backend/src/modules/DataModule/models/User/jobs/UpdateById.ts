@@ -9,7 +9,9 @@ import isSelf from "@/modules/DataModule/permissions/modelPermissions/isSelf";
 export default class UpdateById extends UpdateByIdJob {
 	protected static _model = User;
 
-	protected static _hasModelPermission = [isAdmin, isSelf];
+	protected static _hasPermission = isAdmin;
+
+	protected static _hasModelPermission = isSelf;
 
 	protected static _payloadSchema = Joi.object({
 		_id: Joi.string()

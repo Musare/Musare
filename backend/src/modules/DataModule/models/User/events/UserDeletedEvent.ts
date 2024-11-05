@@ -6,5 +6,7 @@ import User from "../../User";
 export default abstract class UserDeletedEvent extends ModelDeletedEvent {
 	protected static _model = User;
 
-	protected static _hasModelPermission = [isAdmin, isSelf];
+	protected static _hasPermission = isAdmin;
+
+	protected static _hasModelPermission = isSelf;
 }
