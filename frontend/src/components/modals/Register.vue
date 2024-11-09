@@ -1,70 +1,39 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, watch, onMounted } from "vue";
-import { useRoute } from "vue-router";
+import { defineAsyncComponent, ref, onMounted } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { useConfigStore } from "@/stores/config";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useModalsStore } from "@/stores/modals";
 import validation from "@/validation";
+import { useEvents } from "@/composables/useEvents";
+import { useWebsocketStore } from "@/stores/websocket";
+import { useForm } from "@/composables/useForm";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 const InputHelpBox = defineAsyncComponent(
 	() => import("@/components/InputHelpBox.vue")
 );
 
-const route = useRoute();
-
-const username = ref({
-	value: "",
-	valid: false,
-	entered: false,
-	message: "Only letters, numbers and underscores are allowed."
-});
-const email = ref({
-	value: "",
-	valid: false,
-	entered: false,
-	message: "Please enter a valid email address."
-});
-const password = ref({
-	value: "",
-	valid: false,
-	entered: false,
-	visible: false,
-	message:
-		"Include at least one lowercase letter, one uppercase letter, one number and one special character."
-});
+const passwordVisible = ref(false);
 const passwordElement = ref();
-
-const { register } = useUserAuthStore();
 
 const configStore = useConfigStore();
 const { registrationDisabled } = storeToRefs(configStore);
 const { openModal, closeCurrentModal } = useModalsStore();
 
-const submitModal = () => {
-	if (!username.value.valid || !email.value.valid || !password.value.valid)
-		return new Toast("Please ensure all fields are valid.");
+const { runJob } = useWebsocketStore();
+const { onReady } = useEvents();
 
-	return register({
-		username: username.value.value,
-		email: email.value.value,
-		password: password.value.value,
-	})
-		.then((res: any) => {
-			if (res.status === "success") window.location.reload();
-		})
-		.catch(err => new Toast(err.message));
-};
+const { login } = useUserAuthStore();
 
 const togglePasswordVisibility = () => {
 	if (passwordElement.value.type === "password") {
 		passwordElement.value.type = "text";
-		password.value.visible = true;
+		passwordVisible.value = true;
 	} else {
 		passwordElement.value.type = "password";
-		password.value.visible = false;
+		passwordVisible.value = false;
 	}
 };
 
@@ -73,72 +42,77 @@ const changeToLoginModal = () => {
 	openModal("login");
 };
 
-watch(
-	() => username.value.value,
-	value => {
-		username.value.entered = true;
-		if (!validation.isLength(value, 2, 32)) {
-			username.value.message =
-				"Username must have between 2 and 32 characters.";
-			username.value.valid = false;
-		} else if (!validation.regex.azAZ09_.test(value)) {
-			username.value.message =
-				"Invalid format. Allowed characters: a-z, A-Z, 0-9 and _.";
-			username.value.valid = false;
-		} else if (value.replaceAll(/[_]/g, "").length === 0) {
-			username.value.message =
-				"Invalid format. Allowed characters: a-z, A-Z, 0-9 and _, and there has to be at least one letter or number.";
-			username.value.valid = false;
-		} else {
-			username.value.message = "Everything looks great!";
-			username.value.valid = true;
+const { inputs, validate, save } = useForm(
+	{
+		username: {
+			value: null,
+			validate: (value: string) => {
+				if (!validation.isLength(value, 2, 32))
+					return "Username must have between 2 and 32 characters.";
+				if (!validation.regex.azAZ09_.test(value))
+					return "Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _.";
+				if (value.replaceAll(/[_]/g, "").length === 0)
+					return "Invalid username format. Allowed characters: a-z, A-Z, 0-9 and _, and there has to be at least one letter or number.";
+				return true;
+			}
+		},
+		emailAddress: {
+			value: null,
+			validate: (value: string) => {
+				if (!validation.isLength(value, 3, 254))
+					return "Email address must have between 3 and 254 characters.";
+				if (
+					value.indexOf("@") !== value.lastIndexOf("@") ||
+					!validation.regex.emailSimple.test(value)
+				)
+					return "Invalid email address format.";
+				return true;
+			}
+		},
+		password: {
+			value: null,
+			validate: (value: string) => {
+				if (!validation.isLength(value, 6, 200))
+					return "Password must have between 6 and 200 characters.";
+				if (!validation.regex.password.test(value))
+					return "Include at least one lowercase letter, one uppercase letter, one number and one special character.";
+				return true;
+			}
 		}
-	}
-);
-watch(
-	() => email.value.value,
-	value => {
-		email.value.entered = true;
-		if (!validation.isLength(value, 3, 254)) {
-			email.value.message =
-				"Email must have between 3 and 254 characters.";
-			email.value.valid = false;
-		} else if (
-			value.indexOf("@") !== value.lastIndexOf("@") ||
-			!validation.regex.emailSimple.test(value)
-		) {
-			email.value.message = "Invalid format.";
-			email.value.valid = false;
+	},
+	({ status, messages, values }, resolve, reject) => {
+		if (status === "success") {
+			runJob('data.users.register', {
+				query: values
+			})
+				.then(async data => {
+					await login(data.sessionId);
+
+					window.location.reload();
+
+					resolve();
+				})
+				.catch(reject);
 		} else {
-			email.value.message = "Everything looks great!";
-			email.value.valid = true;
-		}
-	}
-);
-watch(
-	() => password.value.value,
-	value => {
-		password.value.entered = true;
-		if (!validation.isLength(value, 6, 200)) {
-			password.value.message =
-				"Password must have between 6 and 200 characters.";
-			password.value.valid = false;
-		} else if (!validation.regex.password.test(value)) {
-			password.value.message =
-				"Include at least one lowercase letter, one uppercase letter, one number and one special character.";
-			password.value.valid = false;
-		} else {
-			password.value.message = "Everything looks great!";
-			password.value.valid = true;
+			if (status === "unchanged") new Toast(messages.unchanged);
+			else if (status === "error")
+				Object.values(messages).forEach(message => {
+					new Toast({ content: message, timeout: 8000 });
+				});
+			resolve();
 		}
 	}
 );
 
 onMounted(async () => {
-	if (registrationDisabled.value) {
-		new Toast("Registration is disabled.");
-		closeCurrentModal();
-	}
+	await onReady(async () => {
+		if (registrationDisabled.value) {
+			new Toast("Registration is disabled.");
+			closeCurrentModal();
+
+			return;
+		}
+	});
 });
 </script>
 
@@ -156,20 +130,23 @@ onMounted(async () => {
 					<p class="control">
 						<label class="label">Email</label>
 						<input
-							v-model="email.value"
+							v-model="inputs.emailAddress.value"
 							class="input"
 							type="email"
-							autocomplete="username"
+							autocomplete="email"
 							placeholder="Email..."
-							@keyup.enter="submitModal()"
+							@input="validate('emailAddress')"
+							@keyup.enter="save()"
 							autofocus
 						/>
 					</p>
 					<transition name="fadein-helpbox">
 						<input-help-box
-							:entered="email.entered"
-							:valid="email.valid"
-							:message="email.message"
+							:entered="inputs.emailAddress.value?.length > 1"
+							:valid="inputs.emailAddress.errors.length === 0"
+							:message="
+								inputs.emailAddress.errors[0] ?? 'Everything looks great!'
+							"
 						/>
 					</transition>
 
@@ -177,19 +154,22 @@ onMounted(async () => {
 					<p class="control">
 						<label class="label">Username</label>
 						<input
-							v-model="username.value"
+							v-model="inputs.username.value"
 							class="input"
 							type="text"
 							autocomplete="username"
 							placeholder="Username..."
-							@keyup.enter="submitModal()"
+							@input="validate('username')"
+							@keyup.enter="save()"
 						/>
 					</p>
 					<transition name="fadein-helpbox">
 						<input-help-box
-							:entered="username.entered"
-							:valid="username.valid"
-							:message="username.message"
+							:entered="inputs.username.value?.length > 1"
+							:valid="inputs.username.errors.length === 0"
+							:message="
+								inputs.username.errors[0] ?? 'Everything looks great!'
+							"
 						/>
 					</transition>
 
@@ -200,18 +180,19 @@ onMounted(async () => {
 
 					<div id="password-visibility-container">
 						<input
-							v-model="password.value"
+							v-model="inputs.password.value"
 							class="input"
 							type="password"
 							autocomplete="new-password"
 							ref="passwordElement"
 							placeholder="Password..."
-							@keyup.enter="submitModal()"
+							@input="validate('password')"
+							@keyup.enter="save()"
 						/>
 						<a @click="togglePasswordVisibility()">
 							<i class="material-icons">
 								{{
-									!password.visible
+									!passwordVisible
 										? "visibility"
 										: "visibility_off"
 								}}
@@ -221,9 +202,11 @@ onMounted(async () => {
 
 					<transition name="fadein-helpbox">
 						<input-help-box
-							:valid="password.valid"
-							:entered="password.entered"
-							:message="password.message"
+							:entered="inputs.password.value?.length > 1"
+							:valid="inputs.password.errors.length === 0"
+							:message="
+								inputs.password.errors[0] ?? 'Everything looks great!'
+							"
 						/>
 					</transition>
 
@@ -243,7 +226,7 @@ onMounted(async () => {
 			</template>
 			<template #footer>
 				<div id="actions">
-					<button class="button is-primary" @click="submitModal()">
+					<button class="button is-primary" @click="save()">
 						Register
 					</button>
 				</div>
