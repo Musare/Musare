@@ -51,7 +51,7 @@ if [[ ${dockerInstalled} -gt 0 || ${composeInstalled} -gt 0 ]]; then
 fi
 
 composeFiles="-f docker-compose.yml"
-if [[ ${CONTAINER_MODE} == "development" ]]; then
+if [[ ${APP_ENV} == "development" ]]; then
     composeFiles="${composeFiles} -f docker-compose.dev.yml"
 fi
 if [[ -f docker-compose.override.yml ]]; then

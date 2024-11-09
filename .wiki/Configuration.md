@@ -26,15 +26,14 @@ machine, even though the application within the container is listening on `21017
 | --- | --- |
 | `COMPOSE_PROJECT_NAME` | Should be a unique name for this installation, especially if you have multiple instances of Musare on the same machine. |
 | `RESTART_POLICY` | Restart policy for Docker containers, values can be found [here](https://docs.docker.com/config/containers/start-containers-automatically/). |
-| `CONTAINER_MODE` | Should be either `production` or `development`.  |
 | `DOCKER_COMMAND` | Should be either `docker` or `podman`.  |
+| `APP_ENV` | Should be either `production` or `development`.  |
 | `BACKEND_HOST` | Backend container host. Only used for development mode. |
 | `BACKEND_PORT` | Backend container port. Only used for development mode. |
 | `FRONTEND_HOST` | Frontend container host. |
 | `FRONTEND_PORT` | Frontend container port. |
 | `FRONTEND_CLIENT_PORT` | Should be the port on which the frontend will be accessible from, usually port `80`, or `443` if using SSL. Only used when running in development mode. |
 | `FRONTEND_DEV_PORT` | Should be the port where Vite's dev server will be accessible from, should always be port `81` for Docker since nginx listens on port 80, and is recommended to be port `80` for non-Docker. Only used when running in development mode. |
-| `FRONTEND_MODE` | Should be either `production` or `development`. |
 | `FRONTEND_PROD_DEVTOOLS` | Whether to enable Vue dev tools in production builds. [^1] |
 | `MONGO_HOST` | Mongo container host. |
 | `MONGO_PORT` | Mongo container port. |
