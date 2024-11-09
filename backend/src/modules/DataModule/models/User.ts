@@ -55,10 +55,6 @@ export class User extends Model<
 
 	declare passwordResetExpiresAt: CreationOptional<Date | null>;
 
-	declare passwordSetCode: CreationOptional<string | null>;
-
-	declare passwordSetExpiresAt: CreationOptional<Date | null>;
-
 	// End services
 
 	// Statistics
@@ -164,11 +160,13 @@ export const schema = {
 	_id: {
 		type: DataTypes.OBJECTID,
 		autoNull: false,
-		primaryKey: true
+		primaryKey: true,
+		unique: true
 	},
 	username: {
-		type: DataTypes.STRING,
-		allowNull: false
+		type: DataTypes.CITEXT,
+		allowNull: false,
+		unique: true
 	},
 	role: {
 		type: DataTypes.ENUM(...Object.values(UserRole)),
@@ -181,11 +179,13 @@ export const schema = {
 	},
 	emailVerificationToken: {
 		type: DataTypes.STRING,
-		allowNull: true
+		allowNull: true,
+		unique: true
 	},
 	emailAddress: {
-		type: DataTypes.STRING,
-		allowNull: false
+		type: DataTypes.CITEXT,
+		allowNull: false,
+		unique: true
 	},
 	avatarType: {
 		type: DataTypes.ENUM(...Object.values(UserAvatarType)),
@@ -205,17 +205,10 @@ export const schema = {
 	},
 	passwordResetCode: {
 		type: DataTypes.STRING,
-		allowNull: true
+		allowNull: true,
+		unique: true
 	},
 	passwordResetExpiresAt: {
-		type: DataTypes.DATE,
-		allowNull: true
-	},
-	passwordSetCode: {
-		type: DataTypes.STRING,
-		allowNull: true
-	},
-	passwordSetExpiresAt: {
 		type: DataTypes.DATE,
 		allowNull: true
 	},
@@ -289,7 +282,6 @@ export const options = {
 				"emailVerificationToken",
 				"password",
 				"passwordResetCode",
-				"passwordSetCode",
 			]
 		}
 	}
