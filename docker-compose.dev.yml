@@ -4,20 +4,12 @@ services:
       dockerfile: ./Dockerfile.dev
     ports:
       - "${BACKEND_HOST:-0.0.0.0}:${BACKEND_PORT:-8080}:8080"
-    volumes:
-      - ./.git:/opt/.git:ro
-      - ./types:/opt/types
-      - ./backend:/opt/app
     environment:
       - APP_ENV=${APP_ENV:-development}
 
   frontend:
     build:
       dockerfile: ./Dockerfile.dev
-    volumes:
-      - ./.git:/opt/.git:ro
-      - ./types:/opt/types
-      - ./frontend:/opt/app
     environment:
       - APP_ENV=${APP_ENV:-development}
 
@@ -28,5 +20,3 @@ services:
   redis:
     ports:
       - "${REDIS_HOST:-0.0.0.0}:${REDIS_PORT:-6379}:6379"
-    volumes:
-      - ${REDIS_DATA_LOCATION:-./redis}:/data

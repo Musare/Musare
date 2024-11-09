@@ -1,0 +1,18 @@
+services:
+  backend:
+    volumes:
+      - ./.git:/opt/.git:ro
+      - ./common:/opt/common
+      - ./types:/opt/types
+      - ./backend:/opt/app
+
+  frontend:
+    volumes:
+      - ./.git:/opt/.git:ro
+      - ./common:/opt/common
+      - ./types:/opt/types
+      - ./frontend:/opt/app
+
+  redis:
+    volumes:
+      - ${REDIS_DATA_LOCATION:-./redis}:/data
