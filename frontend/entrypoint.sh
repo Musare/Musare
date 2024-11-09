@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 if [[ "${CONTAINER_MODE}" == "development" ]]; then
     npm install --silent
