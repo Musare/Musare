@@ -12,16 +12,6 @@ After updating values in `.env`, containers should be restarted or rebuilt.
 If you are using a different setup, you will need to define the relevant
 environment variables yourself.
 
-In the table below, the `[SERVICE]_HOST` properties refer to the IP address that
-the Docker container listens on. Setting this to `127.0.0.1` for will only expose
-the configured port to localhost, whereas setting this to `0.0.0.0` will expose the
-port on all interfaces.  
-The `[SERVICE]_PORT` properties refer to the external Docker container port, used
-to access services from outside the container. Changing this does not require any
-changes to configuration within container. For example, setting the `MONGO_PORT`
-to `21018` will allow you to access the mongo database through that port on your
-machine, even though the application within the container is listening on `21017`.
-
 | Property | Description |
 | --- | --- |
 | `COMPOSE_PROJECT_NAME` | Should be a unique name for this installation, especially if you have multiple instances of Musare on the same machine. |
@@ -157,10 +147,16 @@ For more information on configuration files please refer to the
 | `experimental.soundcloud` | Experimental SoundCloud integration. |
 | `experimental.spotify` | Experimental Spotify integration. |
 
-## Docker compose override
+## Docker
+
+Below are some snippets that may help you get started with Docker.
+For more information please see the [Docker documentation](https://docs.docker.com).
+
+### Compose override
 
 You may want to override the docker compose files in some specific cases.
 For this, you can create a `compose.override.yml` file.
+An example is available at [compose.override.yml.example](../compose.override.yml.example).
 
 For example, to expose the frontend port:
 
@@ -178,4 +174,20 @@ services:
   backend:
     ports:
       - "127.0.0.1:9229:9229"
+```
+
+### Daemon configuration
+
+The below is an example `daemon.json` configured to bind to a specific IP,
+and setup log rotation.
+
+```json
+{
+  "ip": "127.0.0.1",
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "10"
+  }
+}
 ```
