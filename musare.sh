@@ -420,8 +420,9 @@ handleUpdate()
     musareshChange=$(echo "${updated}" | grep "musare.sh")
     dbChange=$(echo "${updated}" | grep "backend/logic/db/schemas")
     bcChange=$(echo "${updated}" | grep "backend/config/default.json")
+    envChange=$(echo "${updated}" | grep ".env.example")
     set -e
-    if [[ ( $2 == "auto" && -z $dbChange && -z $bcChange && -z $musareshChange ) || -z $2 ]]; then
+    if [[ ( $2 == "auto" && -z $dbChange && -z $bcChange && -z $musareshChange && -z $envChange ) || -z $2 ]]; then
         if [[ -n $musareshChange && $(git diff @\{u\} -- musare.sh) != "" ]]; then
             if [[ $musareshModified != "" ]]; then
                 throw "musare.sh has been modified, please reset these changes and run the update command again to continue."
@@ -441,6 +442,9 @@ handleUpdate()
             fi
             if [[ -n $bcChange ]]; then
                 echo -e "${RED}Backend config has changed, please update!${NC}"
+            fi
+            if [[ -n $envChange ]]; then
+                echo -e "${RED}Environment config has changed, please update!${NC}"
             fi
         fi
     elif [[ $2 == "auto" ]]; then
