@@ -2,8 +2,6 @@ services:
   backend:
     build:
       dockerfile: ./Dockerfile.dev
-    ports:
-      - "${BACKEND_HOST:-0.0.0.0}:${BACKEND_PORT:-8080}:8080"
     environment:
       - APP_ENV=${APP_ENV:-development}
 
@@ -12,11 +10,14 @@ services:
       dockerfile: ./Dockerfile.dev
     environment:
       - APP_ENV=${APP_ENV:-development}
-
-  mongo:
-    ports:
-      - "${MONGO_HOST:-0.0.0.0}:${MONGO_PORT:-27017}:${MONGO_PORT:-27017}"
-
-  redis:
-    ports:
-      - "${REDIS_HOST:-0.0.0.0}:${REDIS_PORT:-6379}:6379"
+      - FRONTEND_CLIENT_PORT=${FRONTEND_CLIENT_PORT:-80}
+      - FRONTEND_DEV_PORT=${FRONTEND_DEV_PORT:-81}
+      - FRONTEND_PROD_DEVTOOLS=${FRONTEND_PROD_DEVTOOLS:-false}
+      - MUSARE_SITENAME=${MUSARE_SITENAME:-Musare}
+      - MUSARE_PRIMARY_COLOR=${MUSARE_PRIMARY_COLOR:-#03a9f4}
+      - MUSARE_DEBUG_VERSION=${MUSARE_DEBUG_VERSION:-true}
+      - MUSARE_DEBUG_GIT_REMOTE=${MUSARE_DEBUG_GIT_REMOTE:-false}
+      - MUSARE_DEBUG_GIT_REMOTE_URL=${MUSARE_DEBUG_GIT_REMOTE_URL:-false}
+      - MUSARE_DEBUG_GIT_BRANCH=${MUSARE_DEBUG_GIT_BRANCH:-true}
+      - MUSARE_DEBUG_GIT_LATEST_COMMIT=${MUSARE_DEBUG_GIT_LATEST_COMMIT:-true}
+      - MUSARE_DEBUG_GIT_LATEST_COMMIT_SHORT=${MUSARE_DEBUG_GIT_LATEST_COMMIT_SHORT:-true}

@@ -34,6 +34,8 @@ COPY --chown=musare:musare --link --from=backend_node_modules /opt/app/node_modu
 
 ENTRYPOINT sh /opt/app/entrypoint.dev.sh
 
+EXPOSE 8080
+
 # Frontend node modules
 FROM common_base AS frontend_node_modules
 
@@ -76,3 +78,5 @@ COPY --chown=musare:musare --link frontend /opt/app
 COPY --chown=musare:musare --from=frontend_node_modules --link /opt/app/node_modules node_modules
 
 ENTRYPOINT sh /opt/app/entrypoint.dev.sh
+
+EXPOSE 80

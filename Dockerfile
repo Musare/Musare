@@ -34,6 +34,8 @@ COPY --chown=musare:musare --link --from=backend_node_modules /opt/app/node_modu
 
 ENTRYPOINT npm run prod
 
+EXPOSE 8080
+
 # Frontend node modules
 FROM common_base AS frontend_node_modules
 
@@ -77,3 +79,5 @@ FROM nginx AS frontend
 
 COPY --chown=root:root --link frontend/nginx.prod.conf /etc/nginx/conf.d/default.conf
 COPY --from=frontend_build --chown=nginx:nginx --link /opt/app/build /usr/share/nginx/html
+
+EXPOSE 80
