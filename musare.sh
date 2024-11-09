@@ -50,14 +50,17 @@ if [[ ${dockerInstalled} -gt 0 || ${composeInstalled} -gt 0 ]]; then
     exit 1
 fi
 
-composeFiles="-f docker-compose.yml"
+# Add docker compose file arguments to command
+composeFiles="-f compose.yml"
 if [[ ${APP_ENV} == "development" ]]; then
-    composeFiles="${composeFiles} -f docker-compose.dev.yml"
+    composeFiles="${composeFiles} -f compose.dev.yml"
 fi
 if [[ ${CONTAINER_MODE} == "local" ]]; then
-    composeFiles="${composeFiles} -f docker-compose.local.yml"
+    composeFiles="${composeFiles} -f compose.local.yml"
 fi
-if [[ -f docker-compose.override.yml ]]; then
+if [[ -f compose.override.yml ]]; then
+    composeFiles="${composeFiles} -f compose.override.yml"
+elif [[ -f docker-compose.override.yml ]]; then
     composeFiles="${composeFiles} -f docker-compose.override.yml"
 fi
 dockerCompose="${dockerCompose} ${composeFiles}"

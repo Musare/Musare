@@ -13,6 +13,7 @@ startMongo.cmd
 .redis
 *.rdb
 backups/
+compose.override.yml
 docker-compose.override.yml
 
 npm-debug.log

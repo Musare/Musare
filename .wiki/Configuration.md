@@ -157,10 +157,10 @@ For more information on configuration files please refer to the
 | `experimental.soundcloud` | Experimental SoundCloud integration. |
 | `experimental.spotify` | Experimental Spotify integration. |
 
-## Docker-compose override
+## Docker compose override
 
-You may want to override the docker-compose files in some specific cases.  
-For this, you can create a `docker-compose.override.yml` file.
+You may want to override the docker compose files in some specific cases.
+For this, you can create a `compose.override.yml` file.
 
 For example, to expose the frontend port:
 
