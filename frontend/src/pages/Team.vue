@@ -28,10 +28,7 @@ const currentTeam = ref([
 		active: "Sept 2015 - present",
 		github: "KrisVos130",
 		link: "https://kvos.dev",
-		avatar: {
-			type: "text",
-			color: "orange"
-		}
+		avatarColor: "orange"
 	},
 	{
 		name: "Owen Diffey",
@@ -46,10 +43,7 @@ const currentTeam = ref([
 		active: "Feb 2016 - present",
 		github: "odiffey",
 		link: "https://diffey.dev",
-		avatar: {
-			type: "text",
-			color: "purple"
-		}
+		avatarColor: "purple"
 	}
 ]);
 const previousTeam = ref([
@@ -139,7 +133,7 @@ const otherContributors = ref([
 					>
 						<header class="card-header">
 							<profile-picture
-								:avatar="member.avatar"
+								:color="member.avatarColor"
 								:name="member.name"
 							/>
 							<div>
@@ -191,7 +185,7 @@ const otherContributors = ref([
 					>
 						<header class="card-header">
 							<profile-picture
-								:avatar="{ type: 'text', color: 'grey' }"
+								color="grey"
 								:name="member.name"
 							/>
 							<div>
