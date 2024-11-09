@@ -1,24 +1,38 @@
-FROM node:18-alpine AS backend_node_modules
+FROM node:18-alpine AS backend_base
+
+ARG UID=1000
+ARG GID=1000
+
+RUN deluser --remove-home node \
+    && addgroup -S -g ${GID} musare \
+    && adduser -SD -u ${UID} musare \
+    && adduser musare musare
+
+RUN mkdir -p /opt/.git /opt/types /opt/app \
+    && chown -R musare:musare /opt/app
+
+WORKDIR /opt/app
+
+USER musare
+
+FROM backend_base AS backend_node_modules
 
 RUN mkdir -p /opt/app
 WORKDIR /opt/app
 
-COPY backend/package.json backend/package-lock.json /opt/app/
+COPY --chown=musare:musare --link backend/package.json backend/package-lock.json /opt/app/
 
 RUN npm install
 
-FROM node:18-alpine AS musare_backend
+FROM backend_base AS musare_backend
 
 ARG CONTAINER_MODE=production
 ENV CONTAINER_MODE=${CONTAINER_MODE}
 
-RUN mkdir -p /opt/.git /opt/types /opt/app
-WORKDIR /opt/app
-
-COPY .git /opt/.git
-COPY types /opt/types
-COPY backend /opt/app
-COPY --from=backend_node_modules /opt/app/node_modules node_modules
+COPY --chown=musare:musare --link .git /opt/.git
+COPY --chown=musare:musare --link types /opt/types
+COPY --chown=musare:musare --link backend /opt/app
+COPY --chown=musare:musare --link --from=backend_node_modules /opt/app/node_modules node_modules
 
 ENTRYPOINT sh -c '([[ "${CONTAINER_MODE}" == "development" ]] && npm install); npm run docker:dev'
 
