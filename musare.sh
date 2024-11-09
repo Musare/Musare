@@ -409,14 +409,18 @@ handleUpdate()
         exit 0
     fi
 
+    set +e
     breakingConfigChange=$(git rev-list "$(git rev-parse HEAD)" | grep d8b73be1de231821db34c677110b7b97e413451f)
+    set -e
     if [[ -f backend/config/default.json && -z $breakingConfigChange ]]; then
         throw "Configuration has breaking changes. Please rename or remove 'backend/config/default.json' and run the update command again to continue."
     fi
 
+    set +e
     musareshChange=$(echo "${updated}" | grep "musare.sh")
     dbChange=$(echo "${updated}" | grep "backend/logic/db/schemas")
     bcChange=$(echo "${updated}" | grep "backend/config/default.json")
+    set -e
     if [[ ( $2 == "auto" && -z $dbChange && -z $bcChange && -z $musareshChange ) || -z $2 ]]; then
         if [[ -n $musareshChange && $(git diff @\{u\} -- musare.sh) != "" ]]; then
             if [[ $musareshModified != "" ]]; then
