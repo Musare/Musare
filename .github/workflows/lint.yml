@@ -29,3 +29,5 @@ jobs:
               run: ./musare.sh lint frontend
             - name: Docs Lint
               run: ./musare.sh lint docs
+            - name: Shell Lint
+              run: ./musare.sh lint shell

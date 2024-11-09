@@ -7,7 +7,7 @@ if [ ! -d node_modules ]; then
     npm install
 fi
 
-if [[ "${APP_ENV}" == "development" ]]; then
+if [ "${APP_ENV}" = "development" ]; then
     npm run dev
 else
     npm run prod
