@@ -1,5 +1,5 @@
 # Common base image
-FROM node:18-alpine AS common_base
+FROM node:22-alpine AS common_base
 
 ARG UID=1000
 ARG GID=1000

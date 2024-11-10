@@ -5,7 +5,7 @@ import config from "config";
 import fs from "fs";
 
 import * as readline from "node:readline";
-import packageJson from "./package.json" assert { type: "json" };
+import packageJson from "./package.json" with { type: "json" };
 
 const REQUIRED_CONFIG_VERSION = 12;
 
