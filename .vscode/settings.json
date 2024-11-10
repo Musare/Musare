@@ -1,0 +1,6 @@
+{
+	"javascript.suggest.completeJSDocs": false,
+	"typescript.suggest.completeJSDocs": false,
+	"typescript.suggest.jsdoc.generateReturns": false,
+	"javascript.suggest.jsdoc.generateReturns": false
+}
