@@ -4,6 +4,8 @@ services:
       dockerfile: ./Dockerfile.dev
     environment:
       - APP_ENV=${APP_ENV:-development}
+      - BACKEND_DEBUG=${BACKEND_DEBUG:-false}
+      - BACKEND_DEBUG_PORT=${BACKEND_DEBUG_PORT:-9229}
 
   frontend:
     build:

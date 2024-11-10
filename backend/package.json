@@ -9,7 +9,7 @@
   "license": "GPL-3.0",
   "repository": "https://github.com/Musare/Musare",
   "scripts": {
-    "dev": "nodemon --import=extensionless/register --legacy-watch --no-stdin /opt/app",
+    "dev": "nodemon",
     "prod": "node --import=extensionless/register /opt/app",
     "lint": "eslint . --ext .js",
     "typescript": "tsc --noEmit --skipLibCheck"

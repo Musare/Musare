@@ -2,7 +2,6 @@ Thumbs.db
 .DS_Store
 *.swp
 .idea/
-.vscode/
 .vagrant/
 
 .env

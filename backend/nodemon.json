@@ -1,0 +1,7 @@
+{
+    "ext": "js,json",
+	"stdin": true,
+	"stdout": true,
+	"signal": "SIGUSR2",
+	"exec": "node --import=extensionless/register -i ${INSPECT_BRK} /opt/app"
+}
