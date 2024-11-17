@@ -1,0 +1,79 @@
+{
+  "name": "server",
+  "description": "An open-source collaborative music listening and catalogue curation application.",
+  "version": "0.0.0",
+  "homepage": "",
+  "private": true,
+  "keywords": [
+    "feathers"
+  ],
+  "author": {},
+  "contributors": [],
+  "bugs": {},
+  "engines": {
+    "node": ">= 20.14.0"
+  },
+  "feathers": {
+    "language": "ts",
+    "packager": "npm",
+    "database": "postgresql",
+    "framework": "koa",
+    "transports": [
+      "rest",
+      "websockets"
+    ],
+    "schema": "typebox"
+  },
+  "directories": {
+    "lib": "src",
+    "test": "test"
+  },
+  "files": [
+    "lib/client.js",
+    "lib/**/*.d.ts",
+    "lib/**/*.shared.js"
+  ],
+  "main": "lib/client",
+  "scripts": {
+    "dev": "nodemon -x ts-node src/index.ts",
+    "compile": "shx rm -rf lib/ && tsc",
+    "start": "node lib/",
+    "prettier": "npx prettier \"**/*.ts\" --write",
+    "mocha": "cross-env NODE_ENV=test mocha test/ --require ts-node/register --recursive --extension .ts --exit",
+    "test": "cross-env NODE_ENV=test npm run migrate && npm run mocha",
+    "bundle:client": "npm run compile && npm pack --pack-destination ./public",
+    "migrate": "knex migrate:latest",
+    "migrate:make": "knex migrate:make"
+  },
+  "dependencies": {
+    "@feathersjs/adapter-commons": "^5.0.31",
+    "@feathersjs/authentication": "^5.0.31",
+    "@feathersjs/authentication-client": "^5.0.31",
+    "@feathersjs/configuration": "^5.0.31",
+    "@feathersjs/errors": "^5.0.31",
+    "@feathersjs/feathers": "^5.0.31",
+    "@feathersjs/knex": "^5.0.31",
+    "@feathersjs/koa": "^5.0.31",
+    "@feathersjs/schema": "^5.0.31",
+    "@feathersjs/socketio": "^5.0.31",
+    "@feathersjs/transport-commons": "^5.0.31",
+    "@feathersjs/typebox": "^5.0.31",
+    "knex": "^3.1.0",
+    "pg": "^8.13.1",
+    "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "@feathersjs/cli": "^5.0.31",
+    "@feathersjs/rest-client": "^5.0.31",
+    "@types/mocha": "^10.0.9",
+    "@types/node": "^22.9.0",
+    "axios": "^1.7.7",
+    "cross-env": "^7.0.3",
+    "mocha": "^10.8.2",
+    "nodemon": "^3.1.7",
+    "prettier": "^3.3.3",
+    "shx": "^0.3.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3"
+  }
+}
