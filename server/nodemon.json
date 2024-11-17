@@ -1,0 +1,7 @@
+{
+    "ext": "ts,js,json",
+	"stdin": true,
+	"stdout": true,
+	"signal": "SIGUSR2",
+	"exec": "node --require ts-node/register -i ${INSPECT_BRK} src/index.ts"
+}

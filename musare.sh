@@ -122,19 +122,27 @@ runDockerCommand()
         throw "Error: Invalid runDockerCommand input"
     fi
 
-    servicesString=$(handleServices "backend frontend mongo redis" "${@:3}")
+    servicesString=$(handleServices "server postgres backend frontend mongo redis" "${@:3}")
     if [[ ${servicesString:0:1} != 1 ]]; then
-        throw "${servicesString:2}\n${YELLOW}Usage: ${1} [backend, frontend, mongo, redis]"
+        throw "${servicesString:2}\n${YELLOW}Usage: ${1} [server, postgres, backend, frontend, mongo, redis]"
     fi
 
     if [[ ${servicesString:2:4} == "all" ]]; then
         servicesString=""
-        pullServices="mongo redis"
-        buildServices="backend frontend"
+        pullServices="postgres mongo redis"
+        buildServices="server backend frontend"
     else
         servicesString=${servicesString:2}
         pullArray=()
         buildArray=()
+
+        if [[ "${servicesString}" == *server* ]]; then
+            buildArray+=("server")
+        fi
+
+        if [[ "${servicesString}" == *postgres* ]]; then
+            pullArray+=("postgres")
+        fi
 
         if [[ "${servicesString}" == *mongo* ]]; then
             pullArray+=("mongo")
@@ -198,9 +206,9 @@ getContainerId()
 # Reset services
 handleReset()
 {
-    servicesString=$(handleServices "backend frontend mongo redis" "${@:2}")
+    servicesString=$(handleServices "server postgres backend frontend mongo redis" "${@:2}")
     if [[ ${servicesString:0:1} != 1 ]]; then
-        throw "${servicesString:2}\n${YELLOW}Usage: ${1} [backend, frontend, mongo, redis]"
+        throw "${servicesString:2}\n${YELLOW}Usage: ${1} [server, postgres, backend, frontend, mongo, redis]"
     fi
 
     confirmMessage="${GREEN}Are you sure you want to reset all data"
@@ -234,6 +242,16 @@ attachContainer()
     fi
 
     case $2 in
+        server)
+            echo -e "${YELLOW}Detach with CTRL+P+Q${NC}"
+            ${docker} attach "$containerId"
+            ;;
+
+        postgres)
+            echo -e "${YELLOW}Detach with CTRL+D${NC}"
+            PGPASSWORD="${POSTGRES_PASSWORD}" ${dockerCompose} exec postgres psql "${POSTGRES_USERNAME}" musare
+            ;;
+
         backend)
             echo -e "${YELLOW}Detach with CTRL+P+Q${NC}"
             ${docker} attach "$containerId"
@@ -255,7 +273,7 @@ attachContainer()
             ;;
 
         *)
-            throw "Invalid service ${2}\n${YELLOW}Usage: ${1} [backend, mongo, redis]"
+            throw "Invalid service ${2}\n${YELLOW}Usage: ${1} [postgres, server, backend, mongo, redis]"
             ;;
     esac
 }

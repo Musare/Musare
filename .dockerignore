@@ -5,6 +5,7 @@
 !.git/refs/
 
 !types/
+!server/
 !backend/
 !frontend/
 

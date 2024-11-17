@@ -16,6 +16,26 @@ WORKDIR /opt/app
 
 USER musare
 
+# Server node modules
+FROM common_base AS server_node_modules
+
+COPY --chown=musare:musare --link server/package.json server/package-lock.json /opt/app/
+
+RUN npm install
+
+# Server development image
+FROM common_base AS server
+
+ENV APP_ENV=development
+
+COPY --chown=musare:musare --link .git /opt/.git
+COPY --chown=musare:musare --link server /opt/app
+COPY --chown=musare:musare --link --from=server_node_modules /opt/app/node_modules node_modules
+
+ENTRYPOINT sh /opt/app/entrypoint.dev.sh
+
+EXPOSE 8080
+
 # Backend node modules
 FROM common_base AS backend_node_modules
 

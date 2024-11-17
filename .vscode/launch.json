@@ -5,7 +5,20 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Docker: Attach to Node",
+            "name": "Docker: Attach to server",
+            "type": "node",
+            "request": "attach",
+            "port": 9228,
+            "address": "localhost",
+            "localRoot": "${workspaceFolder}/server",
+            "remoteRoot": "/opt/app/",
+            "autoAttachChildProcesses": true,
+            "restart": true,
+            "continueOnAttach": true,
+            "smartStep": true
+        },
+        {
+            "name": "Docker: Attach to backend",
             "type": "node",
             "request": "attach",
             "port": 9229,

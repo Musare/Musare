@@ -1,4 +1,43 @@
 services:
+  server:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      target: server
+    restart: unless-stopped
+    volumes:
+      - ./server/config:/opt/app/config
+    environment:
+      - MUSARE_SITENAME=${MUSARE_SITENAME:-Musare}
+      - MUSARE_PRIMARY_COLOR=${MUSARE_PRIMARY_COLOR:-#03a9f4}
+      - MUSARE_DEBUG_VERSION=${MUSARE_DEBUG_VERSION:-true}
+      - MUSARE_DEBUG_GIT_REMOTE=${MUSARE_DEBUG_GIT_REMOTE:-false}
+      - MUSARE_DEBUG_GIT_REMOTE_URL=${MUSARE_DEBUG_GIT_REMOTE_URL:-false}
+      - MUSARE_DEBUG_GIT_BRANCH=${MUSARE_DEBUG_GIT_BRANCH:-true}
+      - MUSARE_DEBUG_GIT_LATEST_COMMIT=${MUSARE_DEBUG_GIT_LATEST_COMMIT:-true}
+      - MUSARE_DEBUG_GIT_LATEST_COMMIT_SHORT=${MUSARE_DEBUG_GIT_LATEST_COMMIT_SHORT:-true}
+      - POSTGRES_USERNAME=${POSTGRES_USERNAME}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    links:
+      - postgres
+    networks:
+      - backend
+      - proxy
+    stdin_open: true
+    tty: true
+
+  postgres:
+    image: postgres
+    restart: unless-stopped
+    networks:
+      - backend
+    environment:
+      - POSTGRES_DB=musare
+      - POSTGRES_USER=${POSTGRES_USERNAME}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data 
+
   backend:
     build:
       context: .
@@ -80,6 +119,8 @@ networks:
   backend:
 
 volumes:
+  pgdata:
+
   database:
 
   cache:

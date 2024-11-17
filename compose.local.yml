@@ -1,4 +1,9 @@
 services:
+  server:
+    volumes:
+      - ./.git:/opt/.git:ro
+      - ./server:/opt/app
+
   backend:
     volumes:
       - ./.git:/opt/.git:ro

@@ -1,4 +1,12 @@
 services:
+  server:
+    build:
+      dockerfile: ./Dockerfile.dev
+    environment:
+      - APP_ENV=${APP_ENV:-development}
+      - SERVER_DEBUG=${SERVER_DEBUG:-false}
+      - SERVER_DEBUG_PORT=${SERVER_DEBUG_PORT:-9228}
+
   backend:
     build:
       dockerfile: ./Dockerfile.dev

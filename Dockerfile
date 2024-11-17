@@ -16,6 +16,35 @@ WORKDIR /opt/app
 
 USER musare
 
+# Server node modules
+FROM common_base AS server_node_modules
+
+COPY --chown=musare:musare --link server/package.json server/package-lock.json /opt/app/
+
+RUN npm install
+
+# Server build
+FROM common_base AS server_build
+
+ENV APP_ENV=production
+
+COPY --chown=musare:musare --link .git /opt/.git
+COPY --chown=musare:musare --link server /opt/app
+COPY --chown=musare:musare --link --from=server_node_modules /opt/app/node_modules node_modules
+
+RUN npm run compile
+
+# Server production image
+FROM common_base AS server
+
+COPY --from=server_build --link /opt/app /opt/app
+COPY --from=server_node_modules --link /opt/app/node_modules node_modules
+COPY --from=server_node_modules --link /opt/app/package.json /opt/app/package-lock.json /opt/app/
+
+ENTRYPOINT npm run migrate && npm run start
+
+EXPOSE 8080
+
 # Backend node modules
 FROM common_base AS backend_node_modules
 
