@@ -6,6 +6,7 @@ import { storeToRefs } from "pinia";
 import { useConfigStore } from "@/stores/config";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useModalsStore } from "@/stores/modals";
+import { useAuthStore } from "@/stores/auth";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 
@@ -20,19 +21,20 @@ const passwordElement = ref();
 
 const configStore = useConfigStore();
 const { githubAuthentication, registrationDisabled } = storeToRefs(configStore);
-const { login } = useUserAuthStore();
+const authStore = useAuthStore();
 
 const { openModal, closeCurrentModal } = useModalsStore();
 
 const submitModal = () => {
 	if (!email.value || !password.value.value) return;
 
-	login({
+	authStore.authenticate({
+		strategy: "local",
 		email: email.value,
 		password: password.value.value
 	})
-		.then((res: any) => {
-			if (res.status === "success") window.location.reload();
+		.then(() => {
+			window.location.reload();
 		})
 		.catch(err => new Toast(err.message));
 };

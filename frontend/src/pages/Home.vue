@@ -17,6 +17,7 @@ import { useConfigStore } from "@/stores/config";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useModalsStore } from "@/stores/modals";
 import keyboardShortcuts from "@/keyboardShortcuts";
+import { useAuthStore } from "@/stores/auth";
 
 const MainHeader = defineAsyncComponent(
 	() => import("@/components/MainHeader.vue")
@@ -34,12 +35,12 @@ const UserLink = defineAsyncComponent(
 const { t } = useI18n();
 
 const configStore = useConfigStore();
+const authStore = useAuthStore();
 const userAuthStore = useUserAuthStore();
 const route = useRoute();
 const router = useRouter();
 
 const { sitename, registrationDisabled } = storeToRefs(configStore);
-const { loggedIn, userId } = storeToRefs(userAuthStore);
 const { hasPermission } = userAuthStore;
 
 const { socket } = useWebsocketsStore();
@@ -49,9 +50,9 @@ const searchQuery = ref("");
 const orderOfFavoriteStations = ref([]);
 const handledLoginRegisterRedirect = ref(false);
 
-const isOwner = station => loggedIn.value && station.owner === userId.value;
+const isOwner = station => authStore.isAuthenticated && station.owner === authStore.userId;
 const isDj = station =>
-	loggedIn.value && !!station.djs.find(dj => dj === userId.value);
+	authStore.isAuthenticated && !!station.djs.find(dj => dj === authStore.userId);
 const isOwnerOrDj = station => isOwner(station) || isDj(station);
 
 const isPlaying = station => typeof station.currentSong.title !== "undefined";
@@ -120,7 +121,7 @@ const fetchStations = () => {
 
 const canRequest = (station, requireLogin = true) =>
 	station &&
-	(!requireLogin || loggedIn.value) &&
+	(!requireLogin || authStore.isAuthenticated) &&
 	station.requests &&
 	station.requests.enabled &&
 	(station.requests.access === "user" ||
@@ -170,7 +171,7 @@ onMounted(async () => {
 		searchQuery.value = JSON.stringify(route.query.query);
 
 	if (
-		!loggedIn.value &&
+		!authStore.isAuthenticated &&
 		route.redirectedFrom &&
 		(route.redirectedFrom.name === "login" ||
 			route.redirectedFrom.name === "register") &&
@@ -315,11 +316,11 @@ onMounted(async () => {
 	});
 
 	socket.on("event:station.djs.added", res => {
-		if (res.data.user._id === userId.value) fetchStations();
+		if (res.data.user._id === authStore.userId) fetchStations();
 	});
 
 	socket.on("event:station.djs.removed", res => {
-		if (res.data.user._id === userId.value) fetchStations();
+		if (res.data.user._id === authStore.userId) fetchStations();
 	});
 
 	socket.on("keep.event:user.role.updated", () => {
@@ -371,7 +372,7 @@ onBeforeUnmount(() => {
 				:transparent="true"
 				:hide-logged-out="true"
 			/>
-			<div class="header" :class="{ loggedIn }">
+			<div class="header" :class="{ loggedIn: authStore.isAuthenticated }">
 				<img class="background" src="/assets/homebg.jpeg" />
 				<div class="overlay"></div>
 				<div class="content-container">
@@ -383,7 +384,7 @@ onBeforeUnmount(() => {
 							class="logo"
 						/>
 						<span v-else class="logo">{{ sitename }}</span>
-						<div v-if="!loggedIn" class="buttons">
+						<div v-if="!authStore.isAuthenticated" class="buttons">
 							<button
 								class="button login"
 								@click="openModal('login')"
@@ -482,7 +483,7 @@ onBeforeUnmount(() => {
 									<div class="displayName">
 										<i
 											v-if="
-												loggedIn && !element.isFavorited
+												authStore.isAuthenticated && !element.isFavorited
 											"
 											@click.prevent="
 												favoriteStation(element._id)
@@ -494,7 +495,7 @@ onBeforeUnmount(() => {
 										>
 										<i
 											v-if="
-												loggedIn && element.isFavorited
+												authStore.isAuthenticated && element.isFavorited
 											"
 											@click.prevent="
 												unfavoriteStation(element._id)
@@ -646,7 +647,7 @@ onBeforeUnmount(() => {
 					</div>
 				</div>
 				<a
-					v-if="loggedIn"
+					v-if="authStore.isAuthenticated"
 					@click="openModal('createStation')"
 					class="station-card createStation"
 				>
@@ -758,7 +759,7 @@ onBeforeUnmount(() => {
 						<div class="media">
 							<div class="displayName">
 								<i
-									v-if="loggedIn && !station.isFavorited"
+									v-if="authStore.isAuthenticated && !station.isFavorited"
 									@click.prevent="
 										favoriteStation(station._id)
 									"
@@ -768,7 +769,7 @@ onBeforeUnmount(() => {
 									>{{ t("Icons.Favorite") }}</i
 								>
 								<i
-									v-if="loggedIn && station.isFavorited"
+									v-if="authStore.isAuthenticated && station.isFavorited"
 									@click.prevent="
 										unfavoriteStation(station._id)
 									"

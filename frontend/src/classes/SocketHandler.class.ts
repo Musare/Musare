@@ -71,6 +71,7 @@ export default class SocketHandler {
 	}
 
 	init() {
+		return;
 		const configStore = useConfigStore();
 		const userAuthStore = useUserAuthStore();
 
@@ -151,6 +152,7 @@ export default class SocketHandler {
 			modalUuid?: string;
 		}
 	) {
+		return;
 		this.dispatcher.addEventListener(
 			target,
 			(event: CustomEvent) => cb(...event.detail),
@@ -159,6 +161,7 @@ export default class SocketHandler {
 	}
 
 	dispatch(...args: [string, ...any[]]) {
+		return;
 		if (!this.socket || this.socket.readyState !== 1) {
 			this.pendingDispatches.push(() => this.dispatch(...args));
 			return undefined;

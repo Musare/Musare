@@ -41,6 +41,8 @@
     "vue-tsc": "^2.1.10"
   },
   "dependencies": {
+    "@feathersjs/feathers": "^5.0.31",
+    "@feathersjs/socketio-client": "^5.0.31",
     "@intlify/unplugin-vue-i18n": "^5.3.0",
     "@vitejs/plugin-vue": "^5.1.4",
     "can-autoplay": "^3.0.2",
@@ -48,9 +50,12 @@
     "date-fns": "^4.1.0",
     "dompurify": "^3.1.7",
     "eslint-config-airbnb-base": "^15.0.0",
+    "feathers-pinia": "^4.5.4",
     "marked": "^15.0.0",
+    "musare-server": "http://server:3030/server-0.0.0.tgz",
     "normalize.css": "^8.0.1",
     "pinia": "^2.2.6",
+    "socket.io-client": "^4.8.1",
     "toasters": "^2.3.1",
     "typescript": "^5.6.3",
     "vite": "^5.4.10",

@@ -34,7 +34,7 @@ COPY --chown=musare:musare --link --from=server_node_modules /opt/app/node_modul
 
 ENTRYPOINT sh /opt/app/entrypoint.dev.sh
 
-EXPOSE 8080
+EXPOSE 3030
 
 # Backend node modules
 FROM common_base AS backend_node_modules

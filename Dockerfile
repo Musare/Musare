@@ -43,7 +43,7 @@ COPY --from=server_node_modules --link /opt/app/package.json /opt/app/package-lo
 
 ENTRYPOINT npm run migrate && npm run start
 
-EXPOSE 8080
+EXPOSE 3030
 
 # Backend node modules
 FROM common_base AS backend_node_modules

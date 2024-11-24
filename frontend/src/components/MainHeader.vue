@@ -7,6 +7,7 @@ import { useConfigStore } from "@/stores/config";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useUserPreferencesStore } from "@/stores/userPreferences";
 import { useModalsStore } from "@/stores/modals";
+import { useAuthStore } from "@/stores/auth";
 
 const ChristmasLights = defineAsyncComponent(
 	() => import("@/components/ChristmasLights.vue")
@@ -31,8 +32,9 @@ const configStore = useConfigStore();
 const { cookie, sitename, registrationDisabled, christmas } =
 	storeToRefs(configStore);
 
-const { loggedIn, username } = storeToRefs(userAuthStore);
-const { logout, hasPermission } = userAuthStore;
+const authStore = useAuthStore();
+
+const { hasPermission } = userAuthStore;
 const userPreferencesStore = useUserPreferencesStore();
 const { nightmode } = storeToRefs(userPreferencesStore);
 
@@ -42,7 +44,7 @@ const toggleNightmode = toggle => {
 	localNightmode.value =
 		toggle === undefined ? !localNightmode.value : toggle;
 
-	if (loggedIn.value) {
+	if (authStore.isAuthenticated) {
 		socket.dispatch(
 			"users.updatePreferences",
 			{ nightmode: localNightmode.value },
@@ -77,7 +79,7 @@ onMounted(async () => {
 <template>
 	<nav
 		class="nav is-info"
-		:class="{ transparent, 'hide-logged-out': !loggedIn && hideLoggedOut }"
+		:class="{ transparent, 'hide-logged-out': !authStore.isAuthenticated && hideLoggedOut }"
 	>
 		<div class="nav-left">
 			<router-link v-if="!hideLogo" class="nav-item is-brand" to="/">
@@ -91,7 +93,7 @@ onMounted(async () => {
 		</div>
 
 		<span
-			v-if="loggedIn || !hideLoggedOut"
+			v-if="authStore.isAuthenticated || !hideLoggedOut"
 			class="nav-toggle"
 			:class="{ 'is-active': isMobile }"
 			tabindex="0"
@@ -124,7 +126,7 @@ onMounted(async () => {
 				</span>
 				<span class="night-mode-label">Toggle Nightmode</span>
 			</div>
-			<span v-if="loggedIn" class="grouped">
+			<span v-if="authStore.isAuthenticated" class="grouped">
 				<router-link
 					v-if="hasPermission('admin.view')"
 					class="nav-item admin"
@@ -136,7 +138,7 @@ onMounted(async () => {
 					class="nav-item"
 					:to="{
 						name: 'profile',
-						params: { username },
+						params: { username: authStore.user.username },
 						query: { tab: 'playlists' }
 					}"
 				>
@@ -146,7 +148,7 @@ onMounted(async () => {
 					class="nav-item"
 					:to="{
 						name: 'profile',
-						params: { username }
+						params: { username: authStore.user.username }
 					}"
 				>
 					Profile
@@ -154,9 +156,9 @@ onMounted(async () => {
 				<router-link class="nav-item" to="/settings"
 					>Settings</router-link
 				>
-				<a class="nav-item" @click="logout()">Logout</a>
+				<a class="nav-item" @click="authStore.logout()">Logout</a>
 			</span>
-			<span v-if="!loggedIn && !hideLoggedOut" class="grouped">
+			<span v-if="!authStore.isAuthenticated && !hideLoggedOut" class="grouped">
 				<a class="nav-item" @click="openModal('login')">Login</a>
 				<a
 					v-if="!registrationDisabled"

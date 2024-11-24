@@ -3,7 +3,6 @@ import { createApp } from "vue";
 
 import VueTippy, { Tippy } from "vue-tippy";
 import { createRouter, createWebHistory } from "vue-router";
-import { createPinia } from "pinia";
 import Toast from "toasters";
 
 import { useConfigStore } from "@/stores/config";
@@ -15,6 +14,10 @@ import ms from "@/ms";
 import i18n from "@/i18n";
 
 import AppComponent from "./App.vue";
+
+import { pinia } from "./pinia";
+import { useAuthStore } from "./stores/auth";
+import { api } from "./feathers";
 
 const handleMetadata = attrs => {
 	const configStore = useConfigStore();
@@ -257,7 +260,27 @@ const router = createRouter({
 	]
 });
 
-app.use(createPinia());
+app.use(pinia);
+
+// console.log(222, await api.service('users').create({
+// 	username: 'test',
+// 	email: 'test@test.com',
+// 	password: 'password'
+// }));
+
+// const authStore = useAuthStore();
+// authStore.authenticate({
+// 	strategy: 'local',
+// 	email: 'test@test.com',
+// 	password: 'password'
+// })
+// authStore.authenticate()
+// 	.then(async () => {
+// 		const users = await api.service('users').find();
+
+// 		console.log(333, users);
+// 	});
+
 
 const { createSocket } = useWebsocketsStore();
 createSocket().then(async socket => {

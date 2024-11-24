@@ -13,6 +13,7 @@ import { useUserPreferencesStore } from "@/stores/userPreferences";
 import { useModalsStore } from "@/stores/modals";
 import aw from "@/aw";
 import keyboardShortcuts from "@/keyboardShortcuts";
+import { useAuthStore } from "@/stores/auth";
 
 const ModalManager = defineAsyncComponent(
 	() => import("@/components/ModalManager.vue")
@@ -32,6 +33,7 @@ const configStore = useConfigStore();
 const userAuthStore = useUserAuthStore();
 const userPreferencesStore = useUserPreferencesStore();
 const modalsStore = useModalsStore();
+const authStore = useAuthStore();
 
 const socketConnected = ref(true);
 const keyIsDown = ref("");
@@ -274,7 +276,7 @@ onMounted(async () => {
 <template>
 	<div class="upper-container">
 		<banned-page v-if="banned" />
-		<div v-else class="upper-container">
+		<div v-else-if="authStore.isInitDone" class="upper-container">
 			<router-view :key="$route.fullPath" class="main-container" />
 		</div>
 		<falling-snow v-if="christmas" />
