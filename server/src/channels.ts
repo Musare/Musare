@@ -4,6 +4,7 @@ import type { AuthenticationResult } from '@feathersjs/authentication'
 import '@feathersjs/transport-commons'
 import type { Application, HookContext } from './declarations'
 import { logger } from './logger'
+import { getChannelsWithReadAbility, makeChannelOptions } from 'feathers-casl'
 
 export const channels = (app: Application) => {
   logger.warn(
@@ -19,6 +20,12 @@ export const channels = (app: Application) => {
     // connection can be undefined if there is no
     // real-time connection, e.g. when logging in via REST
     if (connection) {
+      // this is needed to map the ability from the authentication hook to the connection so it gets available in the HookContext as `params.ability` automatically
+      if (authResult.ability) {
+        connection.ability = authResult.ability;
+        connection.rules = authResult.rules;
+      }
+
       // The connection is no longer anonymous, remove it
       app.channel('anonymous').leave(connection)
 
@@ -35,4 +42,10 @@ export const channels = (app: Application) => {
     // e.g. to publish all service events to all authenticated users use
     return app.channel('authenticated')
   })
+
+  const caslOptions = makeChannelOptions(app);
+
+  app.publish((data: any, context: HookContext) => {
+    return getChannelsWithReadAbility(app, data, context, caslOptions);
+  });
 }

@@ -41,6 +41,8 @@
     "vue-tsc": "^2.1.10"
   },
   "dependencies": {
+    "@casl/ability": "^6.7.2",
+    "@casl/vue": "^2.2.2",
     "@feathersjs/feathers": "^5.0.31",
     "@feathersjs/socketio-client": "^5.0.31",
     "@intlify/unplugin-vue-i18n": "^5.3.0",
@@ -50,6 +52,7 @@
     "date-fns": "^4.1.0",
     "dompurify": "^3.1.7",
     "eslint-config-airbnb-base": "^15.0.0",
+    "feathers-casl": "^2.1.2",
     "feathers-pinia": "^4.5.4",
     "marked": "^15.0.0",
     "musare-server": "http://server:3030/server-0.0.0.tgz",

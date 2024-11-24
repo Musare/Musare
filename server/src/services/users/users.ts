@@ -14,9 +14,11 @@ import {
   userQueryResolver
 } from './users.schema'
 
-import type { Application } from '../../declarations'
+import type { Application, HookContext } from '../../declarations'
 import { UserService, getOptions } from './users.class'
 import { userPath, userMethods } from './users.shared'
+import { authorize } from 'feathers-casl'
+import { defineAbilitiesFor } from '../authentication/authentication.abilities'
 
 export * from './users.class'
 export * from './users.schema'
@@ -30,27 +32,39 @@ export const user = (app: Application) => {
     // You can add additional custom events to be sent to clients here
     events: []
   })
+  const authorizeHook = authorize({ adapter: "@feathersjs/knex" });
   // Initialize hooks
   app.service(userPath).hooks({
     around: {
       all: [schemaHooks.resolveExternal(userExternalResolver), schemaHooks.resolveResult(userResolver)],
-      find: [authenticate('jwt')],
-      get: [authenticate('jwt')],
+      find: [authenticate('jwt'), authorizeHook],
+      get: [],
       create: [],
-      update: [authenticate('jwt')],
-      patch: [authenticate('jwt')],
-      remove: [authenticate('jwt')]
+      update: [authenticate('jwt'), authorizeHook],
+      patch: [authenticate('jwt'), authorizeHook],
+      remove: [authenticate('jwt'), authorizeHook]
     },
     before: {
       all: [schemaHooks.validateQuery(userQueryValidator), schemaHooks.resolveQuery(userQueryResolver)],
       find: [],
-      get: [],
+      get: [
+        authenticate('jwt'),
+        (context: HookContext) => {
+          if (context.params.ability) { return context; }
+          const { user } = context.params
+          if (user) context.params.ability = defineAbilitiesFor(user)
+          return context
+        },
+        authorizeHook,
+      ],
       create: [schemaHooks.validateData(userDataValidator), schemaHooks.resolveData(userDataResolver)],
+      update: [],
       patch: [schemaHooks.validateData(userPatchValidator), schemaHooks.resolveData(userPatchResolver)],
       remove: []
     },
     after: {
-      all: []
+      all: [],
+      get: [authorizeHook]
     },
     error: {
       all: []

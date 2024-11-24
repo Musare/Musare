@@ -16,8 +16,10 @@ import i18n from "@/i18n";
 import AppComponent from "./App.vue";
 
 import { pinia } from "./pinia";
-import { useAuthStore } from "./stores/auth";
 import { api } from "./feathers";
+import { abilitiesPlugin } from "@casl/vue";
+import { useCaslStore } from "./stores/casl";
+import { useAuthStore } from "./stores/auth";
 
 const handleMetadata = attrs => {
 	const configStore = useConfigStore();
@@ -261,6 +263,30 @@ const router = createRouter({
 });
 
 app.use(pinia);
+
+const authStore = useAuthStore();
+const caslStore = useCaslStore();
+
+app.use(abilitiesPlugin, caslStore.ability);
+
+authStore.$onAction(async ({ name, after }) => {
+	switch (name) {
+	  case 'authenticate':
+	  case 'reAuthenticate': {
+		after(result => {
+			caslStore.rules = result ? result.rules : []
+		})
+	  } break;
+	  case 'logout': 
+	  case 'isTokenExpired': {
+		after(() => caslStore.rules = [])
+	  } break;
+	  default:
+		break;
+	}
+  })
+
+authStore.reAuthenticate();
 
 // console.log(222, await api.service('users').create({
 // 	username: 'test',

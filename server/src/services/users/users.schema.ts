@@ -1,6 +1,6 @@
 // // For more information about this file see https://dove.feathersjs.com/guides/cli/service.schemas.html
 import { resolve } from '@feathersjs/schema'
-import { Type, getValidator, querySyntax } from '@feathersjs/typebox'
+import { StringEnum, Type, getValidator, querySyntax } from '@feathersjs/typebox'
 import type { Static } from '@feathersjs/typebox'
 import { passwordHash } from '@feathersjs/authentication-local'
 
@@ -9,10 +9,18 @@ import { dataValidator, queryValidator } from '../../validators'
 import type { UserService } from './users.class'
 
 // Main data model schema
+export enum Role {
+  USER = "user",
+  MODERATOR = "moderator",
+  ADMIN = "admin"
+};
 export const userSchema = Type.Object(
   {
     id: Type.Number(),
     username: Type.String(),
+    role: StringEnum(Object.values(Role), {
+      default: Role.USER
+    }),
     email: Type.String(),
     password: Type.Optional(Type.String())
   },
@@ -48,7 +56,7 @@ export const userPatchResolver = resolve<User, HookContext<UserService>>({
 })
 
 // Schema for allowed query properties
-export const userQueryProperties = Type.Pick(userSchema, ['id','username', 'email'])
+export const userQueryProperties = Type.Pick(userSchema, ['id','username', 'role', 'email'])
 export const userQuerySchema = Type.Intersect(
   [
     querySyntax(userQueryProperties),
@@ -61,11 +69,11 @@ export type UserQuery = Static<typeof userQuerySchema>
 export const userQueryValidator = getValidator(userQuerySchema, queryValidator)
 export const userQueryResolver = resolve<UserQuery, HookContext<UserService>>({
   // If there is a user (e.g. with authentication), they are only allowed to see their own data
-  id: async (value, user, context) => {
-    if (context.params.user) {
-      return context.params.user.id
-    }
+  // id: async (value, user, context) => {
+  //   if (context.params.user) {
+  //     return context.params.user.id
+  //   }
 
-    return value
-  }
+  //   return value
+  // }
 })

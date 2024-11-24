@@ -8,6 +8,7 @@ import { useUserAuthStore } from "@/stores/userAuth";
 import { useUserPreferencesStore } from "@/stores/userPreferences";
 import { useModalsStore } from "@/stores/modals";
 import { useAuthStore } from "@/stores/auth";
+import { useAbility } from "@casl/vue";
 
 const ChristmasLights = defineAsyncComponent(
 	() => import("@/components/ChristmasLights.vue")
@@ -39,6 +40,8 @@ const userPreferencesStore = useUserPreferencesStore();
 const { nightmode } = storeToRefs(userPreferencesStore);
 
 const { openModal } = useModalsStore();
+
+const { can } = useAbility();
 
 const toggleNightmode = toggle => {
 	localNightmode.value =
@@ -128,7 +131,7 @@ onMounted(async () => {
 			</div>
 			<span v-if="authStore.isAuthenticated" class="grouped">
 				<router-link
-					v-if="hasPermission('admin.view')"
+					v-if="can('view', 'admin')"
 					class="nav-item admin"
 					to="/admin"
 				>

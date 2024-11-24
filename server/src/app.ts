@@ -8,9 +8,9 @@ import { configurationValidator } from './configuration'
 import type { Application } from './declarations'
 import { logError } from './hooks/log-error'
 import { postgresql } from './postgresql'
-import { authentication } from './authentication'
 import { services } from './services/index'
 import { channels } from './channels'
+import { feathersCasl } from 'feathers-casl'
 
 const app: Application = koa(feathers())
 
@@ -34,9 +34,9 @@ app.configure(
   })
 )
 app.configure(postgresql)
-app.configure(authentication)
 app.configure(services)
 app.configure(channels)
+app.configure(feathersCasl());
 
 // Register hooks that run on all service methods
 app.hooks({

@@ -3,7 +3,6 @@ import socketio from "@feathersjs/socketio-client"
 import io from "socket.io-client"
 import { createPiniaClient } from "feathers-pinia"
 import { pinia } from "./pinia";
-import { useAuthStore } from "./stores/auth";
 
 const socket = io(`${document.location.protocol}//${document.location.host}`, {
     path: "/api/socket.io",
@@ -14,7 +13,7 @@ const feathersClient = createClient(socketio(socket), { storage: window.localSto
 
 export const api = createPiniaClient(feathersClient, {
     pinia,
-    idField: '_id',
+    idField: 'id',
     // optional
     ssr: false,
     whitelist: [],

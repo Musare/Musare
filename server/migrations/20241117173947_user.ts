@@ -5,6 +5,7 @@ export async function up(knex: Knex): Promise<void> {
   await knex.schema.createTable('users', (table) => {
     table.increments('id');
     table.string('username').unique();
+    table.enum('role', ['user', 'moderator', 'admin']).defaultTo('user');
     table.string('email').unique();
     table.string('password');
   })

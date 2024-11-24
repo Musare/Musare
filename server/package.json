@@ -46,6 +46,7 @@
     "migrate:make": "knex migrate:make"
   },
   "dependencies": {
+    "@casl/ability": "^6.7.2",
     "@feathersjs/adapter-commons": "^5.0.31",
     "@feathersjs/authentication": "^5.0.31",
     "@feathersjs/authentication-client": "^5.0.31",
@@ -60,6 +61,7 @@
     "@feathersjs/socketio": "^5.0.31",
     "@feathersjs/transport-commons": "^5.0.31",
     "@feathersjs/typebox": "^5.0.31",
+    "feathers-casl": "^2.1.2",
     "knex": "^3.1.0",
     "pg": "^8.13.1",
     "winston": "^3.17.0"
