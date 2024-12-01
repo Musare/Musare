@@ -30,7 +30,7 @@ const submitModal = () => {
 
 	authStore.authenticate({
 		strategy: "local",
-		email: email.value,
+		identifier: email.value,
 		password: password.value.value
 	})
 		.then(() => {
