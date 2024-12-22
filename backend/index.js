@@ -260,6 +260,7 @@ if (!config.get("migration")) {
 	moduleManager.addModule("stations");
 	moduleManager.addModule("media");
 	moduleManager.addModule("tasks");
+	moduleManager.addModule("users");
 	moduleManager.addModule("utils");
 	moduleManager.addModule("youtube");
 	if (config.get("experimental.soundcloud")) moduleManager.addModule("soundcloud");

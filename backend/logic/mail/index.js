@@ -83,6 +83,25 @@ class _MailModule extends CoreClass {
 			resolve(MailModule.schemas[payload.schemaName]);
 		});
 	}
+
+	/**
+	 * Returns an email schema, but using async instead of callbacks
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.schemaName - name of the schema to get
+	 * @returns {Promise} - returns promise (reject, resolve)
+	 */
+	async GET_SCHEMA_ASYNC(payload) {
+		const { schemaName } = payload;
+
+		return (...args) =>
+			new Promise((resolve, reject) => {
+				const cb = err => {
+					if (err) reject(err);
+					else resolve();
+				};
+				MailModule.schemas[schemaName](...args, cb);
+			});
+	}
 }
 
 export default new _MailModule();

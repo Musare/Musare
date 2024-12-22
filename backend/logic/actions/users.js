@@ -20,7 +20,7 @@ const MailModule = moduleManager.modules.mail;
 const PunishmentsModule = moduleManager.modules.punishments;
 const ActivitiesModule = moduleManager.modules.activities;
 const PlaylistsModule = moduleManager.modules.playlists;
-const MediaModule = moduleManager.modules.media;
+const UsersModule = moduleManager.modules.users;
 
 CacheModule.runJob("SUB", {
 	channel: "user.updatePreferences",
@@ -331,205 +331,22 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	remove: isLoginRequired(async function remove(session, cb) {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-		const dataRequestModel = await DBModule.runJob("GET_MODEL", { modelName: "dataRequest" }, this);
-		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
-		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
-		const activityModel = await DBModule.runJob("GET_MODEL", { modelName: "activity" }, this);
-
-		const dataRequestEmail = await MailModule.runJob("GET_SCHEMA", { schemaName: "dataRequest" }, this);
-
-		const songsToAdjustRatings = [];
+		const { userId } = session;
 
 		async.waterfall(
 			[
-				// activities related to the user
 				next => {
-					activityModel.deleteMany({ userId: session.userId }, next);
-				},
-
-				// user's stations
-				(res, next) => {
-					stationModel.find({ owner: session.userId }, (err, stations) => {
-						if (err) return next(err);
-
-						return async.each(
-							stations,
-							(station, callback) => {
-								// delete the station
-								stationModel.deleteOne({ _id: station._id }, err => {
-									if (err) return callback(err);
-
-									CacheModule.runJob("HDEL", { table: "stations", key: station._id });
-
-									// if applicable, delete the corresponding playlist for the station
-									if (station.playlist)
-										return PlaylistsModule.runJob("DELETE_PLAYLIST", {
-											playlistId: station.playlist
-										})
-											.then(() => callback())
-											.catch(callback);
-
-									return callback();
-								});
-							},
-							err => next(err)
-						);
-					});
-				},
-
-				// remove user as station DJ
-				next => {
-					stationModel.updateMany({ djs: session.userId }, { $pull: { djs: session.userId } }, next);
-				},
-
-				(res, next) => {
-					playlistModel.findOne({ createdBy: session.userId, type: "user-liked" }, next);
-				},
-
-				// get all liked songs (as the global rating values for these songs will need adjusted)
-				(playlist, next) => {
-					if (!playlist) return next();
-
-					playlist.songs.forEach(song =>
-						songsToAdjustRatings.push({ songId: song._id, mediaSource: song.mediaSource })
-					);
-
-					return next();
-				},
-
-				next => {
-					playlistModel.findOne({ createdBy: session.userId, type: "user-disliked" }, next);
-				},
-
-				// get all disliked songs (as the global rating values for these songs will need adjusted)
-				(playlist, next) => {
-					if (!playlist) return next();
-
-					playlist.songs.forEach(song => songsToAdjustRatings.push({ mediaSource: song.mediaSource }));
-
-					return next();
-				},
-
-				// user's playlists
-				next => {
-					playlistModel.deleteMany({ createdBy: session.userId }, next);
-				},
-
-				(res, next) => {
-					async.each(
-						songsToAdjustRatings,
-						(song, next) => {
-							const { mediaSource } = song;
-
-							MediaModule.runJob("RECALCULATE_RATINGS", { mediaSource })
-								.then(() => next())
-								.catch(next);
-						},
-						err => next(err)
-					);
-				},
-
-				// user object
-				next => {
-					userModel.deleteMany({ _id: session.userId }, next);
-				},
-
-				// session
-				(res, next) => {
-					CacheModule.runJob("PUB", {
-						channel: "user.removeSessions",
-						value: session.userId
-					});
-
-					async.waterfall(
-						[
-							next => {
-								CacheModule.runJob("HGETALL", { table: "sessions" }, this)
-									.then(sessions => {
-										next(null, sessions);
-									})
-									.catch(next);
-							},
-
-							(sessions, next) => {
-								if (!sessions) return next(null, [], {});
-
-								const keys = Object.keys(sessions);
-
-								return next(null, keys, sessions);
-							},
-
-							(keys, sessions, next) => {
-								// temp fix, need to wait properly for the SUB/PUB refactor (on wekan)
-								const { userId } = session;
-								setTimeout(
-									() =>
-										async.each(
-											keys,
-											(sessionId, callback) => {
-												const session = sessions[sessionId];
-
-												if (session && session.userId === userId) {
-													CacheModule.runJob(
-														"HDEL",
-														{
-															table: "sessions",
-															key: sessionId
-														},
-														this
-													)
-														.then(() => callback(null))
-														.catch(callback);
-												} else callback();
-											},
-											err => {
-												next(err);
-											}
-										),
-									50
-								);
-							}
-						],
-						next
-					);
-				},
-
-				// request data removal for user
-				next => {
-					dataRequestModel.create({ userId: session.userId, type: "remove" }, next);
-				},
-
-				(request, next) => {
-					WSModule.runJob("EMIT_TO_ROOM", {
-						room: "admin.users",
-						args: ["event:admin.dataRequests.created", { data: { request } }]
-					});
-
-					return next();
-				},
-
-				next => userModel.find({ role: "admin" }, next),
-
-				// send email to all admins of a data removal request
-				(users, next) => {
-					if (!config.get("sendDataRequestEmails")) return next();
-					if (users.length === 0) return next();
-
-					const to = [];
-					users.forEach(user => to.push(user.email.address));
-
-					return dataRequestEmail(to, session.userId, "remove", err => next(err));
+					UsersModule.runJob("REMOVE_USER", { userId })
+						.then(() => next())
+						.catch(err => next(err));
 				}
 			],
 			async err => {
 				if (err && err !== true) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"USER_REMOVE",
-						`Removing data and account for user "${session.userId}" failed. "${err}"`
-					);
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
+
+					this.log("ERROR", "USER_REMOVE", `Removing data and account for user "${userId}" failed. "${err}"`);
+
 					return cb({ status: "error", message: err });
 				}
 
@@ -541,7 +358,7 @@ export default {
 
 				CacheModule.runJob("PUB", {
 					channel: "user.removeAccount",
-					value: session.userId
+					value: userId
 				});
 
 				return cb({
@@ -559,196 +376,17 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	adminRemove: useHasPermission("users.remove", async function adminRemove(session, userId, cb) {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-		const dataRequestModel = await DBModule.runJob("GET_MODEL", { modelName: "dataRequest" }, this);
-		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
-		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
-		const activityModel = await DBModule.runJob("GET_MODEL", { modelName: "activity" }, this);
-
-		const dataRequestEmail = await MailModule.runJob("GET_SCHEMA", { schemaName: "dataRequest" }, this);
-
-		const songsToAdjustRatings = [];
-
 		async.waterfall(
 			[
 				next => {
 					if (!userId) return next("You must provide a userId to remove.");
 					return next();
 				},
-				// activities related to the user
-				next => {
-					activityModel.deleteMany({ userId }, next);
-				},
-
-				// user's stations
-				(res, next) => {
-					stationModel.find({ owner: userId }, (err, stations) => {
-						if (err) return next(err);
-
-						return async.each(
-							stations,
-							(station, callback) => {
-								// delete the station
-								stationModel.deleteOne({ _id: station._id }, err => {
-									if (err) return callback(err);
-
-									// if applicable, delete the corresponding playlist for the station
-									if (station.playlist)
-										return PlaylistsModule.runJob("DELETE_PLAYLIST", {
-											playlistId: station.playlist
-										})
-											.then(() => callback())
-											.catch(callback);
-
-									return callback();
-								});
-							},
-							err => next(err)
-						);
-					});
-				},
-
-				// remove user as station DJ
-				next => {
-					stationModel.updateMany({ djs: userId }, { $pull: { djs: userId } }, next);
-				},
-
-				(res, next) => {
-					playlistModel.findOne({ createdBy: userId, type: "user-liked" }, next);
-				},
-
-				// get all liked songs (as the global rating values for these songs will need adjusted)
-				(playlist, next) => {
-					if (!playlist) return next();
-
-					playlist.songs.forEach(song =>
-						songsToAdjustRatings.push({ songId: song._id, mediaSource: song.mediaSource })
-					);
-
-					return next();
-				},
 
 				next => {
-					playlistModel.findOne({ createdBy: userId, type: "user-disliked" }, next);
-				},
-
-				// get all disliked songs (as the global rating values for these songs will need adjusted)
-				(playlist, next) => {
-					if (!playlist) return next();
-
-					playlist.songs.forEach(song => songsToAdjustRatings.push({ mediaSource: song.mediaSource }));
-
-					return next();
-				},
-
-				// user's playlists
-				next => {
-					playlistModel.deleteMany({ createdBy: userId }, next);
-				},
-
-				(res, next) => {
-					async.each(
-						songsToAdjustRatings,
-						(song, next) => {
-							const { mediaSource } = song;
-
-							MediaModule.runJob("RECALCULATE_RATINGS", { mediaSource })
-								.then(() => next())
-								.catch(next);
-						},
-						err => next(err)
-					);
-				},
-
-				// user object
-				next => {
-					userModel.deleteMany({ _id: userId }, next);
-				},
-
-				// session
-				(res, next) => {
-					CacheModule.runJob("PUB", {
-						channel: "user.removeSessions",
-						value: userId
-					});
-
-					async.waterfall(
-						[
-							next => {
-								CacheModule.runJob("HGETALL", { table: "sessions" }, this)
-									.then(sessions => {
-										next(null, sessions);
-									})
-									.catch(next);
-							},
-
-							(sessions, next) => {
-								if (!sessions) return next(null, [], {});
-
-								const keys = Object.keys(sessions);
-
-								return next(null, keys, sessions);
-							},
-
-							(keys, sessions, next) => {
-								// temp fix, need to wait properly for the SUB/PUB refactor (on wekan)
-								setTimeout(
-									() =>
-										async.each(
-											keys,
-											(sessionId, callback) => {
-												const session = sessions[sessionId];
-
-												if (session && session.userId === userId) {
-													CacheModule.runJob(
-														"HDEL",
-														{
-															table: "sessions",
-															key: sessionId
-														},
-														this
-													)
-														.then(() => callback(null))
-														.catch(callback);
-												} else callback();
-											},
-											err => {
-												next(err);
-											}
-										),
-									50
-								);
-							}
-						],
-						next
-					);
-				},
-
-				// request data removal for user
-				next => {
-					dataRequestModel.create({ userId, type: "remove" }, next);
-				},
-
-				(request, next) => {
-					WSModule.runJob("EMIT_TO_ROOM", {
-						room: "admin.users",
-						args: ["event:admin.dataRequests.created", { data: { request } }]
-					});
-
-					return next();
-				},
-
-				next => userModel.find({ role: "admin" }, next),
-
-				// send email to all admins of a data removal request
-				(users, next) => {
-					if (!config.get("sendDataRequestEmails")) return next();
-					if (users.length === 0) return next();
-
-					const to = [];
-					users.forEach(user => to.push(user.email.address));
-
-					return dataRequestEmail(to, userId, "remove", err => next(err));
+					UsersModule.runJob("REMOVE_USER", { userId })
+						.then(() => next())
+						.catch(err => next(err));
 				}
 			],
 			async err => {
