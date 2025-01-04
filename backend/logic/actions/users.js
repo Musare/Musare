@@ -19,7 +19,6 @@ const CacheModule = moduleManager.modules.cache;
 const MailModule = moduleManager.modules.mail;
 const PunishmentsModule = moduleManager.modules.punishments;
 const ActivitiesModule = moduleManager.modules.activities;
-const PlaylistsModule = moduleManager.modules.playlists;
 const UsersModule = moduleManager.modules.users;
 
 CacheModule.runJob("SUB", {
@@ -503,170 +502,12 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	async register(session, username, email, password, recaptcha, cb) {
-		email = email.toLowerCase().trim();
-		const verificationToken = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 64 }, this);
-
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-		const verifyEmailSchema = await MailModule.runJob("GET_SCHEMA", { schemaName: "verifyEmail" }, this);
-
 		async.waterfall(
 			[
 				next => {
-					if (config.get("registrationDisabled") === true)
-						return next("Registration is not allowed at this time.");
-					if (config.get("experimental.registration_email_whitelist")) {
-						const experimentalRegistrationEmailWhitelist = config.get(
-							"experimental.registration_email_whitelist"
-						);
-						if (!Array.isArray(experimentalRegistrationEmailWhitelist)) return next();
-
-						let anyPassed = false;
-
-						experimentalRegistrationEmailWhitelist.forEach(regex => {
-							const newRegex = new RegExp(regex);
-							if (newRegex.test(email)) anyPassed = true;
-						});
-
-						if (!anyPassed) next("Your email is not allowed to register.");
-					}
-					return next();
-				},
-
-				next => {
-					if (!DBModule.passwordValid(password))
-						return next("Invalid password. Check if it meets all the requirements.");
-					return next();
-				},
-
-				// verify the request with google recaptcha
-				next => {
-					if (config.get("apis.recaptcha.enabled") === true)
-						axios
-							.post("https://www.google.com/recaptcha/api/siteverify", {
-								data: {
-									secret: config.get("apis").recaptcha.secret,
-									response: recaptcha
-								}
-							})
-							.then(res => next(null, res.data))
-							.catch(err => next(err));
-					else next(null, null);
-				},
-
-				// check if the response from Google recaptcha is successful
-				// if it is, we check if a user with the requested username already exists
-				(body, next) => {
-					if (config.get("apis.recaptcha.enabled") === true)
-						if (body.success !== true) return next("Response from recaptcha was not successful.");
-
-					return userModel.findOne({ username: new RegExp(`^${username}$`, "i") }, next);
-				},
-
-				// if the user already exists, respond with that
-				// otherwise check if a user with the requested email already exists
-				(user, next) => {
-					if (user) return next("A user with that username already exists.");
-					return userModel.findOne({ "email.address": email }, next);
-				},
-
-				// if the user already exists, respond with that
-				// otherwise, generate a salt to use with hashing the new users password
-				(user, next) => {
-					if (user) return next("A user with that email already exists.");
-					return bcrypt.genSalt(10, next);
-				},
-
-				// hash the password
-				(salt, next) => {
-					bcrypt.hash(sha256(password), salt, next);
-				},
-
-				(hash, next) => {
-					UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 12 }, this).then(_id => {
-						next(null, hash, _id);
-					});
-				},
-
-				// create the user object
-				(hash, _id, next) => {
-					next(null, {
-						_id,
-						name: username,
-						username,
-						email: {
-							address: email,
-							verificationToken
-						},
-						services: {
-							password: {
-								password: hash
-							}
-						}
-					});
-				},
-
-				// generate the url for gravatar avatar
-				(user, next) => {
-					UtilsModule.runJob("CREATE_GRAVATAR", { email: user.email.address }, this).then(url => {
-						const avatarColors = ["blue", "orange", "green", "purple", "teal"];
-						user.avatar = {
-							type: "initials",
-							color: avatarColors[Math.floor(Math.random() * avatarColors.length)],
-							url
-						};
-						next(null, user);
-					});
-				},
-
-				// save the new user to the database
-				(user, next) => {
-					userModel.create(user, next);
-				},
-
-				// respond with the new user
-				(user, next) => {
-					verifyEmailSchema(email, username, verificationToken, err => {
-						next(err, user._id);
-					});
-				},
-
-				// create a liked songs playlist for the new user
-				(userId, next) => {
-					PlaylistsModule.runJob("CREATE_USER_PLAYLIST", {
-						userId,
-						displayName: "Liked Songs",
-						type: "user-liked"
-					})
-						.then(likedSongsPlaylist => {
-							next(null, likedSongsPlaylist, userId);
-						})
+					UsersModule.runJob("REGISTER", { username, email, password, recaptcha })
+						.then(({ userId }) => next(null, userId))
 						.catch(err => next(err));
-				},
-
-				// create a disliked songs playlist for the new user
-				(likedSongsPlaylist, userId, next) => {
-					PlaylistsModule.runJob("CREATE_USER_PLAYLIST", {
-						userId,
-						displayName: "Disliked Songs",
-						type: "user-disliked"
-					})
-						.then(dislikedSongsPlaylist => {
-							next(null, { likedSongsPlaylist, dislikedSongsPlaylist }, userId);
-						})
-						.catch(err => next(err));
-				},
-
-				// associate liked + disliked songs playlist to the user object
-				({ likedSongsPlaylist, dislikedSongsPlaylist }, userId, next) => {
-					userModel.updateOne(
-						{ _id: userId },
-						{ $set: { likedSongsPlaylist, dislikedSongsPlaylist } },
-						{ runValidators: true },
-						err => {
-							if (err) return next(err);
-							return next(null, userId);
-						}
-					);
 				}
 			],
 			async (err, userId) => {

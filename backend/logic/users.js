@@ -1,6 +1,8 @@
 import config from "config";
 import oauth from "oauth";
 import axios from "axios";
+import bcrypt from "bcrypt";
+import sha256 from "sha256";
 import CoreClass from "../core";
 
 const { OAuth2 } = oauth;
@@ -14,6 +16,8 @@ let WSModule;
 let MediaModule;
 let UtilsModule;
 let ActivitiesModule;
+
+const avatarColors = ["blue", "orange", "green", "purple", "teal"];
 
 class _UsersModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
@@ -429,6 +433,127 @@ class _UsersModule extends CoreClass {
 
 		return {
 			redirectUrl: `${UsersModule.appUrl}/settings?tab=security`
+		};
+	}
+
+	/**
+	 * Attempts to register a user
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.email - email
+	 * @param {string} payload.username - username
+	 * @param {string} payload.password - plaintext password
+	 * @param {string} payload.recaptcha - recaptcha, if recaptcha is enabled
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	async REGISTER(payload) {
+		const { username, password, recaptcha } = payload;
+		let { email } = payload;
+		email = email.toLowerCase().trim();
+
+		if (config.get("registrationDisabled") === true) throw new Error("Registration is not allowed at this time.");
+		if (Array.isArray(config.get("experimental.registration_email_whitelist"))) {
+			const experimentalRegistrationEmailWhitelist = config.get("experimental.registration_email_whitelist");
+
+			const anyRegexPassed = experimentalRegistrationEmailWhitelist.find(regex => {
+				const emailWhitelistRegex = new RegExp(regex);
+				return emailWhitelistRegex.test(email);
+			});
+
+			if (!anyRegexPassed) throw new Error("Your email is not allowed to register.");
+		}
+
+		if (!DBModule.passwordValid(password))
+			throw new Error("Invalid password. Check if it meets all the requirements.");
+
+		if (config.get("apis.recaptcha.enabled") === true) {
+			const recaptchaBody = await axios.post("https://www.google.com/recaptcha/api/siteverify", {
+				data: {
+					secret: config.get("apis").recaptcha.secret,
+					response: recaptcha
+				}
+			});
+			if (recaptchaBody.success !== true) throw new Error("Response from recaptcha was not successful.");
+		}
+
+		let user = await UsersModule.userModel.findOne({ username: new RegExp(`^${username}$`, "i") });
+		if (user) throw new Error("A user with that username already exists.");
+		user = await UsersModule.userModel.findOne({ "email.address": email });
+		if (user) throw new Error("A user with that email already exists.");
+
+		const salt = await bcrypt.genSalt(10);
+		const hash = await bcrypt.hash(sha256(password), salt);
+
+		const userId = await UtilsModule.runJob(
+			"GENERATE_RANDOM_STRING",
+			{
+				length: 12
+			},
+			this
+		);
+		const verificationToken = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 64 }, this);
+		const gravatarUrl = await UtilsModule.runJob(
+			"CREATE_GRAVATAR",
+			{
+				email
+			},
+			this
+		);
+		const likedSongsPlaylist = await PlaylistsModule.runJob(
+			"CREATE_USER_PLAYLIST",
+			{
+				userId,
+				displayName: "Liked Songs",
+				type: "user-liked"
+			},
+			this
+		);
+		const dislikedSongsPlaylist = await PlaylistsModule.runJob(
+			"CREATE_USER_PLAYLIST",
+			{
+				userId,
+				displayName: "Disliked Songs",
+				type: "user-disliked"
+			},
+			this
+		);
+
+		user = {
+			_id: userId,
+			name: username,
+			username,
+			email: {
+				address: email,
+				verificationToken
+			},
+			services: {
+				password: {
+					password: hash
+				}
+			},
+			avatar: {
+				type: "initials",
+				color: avatarColors[Math.floor(Math.random() * avatarColors.length)],
+				url: gravatarUrl
+			},
+			likedSongsPlaylist,
+			dislikedSongsPlaylist
+		};
+
+		await UsersModule.userModel.create(user);
+
+		await UsersModule.verifyEmailSchema(email, username, verificationToken);
+		await ActivitiesModule.runJob(
+			"ADD_ACTIVITY",
+			{
+				userId,
+				type: "user__joined",
+				payload: { message: "Welcome to Musare!" }
+			},
+			this
+		);
+
+		return {
+			userId
 		};
 	}
 
