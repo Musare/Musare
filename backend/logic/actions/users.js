@@ -1466,8 +1466,6 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	updateUsername: isLoginRequired(async function updateUsername(session, updatingUserId, newUsername, cb) {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-
 		async.waterfall(
 			[
 				next => {
@@ -1477,32 +1475,10 @@ export default {
 						.catch(() => next("Invalid permissions."));
 				},
 
-				next => userModel.findOne({ _id: updatingUserId }, next),
-
-				(user, next) => {
-					if (!user) return next("User not found.");
-					if (user.username === newUsername)
-						return next("New username can't be the same as the old username.");
-					return next(null);
-				},
-
 				next => {
-					userModel.findOne({ username: new RegExp(`^${newUsername}$`, "i") }, next);
-				},
-
-				(user, next) => {
-					if (!user) return next();
-					if (user._id.toString() === updatingUserId) return next();
-					return next("That username is already in use.");
-				},
-
-				next => {
-					userModel.updateOne(
-						{ _id: updatingUserId },
-						{ $set: { username: newUsername } },
-						{ runValidators: true },
-						next
-					);
+					UsersModule.runJob("UPDATE_USERNAME", { userId: updatingUserId, username: newUsername })
+						.then(() => next())
+						.catch(err => next(err));
 				}
 			],
 			async err => {
@@ -1554,10 +1530,6 @@ export default {
 	 */
 	updateEmail: isLoginRequired(async function updateEmail(session, updatingUserId, newEmail, cb) {
 		newEmail = newEmail.toLowerCase();
-		const verificationToken = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 64 }, this);
-
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-		const verifyEmailSchema = await MailModule.runJob("GET_SCHEMA", { schemaName: "verifyEmail" }, this);
 
 		async.waterfall(
 			[
@@ -1568,56 +1540,10 @@ export default {
 						.catch(() => next("Invalid permissions."));
 				},
 
-				next => userModel.findOne({ _id: updatingUserId }, next),
-
-				(user, next) => {
-					if (!user) return next("User not found.");
-					if (user.email.address === newEmail)
-						return next("New email can't be the same as your the old email.");
-					return next();
-				},
-
 				next => {
-					userModel.findOne({ "email.address": newEmail }, next);
-				},
-
-				(user, next) => {
-					if (!user) return next();
-					if (user._id === updatingUserId) return next();
-					return next("That email is already in use.");
-				},
-
-				// regenerate the url for gravatar avatar
-				next => {
-					UtilsModule.runJob("CREATE_GRAVATAR", { email: newEmail }, this).then(url => {
-						next(null, url);
-					});
-				},
-
-				(newAvatarUrl, next) => {
-					userModel.updateOne(
-						{ _id: updatingUserId },
-						{
-							$set: {
-								"avatar.url": newAvatarUrl,
-								"email.address": newEmail,
-								"email.verified": false,
-								"email.verificationToken": verificationToken
-							}
-						},
-						{ runValidators: true },
-						next
-					);
-				},
-
-				(res, next) => {
-					userModel.findOne({ _id: updatingUserId }, next);
-				},
-
-				(user, next) => {
-					verifyEmailSchema(newEmail, user.username, verificationToken, err => {
-						next(err);
-					});
+					UsersModule.runJob("UPDATE_EMAIL", { userId: updatingUserId, email: newEmail })
+						.then(() => next())
+						.catch(err => next(err));
 				}
 			],
 			async err => {

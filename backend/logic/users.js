@@ -557,6 +557,64 @@ class _UsersModule extends CoreClass {
 		};
 	}
 
+	/**
+	 * Attempts to update the email address of a user
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.userId - userId
+	 * @param {string} payload.email - new email
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	async UPDATE_EMAIL(payload) {
+		const { userId } = payload;
+		let { email } = payload;
+		email = email.toLowerCase().trim();
+
+		const user = await UsersModule.userModel.findOne({ _id: userId });
+		if (!user) throw new Error("User not found.");
+		if (user.email.address === email) throw new Error("New email can't be the same as your the old email.");
+
+		const existingUser = UsersModule.userModel.findOne({ "email.address": email });
+		if (existingUser) throw new Error("That email is already in use.");
+
+		const gravatarUrl = await UtilsModule.runJob("CREATE_GRAVATAR", { email }, this);
+		const verificationToken = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 64 }, this);
+
+		await UsersModule.userModel.updateOne(
+			{ _id: userId },
+			{
+				$set: {
+					"avatar.url": gravatarUrl,
+					"email.address": email,
+					"email.verified": false,
+					"email.verificationToken": verificationToken
+				}
+			},
+			{ runValidators: true }
+		);
+
+		await UsersModule.verifyEmailSchema(email, user.username, verificationToken);
+	}
+
+	/**
+	 * Attempts to update the username of a user
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.userId - userId
+	 * @param {string} payload.username - new username
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	async UPDATE_USERNAME(payload) {
+		const { userId, username } = payload;
+
+		const user = await UsersModule.userModel.findOne({ _id: userId });
+		if (!user) throw new Error("User not found.");
+		if (user.username === username) throw new Error("New username can't be the same as the old username.");
+
+		const existingUser = UsersModule.userModel.findOne({ username: new RegExp(`^${username}$`, "i") });
+		if (existingUser) throw new Error("That username is already in use.");
+
+		await UsersModule.userModel.updateOne({ _id: userId }, { $set: { username } }, { runValidators: true });
+	}
+
 	// async EXAMPLE_JOB() {
 	// 	if (true) return;
 	// 	else throw new Error("Nothing changed.");
