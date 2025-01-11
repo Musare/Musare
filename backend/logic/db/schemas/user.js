@@ -28,6 +28,10 @@ export default {
 		github: {
 			id: Number,
 			access_token: String
+		},
+		oidc: {
+			sub: String,
+			access_token: String
 		}
 	},
 	statistics: {

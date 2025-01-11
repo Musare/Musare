@@ -576,6 +576,7 @@ class _WSModule extends CoreClass {
 						key: config.get("apis.recaptcha.key")
 					},
 					githubAuthentication: config.get("apis.github.enabled"),
+					oidcAuthentication: config.get("apis.oidc.enabled"),
 					messages: config.get("messages"),
 					christmas: config.get("christmas"),
 					footerLinks: config.get("footerLinks"),

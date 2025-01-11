@@ -1448,6 +1448,7 @@ export default {
 
 				if (user.services.password && user.services.password.password) sanitisedUser.password = true;
 				if (user.services.github && user.services.github.id) sanitisedUser.github = true;
+				if (user.services.oidc && user.services.oidc.sub) sanitisedUser.oidc = true;
 
 				this.log("SUCCESS", "FIND_BY_SESSION", `User found. "${user.username}".`);
 				return cb({

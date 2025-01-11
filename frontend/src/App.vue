@@ -254,6 +254,13 @@ onMounted(async () => {
 				router.push(localStorage.getItem("github_redirect"));
 				localStorage.removeItem("github_redirect");
 			}
+			if (
+				configStore.oidcAuthentication &&
+				localStorage.getItem("oidc_redirect")
+			) {
+				router.push(localStorage.getItem("oidc_redirect"));
+				localStorage.removeItem("oidc_redirect");
+			}
 		});
 	}, true);
 

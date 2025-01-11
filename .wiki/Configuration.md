@@ -96,6 +96,11 @@ For more information on configuration files please refer to the
 | `apis.github.client` | GitHub OAuth Application client, obtained from [here](https://github.com/settings/developers). |
 | `apis.github.secret` | GitHub OAuth Application secret, obtained with client. |
 | `apis.github.redirect_uri` | The backend url with `/auth/github/authorize/callback` appended, for example `http://localhost/backend/auth/github/authorize/callback`. This is configured based on the `url` config option by default. |
+| `apis.oidc.enabled` | Whether to enable OIDC authentication. |
+| `apis.oidc.client_id` | OIDC client id. |
+| `apis.oidc.client_secret` | OIDC client secret. |
+| `apis.oidc.openid_configuration_url` | The URL that points to the openid_configuration resource of the OIDC provider. |
+| `apis.oidc.redirect_uri` | The backend url with `/auth/oidc/authorize/callback` appended, for example `http://localhost/backend/auth/github/authorize/callback`. This is configured based on the `url` config option by default, so this is optional. |
 | `apis.discogs.enabled` | Whether to enable Discogs API usage. |
 | `apis.discogs.client` | Discogs Application client, obtained from [here](https://www.discogs.com/settings/developers). |
 | `apis.discogs.secret` | Discogs Application secret, obtained with client. |

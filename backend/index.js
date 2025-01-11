@@ -194,7 +194,10 @@ class ModuleManager {
 	 */
 	onFail(module) {
 		if (this.modulesNotInitialized.indexOf(module) !== -1) {
-			this.log("ERROR", "A module failed to initialize!");
+			this.log(
+				"ERROR",
+				`Module "${module.name}" failed to initialize at stage ${module.getStage()}! Check error above.`
+			);
 		}
 	}
 

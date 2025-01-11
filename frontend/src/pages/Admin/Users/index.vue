@@ -72,6 +72,14 @@ const columns = ref<TableColumn[]>([
 		defaultWidth: 115
 	},
 	{
+		name: "oidcSub",
+		displayName: "OIDC sub",
+		properties: ["services.oidc.sub"],
+		sortProperty: "services.oidc.sub",
+		minWidth: 115,
+		defaultWidth: 115
+	},
+	{
 		name: "hasPassword",
 		displayName: "Has Password",
 		properties: ["hasPassword"],
@@ -136,6 +144,13 @@ const filters = ref<TableFilter[]>([
 		name: "githubId",
 		displayName: "GitHub ID",
 		property: "services.github.id",
+		filterTypes: ["contains", "exact", "regex"],
+		defaultFilterType: "contains"
+	},
+	{
+		name: "oidcSub",
+		displayName: "OIDC sub",
+		property: "services.oidc.sub",
 		filterTypes: ["contains", "exact", "regex"],
 		defaultFilterType: "contains"
 	},
@@ -284,6 +299,13 @@ onMounted(() => {
 					v-if="slotProps.item.services.github"
 					:title="slotProps.item.services.github.id"
 					>{{ slotProps.item.services.github.id }}</span
+				>
+			</template>
+			<template #column-oidcSub="slotProps">
+				<span
+					v-if="slotProps.item.services.oidc"
+					:title="slotProps.item.services.oidc.sub"
+					>{{ slotProps.item.services.oidc.sub }}</span
 				>
 			</template>
 			<template #column-hasPassword="slotProps">

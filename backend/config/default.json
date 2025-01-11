@@ -62,6 +62,13 @@
 			"enabled": false,
 			"client": "",
 			"secret": ""
+		},
+		"oidc": {
+			"enabled": false,
+			"client_id": "",
+			"secret_secret": "",
+			"openid_configuration_url": "",
+			"redirect_uri": ""
 		}
 	},
 	"cors": {

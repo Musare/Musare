@@ -19,13 +19,14 @@ const props = defineProps({
 });
 
 const configStore = useConfigStore();
-const { cookie, githubAuthentication, messages } = storeToRefs(configStore);
+const { cookie, githubAuthentication, oidcAuthentication, messages } =
+	storeToRefs(configStore);
 const settingsStore = useSettingsStore();
 const route = useRoute();
 
 const { socket } = useWebsocketsStore();
 
-const { isPasswordLinked, isGithubLinked } = settingsStore;
+const { isPasswordLinked, isGithubLinked, isOIDCLinked } = settingsStore;
 
 const { closeCurrentModal } = useModalsStore();
 
@@ -79,6 +80,11 @@ const confirmGithubLink = () =>
 			}
 		} else new Toast(res.message);
 	});
+
+const confirmOIDCLink = () => {
+	// TODO
+	step.value = "remove-account";
+};
 
 const relinkGithub = () => {
 	localStorage.setItem(
@@ -155,10 +161,7 @@ onMounted(async () => {
 			<div
 				class="content-box"
 				id="password-linked"
-				v-if="
-					step === 'confirm-identity' &&
-					(isPasswordLinked || !githubAuthentication)
-				"
+				v-if="step === 'confirm-identity' && isPasswordLinked"
 			>
 				<h2 class="content-box-title">Enter your password</h2>
 				<p class="content-box-description">
@@ -238,6 +241,32 @@ onMounted(async () => {
 							/>
 						</div>
 						&nbsp; Check GitHub is linked
+					</a>
+				</div>
+			</div>
+
+			<div
+				class="content-box"
+				v-else-if="
+					oidcAuthentication &&
+					isOIDCLinked &&
+					step === 'confirm-identity'
+				"
+			>
+				<h2 class="content-box-title">Verify your OIDC</h2>
+				<p class="content-box-description">
+					Check your account is still linked to remove your account.
+				</p>
+
+				<div class="content-box-inputs">
+					<a class="button is-oidc" @click="confirmOIDCLink()">
+						<div class="icon">
+							<img
+								class="invert"
+								src="/assets/social/github.svg"
+							/>
+						</div>
+						&nbsp; Check whether OIDC is linked
 					</a>
 				</div>
 			</div>

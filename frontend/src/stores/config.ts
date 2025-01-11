@@ -9,6 +9,7 @@ export const useConfigStore = defineStore("config", {
 			key: string;
 		};
 		githubAuthentication: boolean;
+		oidcAuthentication: boolean;
 		messages: Record<string, string>;
 		christmas: boolean;
 		footerLinks: Record<string, string | boolean>;
@@ -33,6 +34,7 @@ export const useConfigStore = defineStore("config", {
 			key: ""
 		},
 		githubAuthentication: false,
+		oidcAuthentication: false,
 		messages: {
 			accountRemoval:
 				"Your account will be deactivated instantly and your data will shortly be deleted by an admin."

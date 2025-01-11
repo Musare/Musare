@@ -55,10 +55,14 @@ class _UsersModule extends CoreClass {
 		});
 
 		this.appUrl = `${config.get("url.secure") ? "https" : "http"}://${config.get("url.host")}`;
-		this.redirectUri =
+		this.githubRedirectUri =
 			config.get("apis.github.redirect_uri").length > 0
 				? config.get("apis.github.redirect_uri")
 				: `${this.appUrl}/backend/auth/github/authorize/callback`;
+		this.oidcRedirectUri =
+			config.get("apis.oidc.redirect_uri").length > 0
+				? config.get("apis.oidc.redirect_uri")
+				: `${this.appUrl}/backend/auth/oidc/authorize/callback`;
 
 		this.oauth2 = new OAuth2(
 			config.get("apis.github.client"),
@@ -77,6 +81,42 @@ class _UsersModule extends CoreClass {
 					else resolve({ accessToken, refreshToken, results });
 				});
 			});
+
+		if (config.get("apis.oidc.enabled")) {
+			const openidConfigurationResponse = await axios.get(config.get("apis.oidc.openid_configuration_url"));
+
+			const { token_endpoint: tokenEndpoint, userinfo_endpoint: userinfoEndpoint } =
+				openidConfigurationResponse.data;
+
+			// TODO somehow make this endpoint immutable, if possible in some way
+			this.oidcUserinfoEndpoint = userinfoEndpoint;
+
+			//
+			const clientId = config.get("apis.oidc.client_id");
+			const clientSecret = config.get("apis.oidc.client_secret");
+
+			this.getOIDCOAuthAccessToken = async code => {
+				const tokenResponse = await axios.post(
+					tokenEndpoint,
+					{
+						grant_type: "authorization_code",
+						code,
+						client_id: clientId,
+						client_secret: clientSecret,
+						redirect_uri: this.oidcRedirectUri
+					},
+					{
+						headers: {
+							"Content-Type": "application/x-www-form-urlencoded"
+						}
+					}
+				);
+
+				const { access_token: accessToken } = tokenResponse.data;
+
+				return { accessToken };
+			};
+		}
 	}
 
 	/**
@@ -209,7 +249,7 @@ class _UsersModule extends CoreClass {
 
 		// Tries to get access token. We don't use the refresh token currently
 		const { accessToken, /* refreshToken, */ results } = await UsersModule.getOAuthAccessToken(code, {
-			redirect_uri: UsersModule.redirectUri
+			redirect_uri: UsersModule.githubRedirectUri
 		});
 		if (!accessToken) throw new Error(results.error_description);
 
@@ -243,11 +283,11 @@ class _UsersModule extends CoreClass {
 			userId = user._id;
 		} else {
 			// Try to register the user. Will throw an error if it's unable to do so or any error occurs
-			userId = await UsersModule.runJob(
+			({ userId } = await UsersModule.runJob(
 				"GITHUB_AUTHORIZE_CALLBACK_REGISTER",
 				{ githubUserData, accessToken },
 				this
-			);
+			));
 		}
 
 		// Create session for the userId gotten above, as the user existed or was successfully registered
@@ -338,7 +378,7 @@ class _UsersModule extends CoreClass {
 			location: githubUserData.data.location,
 			bio: githubUserData.data.bio,
 			email: {
-				primaryEmailAddress,
+				address: primaryEmailAddress,
 				verificationToken
 			},
 			services: {
@@ -433,6 +473,178 @@ class _UsersModule extends CoreClass {
 
 		return {
 			redirectUrl: `${UsersModule.appUrl}/settings?tab=security`
+		};
+	}
+
+	/**
+	 * Handles callback route being accessed, which has data from OIDC during the oauth process
+	 * Will be used to either log the user in or register the user
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.code - code we need to use to get the access token
+	 * @param {string} payload.error - error code if an error occured
+	 * @param {string} payload.errorDescription - error description if an error occured
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	async OIDC_AUTHORIZE_CALLBACK(payload) {
+		const { code, error, errorDescription } = payload;
+		if (error) throw new Error(errorDescription);
+
+		// Tries to get access token. We don't use the refresh token currently
+		const { accessToken } = await UsersModule.getOIDCOAuthAccessToken(code);
+
+		// Gets user data
+		const userInfoResponse = await axios.post(
+			UsersModule.oidcUserinfoEndpoint,
+			{},
+			{
+				headers: {
+					Authorization: `Bearer ${accessToken}`
+				}
+			}
+		);
+		if (!userInfoResponse.data.preferred_username) throw new Error("Something went wrong, no preferred_username.");
+		// TODO verify sub from userinfo and token response, see 5.3.2 https://openid.net/specs/openid-connect-core-1_0.html
+
+		// TODO we don't use linking for OIDC currently, so remove this or utilize it in some other way if needed
+		// If we specified a state in the first step when we redirected the user to OIDC, it was to link a
+		// OIDC account to an existing Musare account, so continue with a job specifically for linking the account
+		// if (state)
+		// 	return UsersModule.runJob(
+		// 		"OIDC_AUTHORIZE_CALLBACK_LINK",
+		// 		{ state, sub: userInfoResponse.data.sub, accessToken },
+		// 		this
+		// 	);
+
+		const user = await UsersModule.userModel.findOne({ "services.oidc.sub": userInfoResponse.data.sub });
+		let userId;
+		if (user) {
+			// Refresh access token, though it's pretty useless as it'll probably expire and then be useless,
+			// and we don't use it afterwards at all anyways
+			user.services.oidc.access_token = accessToken;
+			await user.save();
+			userId = user._id;
+		} else {
+			// Try to register the user. Will throw an error if it's unable to do so or any error occurs
+			({ userId } = await UsersModule.runJob(
+				"OIDC_AUTHORIZE_CALLBACK_REGISTER",
+				{ userInfoResponse: userInfoResponse.data, accessToken },
+				this
+			));
+		}
+
+		// Create session for the userId gotten above, as the user existed or was successfully registered
+		const sessionId = await UtilsModule.runJob("GUID", {}, this);
+		await CacheModule.runJob(
+			"HSET",
+			{
+				table: "sessions",
+				key: sessionId,
+				value: UsersModule.sessionSchema(sessionId, userId.toString())
+			},
+			this
+		);
+
+		return { sessionId, userId, redirectUrl: UsersModule.appUrl };
+	}
+
+	/**
+	 * Handles registering the user in the GitHub login/register/link callback/process
+	 * @param {object} payload - object that contains the payload
+	 * @param {string} payload.userInfoResponse - data we got from the OIDC user info API endpoint
+	 * @param {string} payload.accessToken - access token for the GitHub user
+	 * @returns {Promise} - returns a promise (resolve, reject)
+	 */
+	async OIDC_AUTHORIZE_CALLBACK_REGISTER(payload) {
+		const { userInfoResponse, accessToken } = payload;
+		let user;
+
+		// Check if username already exists
+		user = await UsersModule.userModel.findOne({
+			username: new RegExp(`^${userInfoResponse.preferred_username}$`, "i")
+		});
+		if (user) throw new Error(`An account with that username already exists.`); // TODO eventually we'll want users to be able to pick their own username maybe
+
+		const emailAddress = userInfoResponse.email;
+		if (!emailAddress) throw new Error("No email address found.");
+
+		user = await UsersModule.userModel.findOne({ "email.address": emailAddress });
+		if (user && Object.keys(JSON.parse(user.services.github)).length === 0)
+			throw new Error(`An account with that email address already exists, but is not linked to OIDC.`);
+		if (user) throw new Error(`An account with that email address already exists.`);
+
+		const userId = await UtilsModule.runJob(
+			"GENERATE_RANDOM_STRING",
+			{
+				length: 12
+			},
+			this
+		);
+		const verificationToken = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 64 }, this);
+		const gravatarUrl = await UtilsModule.runJob(
+			"CREATE_GRAVATAR",
+			{
+				email: emailAddress
+			},
+			this
+		);
+		const likedSongsPlaylist = await PlaylistsModule.runJob(
+			"CREATE_USER_PLAYLIST",
+			{
+				userId,
+				displayName: "Liked Songs",
+				type: "user-liked"
+			},
+			this
+		);
+		const dislikedSongsPlaylist = await PlaylistsModule.runJob(
+			"CREATE_USER_PLAYLIST",
+			{
+				userId,
+				displayName: "Disliked Songs",
+				type: "user-disliked"
+			},
+			this
+		);
+
+		user = {
+			_id: userId,
+			username: userInfoResponse.preferred_username,
+			name: userInfoResponse.name,
+			location: "",
+			bio: "",
+			email: {
+				address: emailAddress,
+				verificationToken
+			},
+			services: {
+				oidc: {
+					sub: userInfoResponse.sub,
+					access_token: accessToken
+				}
+			},
+			avatar: {
+				type: "gravatar",
+				url: gravatarUrl
+			},
+			likedSongsPlaylist,
+			dislikedSongsPlaylist
+		};
+
+		await UsersModule.userModel.create(user);
+
+		await UsersModule.verifyEmailSchema(emailAddress, userInfoResponse.preferred_username, verificationToken);
+		await ActivitiesModule.runJob(
+			"ADD_ACTIVITY",
+			{
+				userId,
+				type: "user__joined",
+				payload: { message: "Welcome to Musare!" }
+			},
+			this
+		);
+
+		return {
+			userId
 		};
 	}
 
@@ -609,7 +821,7 @@ class _UsersModule extends CoreClass {
 		if (!user) throw new Error("User not found.");
 		if (user.username === username) throw new Error("New username can't be the same as the old username.");
 
-		const existingUser = UsersModule.userModel.findOne({ username: new RegExp(`^${username}$`, "i") });
+		const existingUser = await UsersModule.userModel.findOne({ username: new RegExp(`^${username}$`, "i") });
 		if (existingUser) throw new Error("That username is already in use.");
 
 		await UsersModule.userModel.updateOne({ _id: userId }, { $set: { username } }, { runValidators: true });
