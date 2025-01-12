@@ -3,7 +3,6 @@ import { defineAsyncComponent, ref, watch, reactive } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { useConfigStore } from "@/stores/config";
-import { useSettingsStore } from "@/stores/settings";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
 import _validation from "@/validation";
@@ -16,9 +15,7 @@ const QuickConfirm = defineAsyncComponent(
 );
 
 const configStore = useConfigStore();
-const { githubAuthentication, sitename, oidcAuthentication } =
-	storeToRefs(configStore);
-const settingsStore = useSettingsStore();
+const { oidcAuthentication } = storeToRefs(configStore);
 const userAuthStore = useUserAuthStore();
 
 const { socket } = useWebsocketsStore();
@@ -41,7 +38,6 @@ const validation = reactive({
 const newPassword = ref();
 const oldPassword = ref();
 
-const { isPasswordLinked, isGithubLinked } = settingsStore;
 const { userId } = storeToRefs(userAuthStore);
 
 const togglePasswordVisibility = refName => {
@@ -83,20 +79,6 @@ const changePassword = () => {
 		}
 	);
 };
-const unlinkPassword = () => {
-	if (oidcAuthentication.value) return;
-
-	socket.dispatch("users.unlinkPassword", res => {
-		new Toast(res.message);
-	});
-};
-const unlinkGitHub = () => {
-	if (!githubAuthentication.value) return;
-
-	socket.dispatch("users.unlinkGitHub", res => {
-		new Toast(res.message);
-	});
-};
 const removeSessions = () => {
 	socket.dispatch(`users.removeSessions`, userId.value, res => {
 		new Toast(res.message);
@@ -122,153 +104,85 @@ watch(validation, newValidation => {
 
 <template>
 	<div class="content security-tab">
-		<div v-if="isPasswordLinked">
-			<h4 class="section-title">Change password</h4>
+		<h4 class="section-title">Change password</h4>
 
-			<p class="section-description">
-				You will need to know your previous password
-			</p>
+		<p class="section-description">
+			You will need to know your previous password
+		</p>
 
-			<hr class="section-horizontal-rule" />
+		<hr class="section-horizontal-rule" />
 
-			<p class="control is-expanded margin-top-zero">
-				<label for="old-password">Previous password</label>
-			</p>
+		<p class="control is-expanded margin-top-zero">
+			<label for="old-password">Previous password</label>
+		</p>
 
-			<div id="password-visibility-container">
-				<input
-					class="input"
-					id="old-password"
-					ref="oldPassword"
-					type="password"
-					placeholder="Enter your old password here..."
-					v-model="validation.oldPassword.value"
-				/>
-				<a @click="togglePasswordVisibility('oldPassword')">
-					<i class="material-icons">
-						{{
-							!validation.oldPassword.visible
-								? "visibility"
-								: "visibility_off"
-						}}
-					</i>
-				</a>
-			</div>
-
-			<p class="control is-expanded">
-				<label for="new-password">New password</label>
-			</p>
-
-			<div id="password-visibility-container">
-				<input
-					class="input"
-					id="new-password"
-					type="password"
-					ref="newPassword"
-					placeholder="Enter new password here..."
-					v-model="validation.newPassword.value"
-					@keyup.enter="changePassword()"
-					@keypress="onInput('newPassword')"
-					@paste="onInput('newPassword')"
-				/>
-
-				<a @click="togglePasswordVisibility('newPassword')">
-					<i class="material-icons">
-						{{
-							!validation.newPassword.visible
-								? "visibility"
-								: "visibility_off"
-						}}
-					</i>
-				</a>
-			</div>
-
-			<transition name="fadein-helpbox">
-				<input-help-box
-					:entered="validation.newPassword.entered"
-					:valid="validation.newPassword.valid"
-					:message="validation.newPassword.message"
-				/>
-			</transition>
-
-			<p class="control">
-				<button
-					id="change-password-button"
-					class="button is-success"
-					@click.prevent="changePassword()"
-				>
-					Change password
-				</button>
-			</p>
-
-			<div class="section-margin-bottom" />
-		</div>
-
-		<div v-if="!isPasswordLinked && !oidcAuthentication">
-			<h4 class="section-title">Add a password</h4>
-			<p class="section-description">
-				Add a password, as an alternative to signing in with GitHub
-			</p>
-
-			<hr class="section-horizontal-rule" />
-
-			<router-link to="/set_password" class="button is-default"
-				><i class="material-icons icon-with-button">create</i>Set
-				Password
-			</router-link>
-
-			<div class="section-margin-bottom" />
-		</div>
-
-		<div v-if="!isGithubLinked && githubAuthentication">
-			<h4 class="section-title">Link your GitHub account</h4>
-			<p class="section-description">
-				Link your {{ sitename }} account with GitHub
-			</p>
-
-			<hr class="section-horizontal-rule" />
-
-			<a
-				class="button is-github"
-				:href="`${configStore.urls.api}/auth/github/link`"
-			>
-				<div class="icon">
-					<img class="invert" src="/assets/social/github.svg" />
-				</div>
-				&nbsp; Link GitHub to account
+		<div id="password-visibility-container">
+			<input
+				class="input"
+				id="old-password"
+				ref="oldPassword"
+				type="password"
+				placeholder="Enter your old password here..."
+				v-model="validation.oldPassword.value"
+			/>
+			<a @click="togglePasswordVisibility('oldPassword')">
+				<i class="material-icons">
+					{{
+						!validation.oldPassword.visible
+							? "visibility"
+							: "visibility_off"
+					}}
+				</i>
 			</a>
-
-			<div class="section-margin-bottom" />
 		</div>
 
-		<div v-if="isPasswordLinked && isGithubLinked">
-			<h4 class="section-title">Remove login methods</h4>
-			<p class="section-description">
-				Remove your password as a login method or unlink GitHub
-			</p>
+		<p class="control is-expanded">
+			<label for="new-password">New password</label>
+		</p>
 
-			<hr class="section-horizontal-rule" />
+		<div id="password-visibility-container">
+			<input
+				class="input"
+				id="new-password"
+				type="password"
+				ref="newPassword"
+				placeholder="Enter new password here..."
+				v-model="validation.newPassword.value"
+				@keyup.enter="changePassword()"
+				@keypress="onInput('newPassword')"
+				@paste="onInput('newPassword')"
+			/>
 
-			<div class="row">
-				<quick-confirm
-					v-if="isPasswordLinked && githubAuthentication"
-					@confirm="unlinkPassword()"
-				>
-					<a class="button is-danger">
-						<i class="material-icons icon-with-button">close</i>
-						Remove password
-					</a>
-				</quick-confirm>
-				<quick-confirm v-if="isGithubLinked" @confirm="unlinkGitHub()">
-					<a class="button is-danger">
-						<i class="material-icons icon-with-button">link_off</i>
-						Remove GitHub from account
-					</a>
-				</quick-confirm>
-			</div>
-
-			<div class="section-margin-bottom" />
+			<a @click="togglePasswordVisibility('newPassword')">
+				<i class="material-icons">
+					{{
+						!validation.newPassword.visible
+							? "visibility"
+							: "visibility_off"
+					}}
+				</i>
+			</a>
 		</div>
+
+		<transition name="fadein-helpbox">
+			<input-help-box
+				:entered="validation.newPassword.entered"
+				:valid="validation.newPassword.valid"
+				:message="validation.newPassword.message"
+			/>
+		</transition>
+
+		<p class="control">
+			<button
+				id="change-password-button"
+				class="button is-success"
+				@click.prevent="changePassword()"
+			>
+				Change password
+			</button>
+		</p>
+
+		<div class="section-margin-bottom" />
 
 		<div>
 			<h4 class="section-title">Log out everywhere</h4>

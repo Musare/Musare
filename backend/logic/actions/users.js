@@ -3,7 +3,6 @@ import config from "config";
 import async from "async";
 import mongoose from "mongoose";
 
-import axios from "axios";
 import bcrypt from "bcrypt";
 import sha256 from "sha256";
 import isLoginRequired from "../hooks/loginRequired";
@@ -93,39 +92,6 @@ CacheModule.runJob("SUB", {
 });
 
 CacheModule.runJob("SUB", {
-	channel: "user.unlinkPassword",
-	cb: userId => {
-		WSModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets => {
-			sockets.forEach(socket => {
-				socket.dispatch("event:user.password.unlinked");
-			});
-		});
-	}
-});
-
-CacheModule.runJob("SUB", {
-	channel: "user.linkGithub",
-	cb: userId => {
-		WSModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets => {
-			sockets.forEach(socket => {
-				socket.dispatch("event:user.github.linked");
-			});
-		});
-	}
-});
-
-CacheModule.runJob("SUB", {
-	channel: "user.unlinkGithub",
-	cb: userId => {
-		WSModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets => {
-			sockets.forEach(socket => {
-				socket.dispatch("event:user.github.unlinked");
-			});
-		});
-	}
-});
-
-CacheModule.runJob("SUB", {
 	channel: "user.ban",
 	cb: data => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: data.userId }).then(sockets => {
@@ -194,7 +160,6 @@ CacheModule.runJob("SUB", {
 				"name",
 				"username",
 				"avatar",
-				"services.github.id",
 				"role",
 				"email.address",
 				"email.verified",
@@ -202,7 +167,7 @@ CacheModule.runJob("SUB", {
 				"services.password.password"
 			],
 			(err, user) => {
-				const newUser = { ...user._doc, hasPassword: !!user.services.password.password };
+				const newUser = user._doc;
 				delete newUser.services.password;
 				WSModule.runJob("EMIT_TO_ROOMS", {
 					rooms: ["admin.users", `edit-user.${data.userId}`],
@@ -275,26 +240,8 @@ export default {
 									"services.password.password",
 									"services.password.reset.code",
 									"services.password.reset.expires",
-									"services.password.set.code",
-									"services.password.set.expires",
-									"services.github.access_token",
 									"email.verificationToken"
 								],
-								specialProperties: {
-									hasPassword: [
-										{
-											$addFields: {
-												hasPassword: {
-													$cond: [
-														{ $eq: [{ $type: "$services.password.password" }, "string"] },
-														true,
-														false
-													]
-												}
-											}
-										}
-									]
-								},
 								specialQueries: {}
 							},
 							this
@@ -440,8 +387,7 @@ export default {
 				// otherwise compare the requested password and the actual users password
 				(user, next) => {
 					if (!user) return next("User not found");
-					if (!user.services.password || !user.services.password.password)
-						return next("The account you are trying to access uses GitHub to log in.");
+					if (!user.services.password || !user.services.password.password) return next("Invalid password");
 
 					return bcrypt.compare(sha256(password), user.services.password.password, (err, match) => {
 						if (err) return next(err);
@@ -673,63 +619,6 @@ export default {
 				return cb({
 					status: "error",
 					message: "Unfortunately your password doesn't match."
-				});
-			}
-		);
-	}),
-
-	/**
-	 * Checks if user's github access token has expired or not (ie. if their github account is still linked)
-	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {Function} cb - gets called with the result
-	 */
-	confirmGithubLink: isLoginRequired(async function confirmGithubLink(session, cb) {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-
-		return async.waterfall(
-			[
-				next => {
-					if (!config.get("apis.github.enabled")) return next("GitHub authentication is disabled.");
-					return userModel.findOne({ _id: session.userId }, (err, user) => next(err, user));
-				},
-
-				(user, next) => {
-					if (!user.services.github) return next("You don't have GitHub linked to your account.");
-
-					return axios
-						.get(`https://api.github.com/user/emails`, {
-							headers: {
-								"User-Agent": "request",
-								Authorization: `token ${user.services.github.access_token}`
-							}
-						})
-						.then(res => next(null, res))
-						.catch(err => next(err));
-				},
-
-				(res, next) => next(null, res.status === 200)
-			],
-			async (err, linked) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"USER_CONFIRM_GITHUB_LINK",
-						`Couldn't confirm github link for user "${session.userId}". "${err}"`
-					);
-					return cb({ status: "error", message: err });
-				}
-
-				this.log(
-					"SUCCESS",
-					"USER_CONFIRM_GITHUB_LINK",
-					`GitHub is ${linked ? "linked" : "not linked"} for user "${session.userId}".`
-				);
-
-				return cb({
-					status: "success",
-					data: { linked },
-					message: "Successfully checked if GitHub accounty was linked."
 				});
 			}
 		);
@@ -1364,9 +1253,7 @@ export default {
 							email: {
 								address: user.email.address,
 								verified: user.email.verified
-							},
-							hasPassword: !!user.services.password,
-							services: { github: user.services.github }
+							}
 						}
 					});
 				}
@@ -1447,7 +1334,6 @@ export default {
 				};
 
 				if (user.services.password && user.services.password.password) sanitisedUser.password = true;
-				if (user.services.github && user.services.github.id) sanitisedUser.github = true;
 				if (user.services.oidc && user.services.oidc.sub) sanitisedUser.oidc = true;
 
 				this.log("SUCCESS", "FIND_BY_SESSION", `User found. "${user.username}".`);
@@ -2002,313 +1888,6 @@ export default {
 	}),
 
 	/**
-	 * Requests a password for a session
-	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} email - the email of the user that requests a password reset
-	 * @param {Function} cb - gets called with the result
-	 */
-	requestPassword: isLoginRequired(async function requestPassword(session, cb) {
-		const code = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 8 }, this);
-		const passwordRequestSchema = await MailModule.runJob(
-			"GET_SCHEMA",
-			{
-				schemaName: "passwordRequest"
-			},
-			this
-		);
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-		async.waterfall(
-			[
-				next => {
-					userModel.findOne({ _id: session.userId }, next);
-				},
-
-				(user, next) => {
-					if (!user) return next("User not found.");
-					if (user.services.password && user.services.password.password)
-						return next("You already have a password set.");
-					return next(null, user);
-				},
-
-				(user, next) => {
-					const expires = new Date();
-					expires.setDate(expires.getDate() + 1);
-					userModel.findOneAndUpdate(
-						{ "email.address": user.email.address },
-						{
-							$set: {
-								"services.password": {
-									set: { code, expires }
-								}
-							}
-						},
-						{ runValidators: true },
-						next
-					);
-				},
-
-				(user, next) => {
-					passwordRequestSchema(user.email.address, user.username, code, next);
-				}
-			],
-			async err => {
-				if (err && err !== true) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-
-					this.log(
-						"ERROR",
-						"REQUEST_PASSWORD",
-						`UserId '${session.userId}' failed to request password. '${err}'`
-					);
-
-					return cb({ status: "error", message: err });
-				}
-
-				this.log(
-					"SUCCESS",
-					"REQUEST_PASSWORD",
-					`UserId '${session.userId}' successfully requested a password.`
-				);
-
-				return cb({
-					status: "success",
-					message: "Successfully requested password."
-				});
-			}
-		);
-	}),
-
-	/**
-	 * Verifies a password code
-	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} code - the password code
-	 * @param {Function} cb - gets called with the result
-	 */
-	verifyPasswordCode: isLoginRequired(async function verifyPasswordCode(session, code, cb) {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-		async.waterfall(
-			[
-				next => {
-					if (!code || typeof code !== "string") return next("Invalid code.");
-					return userModel.findOne(
-						{
-							"services.password.set.code": code,
-							_id: session.userId
-						},
-						next
-					);
-				},
-
-				(user, next) => {
-					if (!user) return next("Invalid code.");
-					if (user.services.password.set.expires < new Date()) return next("That code has expired.");
-					return next(null);
-				}
-			],
-			async err => {
-				if (err && err !== true) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "VERIFY_PASSWORD_CODE", `Code '${code}' failed to verify. '${err}'`);
-					cb({ status: "error", message: err });
-				} else {
-					this.log("SUCCESS", "VERIFY_PASSWORD_CODE", `Code '${code}' successfully verified.`);
-					cb({
-						status: "success",
-						message: "Successfully verified password code."
-					});
-				}
-			}
-		);
-	}),
-
-	/**
-	 * Adds a password to a user with a code
-	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} code - the password code
-	 * @param {string} newPassword - the new password code
-	 * @param {Function} cb - gets called with the result
-	 */
-	changePasswordWithCode: isLoginRequired(async function changePasswordWithCode(session, code, newPassword, cb) {
-		const userModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "user"
-			},
-			this
-		);
-		async.waterfall(
-			[
-				next => {
-					if (!code || typeof code !== "string") return next("Invalid code.");
-					return userModel.findOne({ "services.password.set.code": code }, next);
-				},
-
-				(user, next) => {
-					if (!user) return next("Invalid code.");
-					if (!user.services.password.set.expires > new Date()) return next("That code has expired.");
-					return next();
-				},
-
-				next => {
-					if (!DBModule.passwordValid(newPassword))
-						return next("Invalid password. Check if it meets all the requirements.");
-					return next();
-				},
-
-				next => {
-					bcrypt.genSalt(10, next);
-				},
-
-				// hash the password
-				(salt, next) => {
-					bcrypt.hash(sha256(newPassword), salt, next);
-				},
-
-				(hashedPassword, next) => {
-					userModel.updateOne(
-						{ "services.password.set.code": code },
-						{
-							$set: {
-								"services.password.password": hashedPassword
-							},
-							$unset: { "services.password.set": "" }
-						},
-						{ runValidators: true },
-						next
-					);
-				}
-			],
-			async err => {
-				if (err && err !== true) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "ADD_PASSWORD_WITH_CODE", `Code '${code}' failed to add password. '${err}'`);
-					return cb({ status: "error", message: err });
-				}
-
-				this.log("SUCCESS", "ADD_PASSWORD_WITH_CODE", `Code '${code}' successfully added password.`);
-
-				CacheModule.runJob("PUB", {
-					channel: "user.linkPassword",
-					value: session.userId
-				});
-
-				CacheModule.runJob("PUB", {
-					channel: "user.updated",
-					value: { userId: session.userId }
-				});
-
-				return cb({
-					status: "success",
-					message: "Successfully added password."
-				});
-			}
-		);
-	}),
-
-	/**
-	 * Unlinks password from user
-	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {Function} cb - gets called with the result
-	 */
-	unlinkPassword: isLoginRequired(async function unlinkPassword(session, cb) {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-		async.waterfall(
-			[
-				next => {
-					userModel.findOne({ _id: session.userId }, next);
-				},
-
-				(user, next) => {
-					if (!user) return next("Not logged in.");
-					if (!config.get("apis.github.enabled")) return next("Unlinking password is disabled.");
-					if (!user.services.github || !user.services.github.id)
-						return next("You can't remove password login without having GitHub login.");
-					return userModel.updateOne({ _id: session.userId }, { $unset: { "services.password": "" } }, next);
-				}
-			],
-			async err => {
-				if (err && err !== true) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"UNLINK_PASSWORD",
-						`Unlinking password failed for userId '${session.userId}'. '${err}'`
-					);
-					return cb({ status: "error", message: err });
-				}
-
-				this.log("SUCCESS", "UNLINK_PASSWORD", `Unlinking password successful for userId '${session.userId}'.`);
-
-				CacheModule.runJob("PUB", {
-					channel: "user.unlinkPassword",
-					value: session.userId
-				});
-
-				CacheModule.runJob("PUB", {
-					channel: "user.updated",
-					value: { userId: session.userId }
-				});
-
-				return cb({
-					status: "success",
-					message: "Successfully unlinked password."
-				});
-			}
-		);
-	}),
-
-	/**
-	 * Unlinks GitHub from user
-	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {Function} cb - gets called with the result
-	 */
-	unlinkGitHub: isLoginRequired(async function unlinkGitHub(session, cb) {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-		async.waterfall(
-			[
-				next => {
-					userModel.findOne({ _id: session.userId }, next);
-				},
-
-				(user, next) => {
-					if (!user) return next("Not logged in.");
-					if (!user.services.password || !user.services.password.password)
-						return next("You can't remove GitHub login without having password login.");
-					return userModel.updateOne({ _id: session.userId }, { $unset: { "services.github": "" } }, next);
-				}
-			],
-			async err => {
-				if (err && err !== true) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"UNLINK_GITHUB",
-						`Unlinking GitHub failed for userId '${session.userId}'. '${err}'`
-					);
-					return cb({ status: "error", message: err });
-				}
-
-				this.log("SUCCESS", "UNLINK_GITHUB", `Unlinking GitHub successful for userId '${session.userId}'.`);
-
-				CacheModule.runJob("PUB", {
-					channel: "user.unlinkGithub",
-					value: session.userId
-				});
-
-				CacheModule.runJob("PUB", {
-					channel: "user.updated",
-					value: { userId: session.userId }
-				});
-
-				return cb({
-					status: "success",
-					message: "Successfully unlinked GitHub."
-				});
-			}
-		);
-	}),
-
-	/**
 	 * Requests a password reset for an email
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} email - the email of the user that requests a password reset
@@ -2336,8 +1915,6 @@ export default {
 
 				(user, next) => {
 					if (!user) return next("User not found.");
-					if (!user.services.password || !user.services.password.password)
-						return next("User does not have a password set, and probably uses GitHub to log in.");
 					return next(null, user);
 				},
 
@@ -2412,8 +1989,6 @@ export default {
 
 					(user, next) => {
 						if (!user) return next("User not found.");
-						if (!user.services.password || !user.services.password.password)
-							return next("User does not have a password set, and probably uses GitHub to log in.");
 						return next();
 					},
 

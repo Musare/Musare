@@ -19,15 +19,7 @@ export default {
 			reset: {
 				code: { type: String, min: 8, max: 8 },
 				expires: { type: Date }
-			},
-			set: {
-				code: { type: String, min: 8, max: 8 },
-				expires: { type: Date }
 			}
-		},
-		github: {
-			id: Number,
-			access_token: String
 		},
 		oidc: {
 			sub: String,

@@ -1,11 +1,8 @@
 import config from "config";
-import oauth from "oauth";
 import axios from "axios";
 import bcrypt from "bcrypt";
 import sha256 from "sha256";
 import CoreClass from "../core";
-
-const { OAuth2 } = oauth;
 
 let UsersModule;
 let MailModule;
@@ -55,19 +52,6 @@ class _UsersModule extends CoreClass {
 		});
 
 		this.appUrl = `${config.get("url.secure") ? "https" : "http"}://${config.get("url.host")}`;
-		this.githubRedirectUri =
-			config.get("apis.github.redirect_uri").length > 0
-				? config.get("apis.github.redirect_uri")
-				: `${this.appUrl}/backend/auth/github/authorize/callback`;
-
-		this.oauth2 = new OAuth2(
-			config.get("apis.github.client"),
-			config.get("apis.github.secret"),
-			"https://github.com/",
-			"login/oauth/authorize",
-			"login/oauth/access_token",
-			null
-		);
 
 		// getOAuthAccessToken uses callbacks by default, so make a helper function to turn it into a promise instead
 		this.getOAuthAccessToken = (...args) =>
@@ -239,249 +223,6 @@ class _UsersModule extends CoreClass {
 	}
 
 	/**
-	 * Handles callback route being accessed, which has data from GitHub during the oauth process
-	 * Will be used to either log the user in, register the user, or link the GitHub account to an existing account
-	 * @param {object} payload - object that contains the payload
-	 * @param {string} payload.code - code we need to use to get the access token
-	 * @param {string} payload.state - custom state we may have passed to GitHub during the first step
-	 * @param {string} payload.error - error code if an error occured
-	 * @param {string} payload.errorDescription - error description if an error occured
-	 * @returns {Promise} - returns a promise (resolve, reject)
-	 */
-	async GITHUB_AUTHORIZE_CALLBACK(payload) {
-		const { code, state, error, errorDescription } = payload;
-		if (error) throw new Error(errorDescription);
-
-		// Tries to get access token. We don't use the refresh token currently
-		const { accessToken, /* refreshToken, */ results } = await UsersModule.getOAuthAccessToken(code, {
-			redirect_uri: UsersModule.githubRedirectUri
-		});
-		if (!accessToken) throw new Error(results.error_description);
-
-		const options = {
-			headers: {
-				"User-Agent": "request",
-				Authorization: `token ${accessToken}`
-			}
-		};
-		// Gets user data
-		const githubUserData = await axios.get("https://api.github.com/user", options);
-		if (githubUserData.status !== 200) throw new Error(githubUserData.data.message);
-		if (!githubUserData.data.id) throw new Error("Something went wrong, no id.");
-
-		// If we specified a state in the first step when we redirected the user to GitHub, it was to link a
-		// GitHub account to an existing Musare account, so continue with a job specifically for linking the account
-		if (state)
-			return UsersModule.runJob(
-				"GITHUB_AUTHORIZE_CALLBACK_LINK",
-				{ state, githubId: githubUserData.data.id, accessToken },
-				this
-			);
-
-		const user = await UsersModule.userModel.findOne({ "services.github.id": githubUserData.data.id });
-		let userId;
-		if (user) {
-			// Refresh access token, though it's pretty useless as it'll probably expire and then be useless,
-			// and we don't use it afterwards at all
-			user.services.github.access_token = accessToken;
-			await user.save();
-			userId = user._id;
-		} else {
-			// Try to register the user. Will throw an error if it's unable to do so or any error occurs
-			({ userId } = await UsersModule.runJob(
-				"GITHUB_AUTHORIZE_CALLBACK_REGISTER",
-				{ githubUserData, accessToken },
-				this
-			));
-		}
-
-		// Create session for the userId gotten above, as the user existed or was successfully registered
-		const sessionId = await UtilsModule.runJob("GUID", {}, this);
-		await CacheModule.runJob(
-			"HSET",
-			{
-				table: "sessions",
-				key: sessionId,
-				value: UsersModule.sessionSchema(sessionId, userId)
-			},
-			this
-		);
-
-		return { sessionId, userId, redirectUrl: UsersModule.appUrl };
-	}
-
-	/**
-	 * Handles registering the user in the GitHub login/register/link callback/process
-	 * @param {object} payload - object that contains the payload
-	 * @param {string} payload.githubUserData - data we got from the /user API endpoint from GitHub
-	 * @param {string} payload.accessToken - access token for the GitHub user
-	 * @returns {Promise} - returns a promise (resolve, reject)
-	 */
-	async GITHUB_AUTHORIZE_CALLBACK_REGISTER(payload) {
-		const { githubUserData, accessToken } = payload;
-		let user;
-
-		// Check if username already exists
-		user = await UsersModule.userModel.findOne({ username: new RegExp(`^${githubUserData.data.login}$`, "i") });
-		if (user) throw new Error(`An account with that username already exists.`);
-
-		// Get emails used for GitHub account
-		const githubEmailsData = await axios.get("https://api.github.com/user/emails", {
-			headers: {
-				"User-Agent": "request",
-				Authorization: `token ${accessToken}`
-			}
-		});
-		if (!Array.isArray(githubEmailsData.data)) throw new Error(githubEmailsData.message);
-
-		const primaryEmailAddress = githubEmailsData.data.find(emailAddress => emailAddress.primary)?.email;
-		if (!primaryEmailAddress) throw new Error("No primary email address found.");
-
-		user = await UsersModule.userModel.findOne({ "email.address": primaryEmailAddress });
-		if (user && Object.keys(JSON.parse(user.services.github)).length === 0)
-			throw new Error(`An account with that email address exists, but is not linked to GitHub.`);
-		if (user) throw new Error(`An account with that email address already exists.`);
-
-		const userId = await UtilsModule.runJob(
-			"GENERATE_RANDOM_STRING",
-			{
-				length: 12
-			},
-			this
-		);
-		const verificationToken = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 64 }, this);
-		const gravatarUrl = await UtilsModule.runJob(
-			"CREATE_GRAVATAR",
-			{
-				email: primaryEmailAddress
-			},
-			this
-		);
-		const likedSongsPlaylist = await PlaylistsModule.runJob(
-			"CREATE_USER_PLAYLIST",
-			{
-				userId,
-				displayName: "Liked Songs",
-				type: "user-liked"
-			},
-			this
-		);
-		const dislikedSongsPlaylist = await PlaylistsModule.runJob(
-			"CREATE_USER_PLAYLIST",
-			{
-				userId,
-				displayName: "Disliked Songs",
-				type: "user-disliked"
-			},
-			this
-		);
-
-		user = {
-			_id: userId,
-			username: githubUserData.data.login,
-			name: githubUserData.data.name,
-			location: githubUserData.data.location,
-			bio: githubUserData.data.bio,
-			email: {
-				address: primaryEmailAddress,
-				verificationToken
-			},
-			services: {
-				github: {
-					id: githubUserData.data.id,
-					access_token: accessToken
-				}
-			},
-			avatar: {
-				type: "gravatar",
-				url: gravatarUrl
-			},
-			likedSongsPlaylist,
-			dislikedSongsPlaylist
-		};
-
-		await UsersModule.userModel.create(user);
-
-		await UsersModule.verifyEmailSchema(primaryEmailAddress, githubUserData.data.login, verificationToken);
-		await ActivitiesModule.runJob(
-			"ADD_ACTIVITY",
-			{
-				userId,
-				type: "user__joined",
-				payload: { message: "Welcome to Musare!" }
-			},
-			this
-		);
-
-		return {
-			userId
-		};
-	}
-
-	/**
-	 * Job to attempt to link a GitHub user to a Musare account
-	 * @param {object} payload - object that contains the payload
-	 * @param {string} payload.state - state we passed to GitHub and got back from GitHub
-	 * @param {string} payload.githubId - GitHub user id
-	 * @param {string} payload.accessToken - GitHub user access token
-	 * @returns {Promise} - returns a promise (resolve, reject)
-	 */
-	async GITHUB_AUTHORIZE_CALLBACK_LINK(payload) {
-		const { state, githubId, accessToken } = payload;
-
-		// State is currently the session id (SID), so check if that session (still) exists
-		const session = await CacheModule.runJob(
-			"HGET",
-			{
-				table: "sessions",
-				key: state
-			},
-			this
-		);
-		if (!session) throw new Error("Invalid session.");
-
-		const user = await UsersModule.userModel.findOne({ _id: session.userId });
-		if (!user) throw new Error("User not found.");
-		if (user.services.github && user.services.github.id) throw new Error("Account already has GitHub linked.");
-
-		const { _id: userId } = user;
-
-		await UsersModule.userModel.updateOne(
-			{ _id: userId },
-			{
-				$set: {
-					"services.github": {
-						id: githubId,
-						access_token: accessToken
-					}
-				}
-			},
-			{ runValidators: true }
-		);
-
-		await CacheModule.runJob(
-			"PUB",
-			{
-				channel: "user.linkGithub",
-				value: userId
-			},
-			this
-		);
-		await CacheModule.runJob(
-			"PUB",
-			{
-				channel: "user.updated",
-				value: { userId }
-			},
-			this
-		);
-
-		return {
-			redirectUrl: `${UsersModule.appUrl}/settings?tab=security`
-		};
-	}
-
-	/**
 	 * Handles callback route being accessed, which has data from OIDC during the oauth process
 	 * Will be used to either log the user in or register the user
 	 * @param {object} payload - object that contains the payload
@@ -553,10 +294,10 @@ class _UsersModule extends CoreClass {
 	}
 
 	/**
-	 * Handles registering the user in the GitHub login/register/link callback/process
+	 * Handles registering the user in the OIDC login/register/link callback/process
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.userInfoResponse - data we got from the OIDC user info API endpoint
-	 * @param {string} payload.accessToken - access token for the GitHub user
+	 * @param {string} payload.accessToken - access token for the OIDC user
 	 * @returns {Promise} - returns a promise (resolve, reject)
 	 */
 	async OIDC_AUTHORIZE_CALLBACK_REGISTER(payload) {
@@ -573,8 +314,6 @@ class _UsersModule extends CoreClass {
 		if (!emailAddress) throw new Error("No email address found.");
 
 		user = await UsersModule.userModel.findOne({ "email.address": emailAddress });
-		if (user && Object.keys(JSON.parse(user.services.github)).length === 0)
-			throw new Error(`An account with that email address already exists, but is not linked to OIDC.`);
 		if (user) throw new Error(`An account with that email address already exists.`);
 
 		const userId = await UtilsModule.runJob(

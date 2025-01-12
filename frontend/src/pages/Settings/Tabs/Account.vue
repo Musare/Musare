@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, watch, reactive, onMounted } from "vue";
-import { useRoute } from "vue-router";
+import { defineAsyncComponent, ref, watch, reactive } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { useSettingsStore } from "@/stores/settings";
@@ -22,7 +21,6 @@ const QuickConfirm = defineAsyncComponent(
 
 const settingsStore = useSettingsStore();
 const userAuthStore = useUserAuthStore();
-const route = useRoute();
 const configStore = useConfigStore();
 
 const { socket } = useWebsocketsStore();
@@ -147,18 +145,6 @@ const removeActivities = () => {
 	});
 };
 
-onMounted(() => {
-	if (
-		route.query.removeAccount === "relinked-github" &&
-		!localStorage.getItem("github_redirect")
-	) {
-		openModal({
-			modal: "removeAccount",
-			props: { githubLinkConfirmed: true }
-		});
-	}
-});
-
 watch(
 	() => modifiedUser.username,
 	value => {
@@ -170,7 +156,7 @@ watch(
 			validation.username.valid = false;
 		} else if (
 			!_validation.regex.azAZ09_.test(value) &&
-			value !== originalUser.username // Sometimes a username pulled from GitHub won't succeed validation
+			value !== originalUser.username // Sometimes a username pulled from OIDC won't succeed validation
 		) {
 			validation.username.message =
 				"Invalid format. Allowed characters: a-z, A-Z, 0-9 and _.";

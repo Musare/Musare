@@ -8,7 +8,6 @@ export const useConfigStore = defineStore("config", {
 			enabled: boolean;
 			key: string;
 		};
-		githubAuthentication: boolean;
 		oidcAuthentication: boolean;
 		messages: Record<string, string>;
 		christmas: boolean;
@@ -33,7 +32,6 @@ export const useConfigStore = defineStore("config", {
 			enabled: false,
 			key: ""
 		},
-		githubAuthentication: false,
 		oidcAuthentication: false,
 		messages: {
 			accountRemoval:

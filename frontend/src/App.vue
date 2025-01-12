@@ -248,13 +248,6 @@ onMounted(async () => {
 
 		router.isReady().then(() => {
 			if (
-				configStore.githubAuthentication &&
-				localStorage.getItem("github_redirect")
-			) {
-				router.push(localStorage.getItem("github_redirect"));
-				localStorage.removeItem("github_redirect");
-			}
-			if (
 				configStore.oidcAuthentication &&
 				localStorage.getItem("oidc_redirect")
 			) {

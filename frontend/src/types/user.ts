@@ -24,17 +24,12 @@ export interface User {
 				expires: Date;
 			};
 		};
-		github?: {
-			id: number;
-			access_token: string;
-		};
 		oidc?: {
 			sub: string;
 			access_token: string;
 		};
 	};
 	password?: boolean;
-	github?: boolean;
 	oidc?: boolean;
 	statistics: {
 		songsRequested: number;

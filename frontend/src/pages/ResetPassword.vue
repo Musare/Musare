@@ -16,10 +16,6 @@ const InputHelpBox = defineAsyncComponent(
 	() => import("@/components/InputHelpBox.vue")
 );
 
-const props = defineProps({
-	mode: { type: String, enum: ["reset", "set"], default: "reset" }
-});
-
 const userAuthStore = useUserAuthStore();
 const { email: accountEmail } = storeToRefs(userAuthStore);
 
@@ -89,13 +85,6 @@ const submitEmail = () => {
 
 	inputs.value.email.hasBeenSentAlready = false;
 
-	if (props.mode === "set") {
-		return socket.dispatch("users.requestPassword", res => {
-			new Toast(res.message);
-			if (res.status === "success") step.value = 2;
-		});
-	}
-
 	return socket.dispatch(
 		"users.requestPasswordReset",
 		inputs.value.email.value,
@@ -112,16 +101,10 @@ const submitEmail = () => {
 const verifyCode = () => {
 	if (!code.value) return new Toast("Code cannot be empty");
 
-	return socket.dispatch(
-		props.mode === "set"
-			? "users.verifyPasswordCode"
-			: "users.verifyPasswordResetCode",
-		code.value,
-		res => {
-			new Toast(res.message);
-			if (res.status === "success") step.value = 3;
-		}
-	);
+	return socket.dispatch("users.verifyPasswordResetCode", code.value, res => {
+		new Toast(res.message);
+		if (res.status === "success") step.value = 3;
+	});
 };
 
 const changePassword = () => {
@@ -132,9 +115,7 @@ const changePassword = () => {
 		return new Toast("Please enter a valid password.");
 
 	return socket.dispatch(
-		props.mode === "set"
-			? "users.changePasswordWithCode"
-			: "users.changePasswordWithResetCode",
+		"users.changePasswordWithResetCode",
 		code.value,
 		inputs.value.password.value,
 		res => {
@@ -199,14 +180,12 @@ onMounted(() => {
 
 <template>
 	<div>
-		<page-metadata
-			:title="mode === 'reset' ? 'Reset password' : 'Set password'"
-		/>
+		<page-metadata title="Reset password" />
 		<main-header />
 		<div class="container">
 			<div class="content-wrapper">
 				<h1 id="title" class="has-text-centered page-title">
-					{{ mode === "reset" ? "Reset" : "Set" }} your password
+					Reset your password
 				</h1>
 
 				<div id="steps">
@@ -466,7 +445,7 @@ onMounted(() => {
 								<i class="material-icons success-icon"
 									>check_circle</i
 								>
-								<h2>Password successfully {{ mode }}</h2>
+								<h2>Password successfully reset</h2>
 								<router-link
 									class="button is-dark"
 									to="/settings"
@@ -483,7 +462,7 @@ onMounted(() => {
 							>
 								<i class="material-icons error-icon">error</i>
 								<h2>
-									Password {{ mode }} failed, please try again
+									Password reset failed, please try again
 									later
 								</h2>
 								<router-link

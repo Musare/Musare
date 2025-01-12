@@ -64,26 +64,12 @@ const columns = ref<TableColumn[]>([
 		defaultWidth: 230
 	},
 	{
-		name: "githubId",
-		displayName: "GitHub ID",
-		properties: ["services.github.id"],
-		sortProperty: "services.github.id",
-		minWidth: 115,
-		defaultWidth: 115
-	},
-	{
 		name: "oidcSub",
 		displayName: "OIDC sub",
 		properties: ["services.oidc.sub"],
 		sortProperty: "services.oidc.sub",
 		minWidth: 115,
 		defaultWidth: 115
-	},
-	{
-		name: "hasPassword",
-		displayName: "Has Password",
-		properties: ["hasPassword"],
-		sortProperty: "hasPassword"
 	},
 	{
 		name: "role",
@@ -141,25 +127,11 @@ const filters = ref<TableFilter[]>([
 		defaultFilterType: "contains"
 	},
 	{
-		name: "githubId",
-		displayName: "GitHub ID",
-		property: "services.github.id",
-		filterTypes: ["contains", "exact", "regex"],
-		defaultFilterType: "contains"
-	},
-	{
 		name: "oidcSub",
 		displayName: "OIDC sub",
 		property: "services.oidc.sub",
 		filterTypes: ["contains", "exact", "regex"],
 		defaultFilterType: "contains"
-	},
-	{
-		name: "hasPassword",
-		displayName: "Has Password",
-		property: "hasPassword",
-		filterTypes: ["boolean"],
-		defaultFilterType: "boolean"
 	},
 	{
 		name: "role",
@@ -294,24 +266,12 @@ onMounted(() => {
 					slotProps.item._id
 				}}</span>
 			</template>
-			<template #column-githubId="slotProps">
-				<span
-					v-if="slotProps.item.services.github"
-					:title="slotProps.item.services.github.id"
-					>{{ slotProps.item.services.github.id }}</span
-				>
-			</template>
 			<template #column-oidcSub="slotProps">
 				<span
 					v-if="slotProps.item.services.oidc"
 					:title="slotProps.item.services.oidc.sub"
 					>{{ slotProps.item.services.oidc.sub }}</span
 				>
-			</template>
-			<template #column-hasPassword="slotProps">
-				<span :title="slotProps.item.hasPassword">{{
-					slotProps.item.hasPassword
-				}}</span>
 			</template>
 			<template #column-role="slotProps">
 				<span :title="slotProps.item.role">{{

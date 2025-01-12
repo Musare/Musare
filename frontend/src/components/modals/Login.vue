@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref } from "vue";
-import { useRoute } from "vue-router";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { useConfigStore } from "@/stores/config";
@@ -8,8 +7,6 @@ import { useUserAuthStore } from "@/stores/userAuth";
 import { useModalsStore } from "@/stores/modals";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
-
-const route = useRoute();
 
 const email = ref("");
 const password = ref({
@@ -19,7 +16,7 @@ const password = ref({
 const passwordElement = ref();
 
 const configStore = useConfigStore();
-const { githubAuthentication, registrationDisabled } = storeToRefs(configStore);
+const { registrationDisabled } = storeToRefs(configStore);
 const { login } = useUserAuthStore();
 
 const { openModal, closeCurrentModal } = useModalsStore();
@@ -61,10 +58,6 @@ const togglePasswordVisibility = () => {
 const changeToRegisterModal = () => {
 	closeCurrentModal();
 	openModal("register");
-};
-
-const githubRedirect = () => {
-	localStorage.setItem("github_redirect", route.path);
 };
 </script>
 
@@ -150,20 +143,6 @@ const githubRedirect = () => {
 					<button class="button is-primary" @click="submitModal()">
 						Login
 					</button>
-					<a
-						v-if="githubAuthentication"
-						class="button is-github"
-						:href="configStore.urls.api + '/auth/github/authorize'"
-						@click="githubRedirect()"
-					>
-						<div class="icon">
-							<img
-								class="invert"
-								src="/assets/social/github.svg"
-							/>
-						</div>
-						&nbsp;&nbsp;Login with GitHub
-					</a>
 				</div>
 
 				<p
@@ -204,14 +183,6 @@ const githubRedirect = () => {
 	}
 }
 
-.button.is-github {
-	background-color: var(--dark-grey-2);
-	color: var(--white) !important;
-}
-
-.is-github:focus {
-	background-color: var(--dark-grey-4);
-}
 .is-primary:focus {
 	background-color: var(--primary-color) !important;
 }

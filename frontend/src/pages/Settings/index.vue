@@ -58,27 +58,6 @@ onMounted(() => {
 			value: true
 		})
 	);
-
-	socket.on("event:user.password.unlinked", () =>
-		updateOriginalUser({
-			property: "password",
-			value: false
-		})
-	);
-
-	socket.on("event:user.github.linked", () =>
-		updateOriginalUser({
-			property: "github",
-			value: true
-		})
-	);
-
-	socket.on("event:user.github.unlinked", () =>
-		updateOriginalUser({
-			property: "github",
-			value: false
-		})
-	);
 });
 </script>
 

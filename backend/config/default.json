@@ -52,12 +52,6 @@
 			"key": "",
 			"secret": ""
 		},
-		"github": {
-			"enabled": false,
-			"client": "",
-			"secret": "",
-			"redirect_uri": ""
-		},
 		"discogs": {
 			"enabled": false,
 			"client": "",
