@@ -38,7 +38,8 @@ const userAuthStore = useUserAuthStore();
 const route = useRoute();
 const router = useRouter();
 
-const { sitename, registrationDisabled } = storeToRefs(configStore);
+const { sitename, registrationDisabled, oidcAuthentication } =
+	storeToRefs(configStore);
 const { loggedIn, userId } = storeToRefs(userAuthStore);
 const { hasPermission } = userAuthStore;
 
@@ -152,6 +153,12 @@ const changeFavoriteOrder = ({ moved }) => {
 	);
 };
 
+const oidcRedirect = () => {
+	localStorage.setItem("oidc_redirect", route.path);
+
+	window.location.href = `${configStore.urls.api}/auth/oidc/authorize`;
+};
+
 watch(
 	() => hasPermission("stations.index.other"),
 	value => {
@@ -178,7 +185,9 @@ onMounted(async () => {
 	) {
 		// Makes sure the login/register modal isn't opened whenever the home page gets remounted due to a code change
 		handledLoginRegisterRedirect.value = true;
-		openModal(route.redirectedFrom.name);
+
+		if (oidcAuthentication.value) oidcRedirect();
+		else openModal(route.redirectedFrom.name);
 	}
 
 	socket.onConnect(() => {
@@ -384,7 +393,15 @@ onBeforeUnmount(() => {
 						/>
 						<span v-else class="logo">{{ sitename }}</span>
 						<div v-if="!loggedIn" class="buttons">
+							<a
+								v-if="oidcAuthentication"
+								class="button login"
+								@click="oidcRedirect()"
+							>
+								{{ t("Login") }}
+							</a>
 							<button
+								v-else
 								class="button login"
 								@click="openModal('login')"
 							>

@@ -662,7 +662,8 @@ class _UsersModule extends CoreClass {
 		let { email } = payload;
 		email = email.toLowerCase().trim();
 
-		if (config.get("registrationDisabled") === true) throw new Error("Registration is not allowed at this time.");
+		if (config.get("registrationDisabled") === true || config.get("apis.oidc.enabled") === true)
+			throw new Error("Registration is not allowed at this time.");
 		if (Array.isArray(config.get("experimental.registration_email_whitelist"))) {
 			const experimentalRegistrationEmailWhitelist = config.get("experimental.registration_email_whitelist");
 

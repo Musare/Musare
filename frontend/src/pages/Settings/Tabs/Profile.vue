@@ -6,6 +6,7 @@ import { useSettingsStore } from "@/stores/settings";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
 import validation from "@/validation";
+import { useConfigStore } from "@/stores/config";
 
 const ProfilePicture = defineAsyncComponent(
 	() => import("@/components/ProfilePicture.vue")
@@ -16,6 +17,7 @@ const SaveButton = defineAsyncComponent(
 
 const settingsStore = useSettingsStore();
 const userAuthStore = useUserAuthStore();
+const configStore = useConfigStore();
 
 const { socket } = useWebsocketsStore();
 
@@ -23,10 +25,13 @@ const saveButton = ref();
 
 const { userId } = storeToRefs(userAuthStore);
 const { originalUser, modifiedUser } = settingsStore;
+const { oidcAuthentication } = storeToRefs(configStore);
 
 const { updateOriginalUser } = settingsStore;
 
 const changeName = () => {
+	if (oidcAuthentication.value) return null;
+
 	modifiedUser.name = modifiedUser.name.replaceAll(/ +/g, " ").trim();
 	const { name } = modifiedUser;
 
@@ -211,8 +216,11 @@ const saveChanges = () => {
 				placeholder="Enter name here..."
 				maxlength="64"
 				v-model="modifiedUser.name"
+				:disabled="oidcAuthentication"
 			/>
-			<span v-if="modifiedUser.name" class="character-counter"
+			<span
+				v-if="modifiedUser.name && !oidcAuthentication"
+				class="character-counter"
 				>{{ modifiedUser.name.length }}/64</span
 			>
 		</p>

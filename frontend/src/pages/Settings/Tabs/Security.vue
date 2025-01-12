@@ -16,7 +16,8 @@ const QuickConfirm = defineAsyncComponent(
 );
 
 const configStore = useConfigStore();
-const { githubAuthentication, sitename } = storeToRefs(configStore);
+const { githubAuthentication, sitename, oidcAuthentication } =
+	storeToRefs(configStore);
 const settingsStore = useSettingsStore();
 const userAuthStore = useUserAuthStore();
 
@@ -57,6 +58,8 @@ const onInput = inputName => {
 	validation[inputName].entered = true;
 };
 const changePassword = () => {
+	if (oidcAuthentication.value) return null;
+
 	const newPassword = validation.newPassword.value;
 
 	if (validation.oldPassword.value === "")
@@ -81,11 +84,15 @@ const changePassword = () => {
 	);
 };
 const unlinkPassword = () => {
+	if (oidcAuthentication.value) return;
+
 	socket.dispatch("users.unlinkPassword", res => {
 		new Toast(res.message);
 	});
 };
 const unlinkGitHub = () => {
+	if (!githubAuthentication.value) return;
+
 	socket.dispatch("users.unlinkGitHub", res => {
 		new Toast(res.message);
 	});
@@ -197,7 +204,7 @@ watch(validation, newValidation => {
 			<div class="section-margin-bottom" />
 		</div>
 
-		<div v-if="!isPasswordLinked">
+		<div v-if="!isPasswordLinked && !oidcAuthentication">
 			<h4 class="section-title">Add a password</h4>
 			<p class="section-description">
 				Add a password, as an alternative to signing in with GitHub

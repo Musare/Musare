@@ -19,8 +19,7 @@ const password = ref({
 const passwordElement = ref();
 
 const configStore = useConfigStore();
-const { githubAuthentication, oidcAuthentication, registrationDisabled } =
-	storeToRefs(configStore);
+const { githubAuthentication, registrationDisabled } = storeToRefs(configStore);
 const { login } = useUserAuthStore();
 
 const { openModal, closeCurrentModal } = useModalsStore();
@@ -66,9 +65,6 @@ const changeToRegisterModal = () => {
 
 const githubRedirect = () => {
 	localStorage.setItem("github_redirect", route.path);
-};
-const oidcRedirect = () => {
-	localStorage.setItem("oidc_redirect", route.path);
 };
 </script>
 
@@ -167,20 +163,6 @@ const oidcRedirect = () => {
 							/>
 						</div>
 						&nbsp;&nbsp;Login with GitHub
-					</a>
-					<a
-						v-if="oidcAuthentication"
-						class="button is-oidc"
-						:href="configStore.urls.api + '/auth/oidc/authorize'"
-						@click="oidcRedirect()"
-					>
-						<div class="icon">
-							<img
-								class="invert"
-								src="/assets/social/github.svg"
-							/>
-						</div>
-						&nbsp;&nbsp;Login with OIDC
 					</a>
 				</div>
 

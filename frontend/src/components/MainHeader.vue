@@ -2,6 +2,7 @@
 import { defineAsyncComponent, ref, onMounted, watch, nextTick } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
+import { useRoute } from "vue-router";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useConfigStore } from "@/stores/config";
 import { useUserAuthStore } from "@/stores/userAuth";
@@ -18,6 +19,8 @@ defineProps({
 	hideLoggedOut: { type: Boolean, default: false }
 });
 
+const route = useRoute();
+
 const userAuthStore = useUserAuthStore();
 
 const localNightmode = ref(false);
@@ -28,8 +31,13 @@ const broadcastChannel = ref();
 const { socket } = useWebsocketsStore();
 
 const configStore = useConfigStore();
-const { cookie, sitename, registrationDisabled, christmas } =
-	storeToRefs(configStore);
+const {
+	cookie,
+	sitename,
+	registrationDisabled,
+	christmas,
+	oidcAuthentication
+} = storeToRefs(configStore);
 
 const { loggedIn, username } = storeToRefs(userAuthStore);
 const { logout, hasPermission } = userAuthStore;
@@ -57,6 +65,10 @@ const toggleNightmode = toggle => {
 
 const onResize = () => {
 	windowWidth.value = window.innerWidth;
+};
+
+const oidcRedirect = () => {
+	localStorage.setItem("oidc_redirect", route.path);
 };
 
 watch(nightmode, value => {
@@ -157,7 +169,17 @@ onMounted(async () => {
 				<a class="nav-item" @click="logout()">Logout</a>
 			</span>
 			<span v-if="!loggedIn && !hideLoggedOut" class="grouped">
-				<a class="nav-item" @click="openModal('login')">Login</a>
+				<a
+					v-if="oidcAuthentication"
+					class="nav-item"
+					:href="configStore.urls.api + '/auth/oidc/authorize'"
+					@click="oidcRedirect()"
+				>
+					Login
+				</a>
+				<a v-else class="nav-item" @click="openModal('login')">
+					Login
+				</a>
 				<a
 					v-if="!registrationDisabled"
 					class="nav-item"
