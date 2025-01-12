@@ -4,7 +4,6 @@ import cookieParser from "cookie-parser";
 import bodyParser from "body-parser";
 import express from "express";
 import http from "http";
-import axios from "axios";
 
 import CoreClass from "../core";
 
@@ -145,16 +144,6 @@ class _AppModule extends CoreClass {
 		}
 
 		if (config.get("apis.oidc.enabled")) {
-			const redirectUri =
-				config.get("apis.oidc.redirect_uri").length > 0
-					? config.get("apis.oidc.redirect_uri")
-					: `${appUrl}/backend/auth/oidc/authorize/callback`;
-
-			// TODO don't fetch the openid configuration twice (app module and user module)
-			const openidConfigurationResponse = await axios.get(config.get("apis.oidc.openid_configuration_url"));
-
-			const { authorization_endpoint: authorizationEndpoint } = openidConfigurationResponse.data;
-
 			app.get("/auth/oidc/authorize", async (req, res) => {
 				if (this.getStatus() !== "READY") {
 					this.log(
@@ -167,11 +156,11 @@ class _AppModule extends CoreClass {
 
 				const params = [
 					`client_id=${config.get("apis.oidc.client_id")}`,
-					`redirect_uri=${redirectUri}`,
+					`redirect_uri=${UsersModule.oidcRedirectUri}`,
 					`scope=basic openid`, // TODO check if openid is necessary for us
 					`response_type=code`
 				].join("&");
-				return res.redirect(`${authorizationEndpoint}?${params}`);
+				return res.redirect(`${UsersModule.oidcAuthorizationEndpoint}?${params}`);
 			});
 
 			app.get("/auth/oidc/authorize/callback", async (req, res) => {

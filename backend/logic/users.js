@@ -59,10 +59,6 @@ class _UsersModule extends CoreClass {
 			config.get("apis.github.redirect_uri").length > 0
 				? config.get("apis.github.redirect_uri")
 				: `${this.appUrl}/backend/auth/github/authorize/callback`;
-		this.oidcRedirectUri =
-			config.get("apis.oidc.redirect_uri").length > 0
-				? config.get("apis.oidc.redirect_uri")
-				: `${this.appUrl}/backend/auth/oidc/authorize/callback`;
 
 		this.oauth2 = new OAuth2(
 			config.get("apis.github.client"),
@@ -85,11 +81,20 @@ class _UsersModule extends CoreClass {
 		if (config.get("apis.oidc.enabled")) {
 			const openidConfigurationResponse = await axios.get(config.get("apis.oidc.openid_configuration_url"));
 
-			const { token_endpoint: tokenEndpoint, userinfo_endpoint: userinfoEndpoint } =
-				openidConfigurationResponse.data;
+			const {
+				authorization_endpoint: authorizationEndpoint,
+				token_endpoint: tokenEndpoint,
+				userinfo_endpoint: userinfoEndpoint
+			} = openidConfigurationResponse.data;
 
 			// TODO somehow make this endpoint immutable, if possible in some way
+			this.oidcAuthorizationEndpoint = authorizationEndpoint;
+			this.oidcTokenEndpoint = userinfoEndpoint;
 			this.oidcUserinfoEndpoint = userinfoEndpoint;
+			this.oidcRedirectUri =
+				config.get("apis.oidc.redirect_uri").length > 0
+					? config.get("apis.oidc.redirect_uri")
+					: `${this.appUrl}/backend/auth/oidc/authorize/callback`;
 
 			//
 			const clientId = config.get("apis.oidc.client_id");
