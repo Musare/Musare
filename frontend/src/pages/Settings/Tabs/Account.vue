@@ -7,7 +7,6 @@ import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { useModalsStore } from "@/stores/modals";
 import _validation from "@/validation";
-import { useConfigStore } from "@/stores/config";
 
 const InputHelpBox = defineAsyncComponent(
 	() => import("@/components/InputHelpBox.vue")
@@ -21,7 +20,6 @@ const QuickConfirm = defineAsyncComponent(
 
 const settingsStore = useSettingsStore();
 const userAuthStore = useUserAuthStore();
-const configStore = useConfigStore();
 
 const { socket } = useWebsocketsStore();
 
@@ -29,7 +27,6 @@ const saveButton = ref();
 
 const { userId } = storeToRefs(userAuthStore);
 const { originalUser, modifiedUser } = settingsStore;
-const { oidcAuthentication } = storeToRefs(configStore);
 
 const validation = reactive({
 	username: {
@@ -122,8 +119,6 @@ const changeUsername = () => {
 };
 
 const saveChanges = () => {
-	if (oidcAuthentication.value) return;
-
 	const usernameChanged = modifiedUser.username !== originalUser.username;
 	const emailAddressChanged =
 		modifiedUser.email.address !== originalUser.email.address;
@@ -215,17 +210,13 @@ watch(
 				autocomplete="off"
 				@keypress="onInput('username')"
 				@paste="onInput('username')"
-				:disabled="oidcAuthentication"
 			/>
-			<span
-				v-if="modifiedUser.username && !oidcAuthentication"
-				class="character-counter"
+			<span v-if="modifiedUser.username" class="character-counter"
 				>{{ modifiedUser.username.length }}/32</span
 			>
 		</p>
 		<transition name="fadein-helpbox">
 			<input-help-box
-				v-if="!oidcAuthentication"
 				:entered="validation.username.entered"
 				:valid="validation.username.valid"
 				:message="validation.username.message"
@@ -244,23 +235,17 @@ watch(
 				@keypress="onInput('email')"
 				@paste="onInput('email')"
 				autocomplete="off"
-				:disabled="oidcAuthentication"
 			/>
 		</p>
 		<transition name="fadein-helpbox">
 			<input-help-box
-				v-if="!oidcAuthentication"
 				:entered="validation.email.entered"
 				:valid="validation.email.valid"
 				:message="validation.email.message"
 			/>
 		</transition>
 
-		<SaveButton
-			v-if="!oidcAuthentication"
-			ref="saveButton"
-			@clicked="saveChanges()"
-		/>
+		<SaveButton ref="saveButton" @clicked="saveChanges()" />
 
 		<div class="section-margin-bottom" />
 

@@ -566,6 +566,12 @@ export default {
 		return async.waterfall(
 			[
 				next => {
+					if (config.get("apis.oidc.enabled")) return next("Confirming passwords is disabled.");
+
+					return next();
+				},
+
+				next => {
 					if (!password || password === "") return next("Please provide a valid password.");
 					return next();
 				},
@@ -1824,6 +1830,12 @@ export default {
 		async.waterfall(
 			[
 				next => {
+					if (config.get("apis.oidc.enabled")) return next("Updating password is disabled.");
+
+					return next();
+				},
+
+				next => {
 					userModel.findOne({ _id: session.userId }, next);
 				},
 
@@ -1906,8 +1918,13 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					if (!config.get("mail.enabled")) return next("Password resets are disabled.");
+					if (!config.get("mail.enabled") || config.get("apis.oidc.enabled"))
+						return next("Password resets are disabled.");
 
+					return next();
+				},
+
+				next => {
 					if (!email || typeof email !== "string") return next("Invalid email.");
 					email = email.toLowerCase();
 					return userModel.findOne({ "email.address": email }, next);
@@ -1985,6 +2002,13 @@ export default {
 
 			async.waterfall(
 				[
+					next => {
+						if (!config.get("mail.enabled") || config.get("apis.oidc.enabled"))
+							return next("Password resets are disabled.");
+
+						return next();
+					},
+
 					next => userModel.findOne({ _id: userId }, next),
 
 					(user, next) => {
@@ -2051,6 +2075,13 @@ export default {
 		async.waterfall(
 			[
 				next => {
+					if (!config.get("mail.enabled") || config.get("apis.oidc.enabled"))
+						return next("Password resets are disabled.");
+
+					return next();
+				},
+
+				next => {
 					if (!code || typeof code !== "string") return next("Invalid code.");
 					return userModel.findOne({ "services.password.reset.code": code }, next);
 				},
@@ -2089,6 +2120,13 @@ export default {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 		async.waterfall(
 			[
+				next => {
+					if (!config.get("mail.enabled") || config.get("apis.oidc.enabled"))
+						return next("Password resets are disabled.");
+
+					return next();
+				},
+
 				next => {
 					if (!code || typeof code !== "string") return next("Invalid code.");
 					return userModel.findOne({ "services.password.reset.code": code }, next);

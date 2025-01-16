@@ -446,7 +446,7 @@ class _DBModule extends CoreClass {
 
 					// If a filter or property exists for a special property, add some custom pipeline steps
 					(pipeline, next) => {
-						const { properties, queries, specialProperties } = payload;
+						const { properties, queries, specialProperties = {} } = payload;
 
 						async.eachLimit(
 							Object.entries(specialProperties),

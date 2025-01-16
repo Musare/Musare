@@ -17,6 +17,7 @@ export const useConfigStore = defineStore("config", {
 		registrationDisabled: boolean;
 		mailEnabled: boolean;
 		discogsEnabled: boolean;
+		passwordResetEnabled: boolean;
 		experimental: {
 			changable_listen_mode: string[] | boolean;
 			media_session: boolean;
@@ -44,6 +45,7 @@ export const useConfigStore = defineStore("config", {
 		registrationDisabled: false,
 		mailEnabled: true,
 		discogsEnabled: true,
+		passwordResetEnabled: true,
 		experimental: {
 			changable_listen_mode: [],
 			media_session: false,

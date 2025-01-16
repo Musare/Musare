@@ -137,7 +137,7 @@ const router = createRouter({
 			path: "/reset_password",
 			component: () => import("@/pages/ResetPassword.vue"),
 			meta: {
-				configRequired: "mailEnabled"
+				configRequired: "passwordResetEnabled"
 			}
 		},
 		{
