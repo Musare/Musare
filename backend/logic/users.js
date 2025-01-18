@@ -251,16 +251,6 @@ class _UsersModule extends CoreClass {
 		if (!userInfoResponse.data.preferred_username) throw new Error("Something went wrong, no preferred_username.");
 		// TODO verify sub from userinfo and token response, see 5.3.2 https://openid.net/specs/openid-connect-core-1_0.html
 
-		// TODO we don't use linking for OIDC currently, so remove this or utilize it in some other way if needed
-		// If we specified a state in the first step when we redirected the user to OIDC, it was to link a
-		// OIDC account to an existing Musare account, so continue with a job specifically for linking the account
-		// if (state)
-		// 	return UsersModule.runJob(
-		// 		"OIDC_AUTHORIZE_CALLBACK_LINK",
-		// 		{ state, sub: userInfoResponse.data.sub, accessToken },
-		// 		this
-		// 	);
-
 		const user = await UsersModule.userModel.findOne({ "services.oidc.sub": userInfoResponse.data.sub });
 		let userId;
 		if (user) {
@@ -294,7 +284,7 @@ class _UsersModule extends CoreClass {
 	}
 
 	/**
-	 * Handles registering the user in the OIDC login/register/link callback/process
+	 * Handles registering the user in the OIDC login/register callback/process
 	 * @param {object} payload - object that contains the payload
 	 * @param {string} payload.userInfoResponse - data we got from the OIDC user info API endpoint
 	 * @param {string} payload.accessToken - access token for the OIDC user

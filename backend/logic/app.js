@@ -65,7 +65,7 @@ class _AppModule extends CoreClass {
 				const params = [
 					`client_id=${config.get("apis.oidc.client_id")}`,
 					`redirect_uri=${UsersModule.oidcRedirectUri}`,
-					`scope=basic openid`, // TODO check if openid is necessary for us
+					`scope=basic openid`,
 					`response_type=code`
 				].join("&");
 				return res.redirect(`${UsersModule.oidcAuthorizationEndpoint}?${params}`);
