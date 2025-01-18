@@ -109,6 +109,7 @@
 	"shortcutOverrides": {},
 	"registrationDisabled": false,
 	"sendDataRequestEmails": true,
+	"restrictToUsers": false,
 	"skipConfigVersionCheck": false,
 	"skipDbDocumentsVersionCheck": false,
 	"debug": {

@@ -3,6 +3,7 @@ import async from "async";
 import axios from "axios";
 
 import isLoginRequired from "../hooks/loginRequired";
+import isLoginSometimesRequired from "../hooks/loginSometimesRequired";
 import { hasPermission, useHasPermission } from "../hooks/hasPermission";
 
 // eslint-disable-next-line
@@ -314,7 +315,7 @@ export default {
 	 * @param {string} room - the room to join
 	 * @param {Function} cb - callback
 	 */
-	joinRoom(session, room, cb) {
+	joinRoom: isLoginSometimesRequired(function joinRoom(session, room, cb) {
 		const roomName = room.split(".")[0];
 		// const roomId = room.split(".")[1];
 		const rooms = {
@@ -352,7 +353,7 @@ export default {
 				.then(() => join("success"))
 				.catch(err => join("error", err));
 		else join("error", "Room not found");
-	},
+	}),
 
 	/**
 	 * Leaves a room

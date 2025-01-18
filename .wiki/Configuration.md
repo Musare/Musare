@@ -124,6 +124,7 @@ For more information on configuration files please refer to the
 | `primaryColor` | Primary color of the application, in hex format. |
 | `registrationDisabled` | If set to `true`, users can't register accounts. |
 | `sendDataRequestEmails` | If `true` all admin users will be sent an email if a data request is received. Requires mail to be enabled and configured. |
+| `restrictToUsers` | If `true` only logged-in users will be able to visit user profiles, see news, see stations on the homepage or enter stations (even public stations) - any interactive thing except logging in/registering, and some public config info (site name, experimental features enabled, footer mail/oidc/password enabled, account removal message, etc.) |
 | `skipConfigVersionCheck` | Skips checking if the config version is outdated or not. Should almost always be set to false. |
 | `skipDbDocumentsVersionCheck` | Skips checking if there are any DB documents outdated or not. Should almost always be set to false. |
 | `debug.stationIssue` | If set to `true` it will enable the `/debug_station` API endpoint on the backend, which provides information useful to debugging stations not skipping, as well as capture all jobs specified in `debug.captureJobs`. |

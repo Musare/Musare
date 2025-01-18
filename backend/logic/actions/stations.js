@@ -4,6 +4,7 @@ import config from "config";
 
 import { hasPermission, useHasPermission } from "../hooks/hasPermission";
 import isLoginRequired from "../hooks/loginRequired";
+import isLoginSometimesRequired from "../hooks/loginSometimesRequired";
 
 // eslint-disable-next-line
 import moduleManager from "../../index";
@@ -359,7 +360,7 @@ export default {
 	 * @param {boolean} adminFilter - whether to filter out stations admins do not own
 	 * @param {Function} cb - callback
 	 */
-	async index(session, adminFilter, cb) {
+	index: isLoginSometimesRequired(async function index(session, adminFilter, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
 
 		async.waterfall(
@@ -454,7 +455,7 @@ export default {
 				return cb({ status: "success", data: { stations, favorited } });
 			}
 		);
-	},
+	}),
 
 	/**
 	 * Gets stations, used in the admin stations page by the AdvancedTable component
@@ -564,7 +565,7 @@ export default {
 	 * @param {string} stationId - the station id
 	 * @param {Function} cb - callback
 	 */
-	getStationForActivity(session, stationId, cb) {
+	getStationForActivity: isLoginSometimesRequired(function getStationForActivity(session, stationId, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -599,7 +600,7 @@ export default {
 				});
 			}
 		);
-	},
+	}),
 
 	/**
 	 * Verifies that a station exists from its name
@@ -607,7 +608,7 @@ export default {
 	 * @param {string} stationName - the station name
 	 * @param {Function} cb - callback
 	 */
-	existsByName(session, stationName, cb) {
+	existsByName: isLoginSometimesRequired(function existsByName(session, stationName, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -643,7 +644,7 @@ export default {
 				return cb({ status: "success", data: { exists } });
 			}
 		);
-	},
+	}),
 
 	/**
 	 * Verifies that a station exists from its id
@@ -651,7 +652,7 @@ export default {
 	 * @param {string} stationId - the station id
 	 * @param {Function} cb - callback
 	 */
-	existsById(session, stationId, cb) {
+	existsById: isLoginSometimesRequired(function existsById(session, stationId, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -687,7 +688,7 @@ export default {
 				return cb({ status: "success", data: { exists } });
 			}
 		);
-	},
+	}),
 
 	/**
 	 * Gets the official playlist for a station
@@ -695,7 +696,7 @@ export default {
 	 * @param {string} stationId - the station id
 	 * @param {Function} cb - callback
 	 */
-	getPlaylist(session, stationId, cb) {
+	getPlaylist: isLoginSometimesRequired(function getPlaylist(session, stationId, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -769,7 +770,7 @@ export default {
 				return cb({ status: "success", data: { songs: playlist.songs } });
 			}
 		);
-	},
+	}),
 
 	/**
 	 * Joins the station by its name
@@ -777,7 +778,7 @@ export default {
 	 * @param {string} stationIdentifier - the station name or station id
 	 * @param {Function} cb - callback
 	 */
-	async join(session, stationIdentifier, cb) {
+	join: isLoginSometimesRequired(async function join(session, stationIdentifier, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" });
 		async.waterfall(
 			[
@@ -897,7 +898,7 @@ export default {
 				return cb({ status: "success", data });
 			}
 		);
-	},
+	}),
 
 	/**
 	 * Gets a station by id
@@ -905,7 +906,7 @@ export default {
 	 * @param {string} stationId - the station id
 	 * @param {Function} cb - callback
 	 */
-	getStationById(session, stationId, cb) {
+	getStationById: isLoginSometimesRequired(function getStationById(session, stationId, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -986,7 +987,7 @@ export default {
 				return cb({ status: "success", data: { station: data } });
 			}
 		);
-	},
+	}),
 
 	/**
 	 * Gets station history
@@ -994,7 +995,7 @@ export default {
 	 * @param {string} stationId - the station id
 	 * @param {Function} cb - callback
 	 */
-	getHistory(session, stationId, cb) {
+	getHistory: isLoginSometimesRequired(function getHistory(session, stationId, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -1054,80 +1055,82 @@ export default {
 				return cb({ status: "success", data: { history } });
 			}
 		);
-	},
+	}),
 
-	getStationAutofillPlaylistsById(session, stationId, cb) {
-		async.waterfall(
-			[
-				next => {
-					StationsModule.runJob("GET_STATION", { stationId }, this)
-						.then(station => {
-							next(null, station);
-						})
-						.catch(next);
-				},
+	getStationAutofillPlaylistsById: isLoginSometimesRequired(
+		function getStationAutofillPlaylistsById(session, stationId, cb) {
+			async.waterfall(
+				[
+					next => {
+						StationsModule.runJob("GET_STATION", { stationId }, this)
+							.then(station => {
+								next(null, station);
+							})
+							.catch(next);
+					},
 
-				(station, next) => {
-					if (!station) return next("Station not found.");
-					return StationsModule.runJob(
-						"CAN_USER_VIEW_STATION",
-						{
-							station,
-							userId: session.userId
-						},
-						this
-					)
-						.then(canView => {
-							if (!canView) next("Not allowed to get station.");
-							else next(null, station);
-						})
-						.catch(err => next(err));
-				},
+					(station, next) => {
+						if (!station) return next("Station not found.");
+						return StationsModule.runJob(
+							"CAN_USER_VIEW_STATION",
+							{
+								station,
+								userId: session.userId
+							},
+							this
+						)
+							.then(canView => {
+								if (!canView) next("Not allowed to get station.");
+								else next(null, station);
+							})
+							.catch(err => next(err));
+					},
 
-				(station, next) => {
-					const playlists = [];
+					(station, next) => {
+						const playlists = [];
 
-					async.eachLimit(
-						station.autofill.playlists,
-						1,
-						(playlistId, next) => {
-							PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
-								.then(playlist => {
-									playlists.push(playlist);
-									next();
-								})
-								.catch(() => {
-									playlists.push(null);
-									next();
-								});
-						},
-						err => {
-							next(err, playlists);
-						}
-					);
-				}
-			],
-			async (err, playlists) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						async.eachLimit(
+							station.autofill.playlists,
+							1,
+							(playlistId, next) => {
+								PlaylistsModule.runJob("GET_PLAYLIST", { playlistId }, this)
+									.then(playlist => {
+										playlists.push(playlist);
+										next();
+									})
+									.catch(() => {
+										playlists.push(null);
+										next();
+									});
+							},
+							err => {
+								next(err, playlists);
+							}
+						);
+					}
+				],
+				async (err, playlists) => {
+					if (err) {
+						err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
+						this.log(
+							"ERROR",
+							"GET_STATION_AUTOFILL_PLAYLISTS_BY_ID",
+							`Getting station "${stationId}"'s autofilling playlists failed. "${err}"`
+						);
+						return cb({ status: "error", message: err });
+					}
 					this.log(
-						"ERROR",
+						"SUCCESS",
 						"GET_STATION_AUTOFILL_PLAYLISTS_BY_ID",
-						`Getting station "${stationId}"'s autofilling playlists failed. "${err}"`
+						`Got station "${stationId}"'s autofilling playlists successfully.`
 					);
-					return cb({ status: "error", message: err });
+					return cb({ status: "success", data: { playlists } });
 				}
-				this.log(
-					"SUCCESS",
-					"GET_STATION_AUTOFILL_PLAYLISTS_BY_ID",
-					`Got station "${stationId}"'s autofilling playlists successfully.`
-				);
-				return cb({ status: "success", data: { playlists } });
-			}
-		);
-	},
+			);
+		}
+	),
 
-	getStationBlacklistById(session, stationId, cb) {
+	getStationBlacklistById: isLoginSometimesRequired(function getStationBlacklistById(session, stationId, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -1196,7 +1199,7 @@ export default {
 				return cb({ status: "success", data: { playlists } });
 			}
 		);
-	},
+	}),
 
 	/**
 	 * Toggle votes to skip a station
@@ -1331,7 +1334,7 @@ export default {
 	 * @param {string} stationId - id of station to leave
 	 * @param {Function} cb - callback
 	 */
-	leave(session, stationId, cb) {
+	leave: isLoginSometimesRequired(function leave(session, stationId, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -1366,7 +1369,7 @@ export default {
 				});
 			}
 		);
-	},
+	}),
 
 	/**
 	 * Updates a station's settings
@@ -2034,7 +2037,7 @@ export default {
 	 * @param {string} stationId - the station id
 	 * @param {Function} cb - callback
 	 */
-	getQueue(session, stationId, cb) {
+	getQueue: isLoginSometimesRequired(function getQueue(session, stationId, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -2079,7 +2082,7 @@ export default {
 				});
 			}
 		);
-	},
+	}),
 
 	/**
 	 * Reposition a song in station queue

@@ -6,6 +6,7 @@ import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import sha256 from "sha256";
 import isLoginRequired from "../hooks/loginRequired";
+import isLoginSometimesRequired from "../hooks/loginSometimesRequired";
 import { hasPermission, useHasPermission } from "../hooks/hasPermission";
 
 // eslint-disable-next-line
@@ -984,7 +985,7 @@ export default {
 	 * @param {string} identifier - the ObjectId or username of the user we are trying to find
 	 * @param {Function} cb - gets called with the result
 	 */
-	getBasicUser: async function getBasicUser(session, identifier, cb) {
+	getBasicUser: isLoginSometimesRequired(async function getBasicUser(session, identifier, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
 		async.waterfall(
@@ -1025,7 +1026,7 @@ export default {
 				});
 			}
 		);
-	},
+	}),
 
 	/**
 	 * Gets a list of long jobs, including onprogress events when those long jobs have progress

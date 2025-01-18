@@ -1,6 +1,7 @@
 import async from "async";
 
 import isLoginRequired from "../hooks/loginRequired";
+import isLoginSometimesRequired from "../hooks/loginSometimesRequired";
 import { useHasPermission } from "../hooks/hasPermission";
 
 // eslint-disable-next-line
@@ -706,7 +707,7 @@ export default {
 	 * @param cb
 	 */
 
-	async getRatings(session, mediaSource, cb) {
+	getRatings: isLoginSometimesRequired(async function getRatings(session, mediaSource, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -744,7 +745,7 @@ export default {
 				});
 			}
 		);
-	},
+	}),
 
 	/**
 	 * Gets user's own ratings

@@ -2,6 +2,7 @@ import async from "async";
 import config from "config";
 
 import isLoginRequired from "../hooks/loginRequired";
+import isLoginSometimesRequired from "../hooks/loginSometimesRequired";
 import { hasPermission, useHasPermission } from "../hooks/hasPermission";
 
 // eslint-disable-next-line
@@ -629,7 +630,7 @@ export default {
 	 * @param {string} userId - the user id in question
 	 * @param {Function} cb - gets called with the result
 	 */
-	indexForUser: async function indexForUser(session, userId, cb) {
+	indexForUser: isLoginSometimesRequired(async function indexForUser(session, userId, cb) {
 		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
@@ -698,7 +699,7 @@ export default {
 				});
 			}
 		);
-	},
+	}),
 
 	/**
 	 * Gets all playlists for the user requesting it
@@ -896,7 +897,7 @@ export default {
 	 * @param {string} playlistId - the id of the playlist we are getting
 	 * @param {Function} cb - gets called with the result
 	 */
-	getPlaylist: function getPlaylist(session, playlistId, cb) {
+	getPlaylist: isLoginSometimesRequired(function getPlaylist(session, playlistId, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -937,7 +938,7 @@ export default {
 				});
 			}
 		);
-	},
+	}),
 
 	/**
 	 * Gets a playlist from station id
@@ -946,7 +947,7 @@ export default {
 	 * @param {string} includeSongs - include songs
 	 * @param {Function} cb - gets called with the result
 	 */
-	getPlaylistForStation: function getPlaylist(session, stationId, includeSongs, cb) {
+	getPlaylistForStation: isLoginSometimesRequired(function getPlaylist(session, stationId, includeSongs, cb) {
 		async.waterfall(
 			[
 				next => {
@@ -987,7 +988,7 @@ export default {
 				});
 			}
 		);
-	},
+	}),
 
 	/**
 	 * Shuffles songs in a private playlist
