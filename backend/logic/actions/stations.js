@@ -1810,7 +1810,7 @@ export default {
 				},
 
 				(playlist, stationId, next) => {
-					const { name, displayName, description, type } = data;
+					const { name, displayName, description, type, privacy } = data;
 					if (type === "official") {
 						stationModel.create(
 							{
@@ -1820,7 +1820,7 @@ export default {
 								description,
 								playlist: playlist._id,
 								type,
-								privacy: "private",
+								privacy,
 								queue: [],
 								currentSong: null
 							},
@@ -1835,7 +1835,7 @@ export default {
 								description,
 								playlist: playlist._id,
 								type,
-								privacy: "private",
+								privacy,
 								owner: session.userId,
 								queue: [],
 								currentSong: null

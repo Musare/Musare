@@ -5,6 +5,8 @@ export type UserPreferences = {
 	activityLogPublic: boolean;
 	anonymousSongRequests: boolean;
 	activityWatch: boolean;
+	defaultStationPrivacy: "public" | "unlisted" | "private";
+	defaultPlaylistPrivacy: "public" | "private";
 };
 
 export type UserModel = {

@@ -20,12 +20,17 @@ const localActivityLogPublic = ref(false);
 const localAnonymousSongRequests = ref(false);
 const localActivityWatch = ref(false);
 
+const localDefaultStationPrivacy = ref("private");
+const localDefaultPlaylistPrivacy = ref("public");
+
 const {
 	nightmode,
 	autoSkipDisliked,
 	activityLogPublic,
 	anonymousSongRequests,
-	activityWatch
+	activityWatch,
+	defaultStationPrivacy,
+	defaultPlaylistPrivacy
 } = storeToRefs(userPreferencesStore);
 
 const saveChanges = () => {
@@ -34,7 +39,9 @@ const saveChanges = () => {
 		localAutoSkipDisliked.value === autoSkipDisliked.value &&
 		localActivityLogPublic.value === activityLogPublic.value &&
 		localAnonymousSongRequests.value === anonymousSongRequests.value &&
-		localActivityWatch.value === activityWatch.value
+		localActivityWatch.value === activityWatch.value &&
+		localDefaultStationPrivacy.value === defaultStationPrivacy.value &&
+		localDefaultPlaylistPrivacy.value === defaultPlaylistPrivacy.value
 	) {
 		new Toast("Please make a change before saving.");
 
@@ -50,7 +57,9 @@ const saveChanges = () => {
 			autoSkipDisliked: localAutoSkipDisliked.value,
 			activityLogPublic: localActivityLogPublic.value,
 			anonymousSongRequests: localAnonymousSongRequests.value,
-			activityWatch: localActivityWatch.value
+			activityWatch: localActivityWatch.value,
+			defaultStationPrivacy: localDefaultStationPrivacy.value,
+			defaultPlaylistPrivacy: localDefaultPlaylistPrivacy.value
 		},
 		res => {
 			if (res.status !== "success") {
@@ -76,6 +85,10 @@ onMounted(() => {
 				localAnonymousSongRequests.value =
 					preferences.anonymousSongRequests;
 				localActivityWatch.value = preferences.activityWatch;
+				localDefaultStationPrivacy.value =
+					preferences.defaultStationPrivacy;
+				localDefaultPlaylistPrivacy.value =
+					preferences.defaultPlaylistPrivacy;
 			}
 		});
 	});
@@ -98,6 +111,14 @@ onMounted(() => {
 
 		if (preferences.activityWatch !== undefined)
 			localActivityWatch.value = preferences.activityWatch;
+
+		if (preferences.defaultStationPrivacy !== undefined)
+			localDefaultStationPrivacy.value =
+				preferences.defaultStationPrivacy;
+
+		if (preferences.defaultPlaylistPrivacy !== undefined)
+			localDefaultPlaylistPrivacy.value =
+				preferences.defaultPlaylistPrivacy;
 	});
 });
 </script>
@@ -187,6 +208,26 @@ onMounted(() => {
 			</label>
 		</p>
 
+		<div class="control is-grouped input-with-label">
+			<div class="control select">
+				<select v-model="localDefaultStationPrivacy">
+					<option value="public">Public</option>
+					<option value="unlisted">Unlisted</option>
+					<option value="private">Private</option>
+				</select>
+			</div>
+			<label class="label"> Default station privacy </label>
+		</div>
+
+		<div class="control is-grouped input-with-label">
+			<div class="control select">
+				<select v-model="localDefaultPlaylistPrivacy">
+					<option value="public">Public</option>
+					<option value="private">Private</option>
+				</select>
+			</div>
+			<label class="label"> Default playlist privacy </label>
+		</div>
 		<SaveButton ref="saveButton" @clicked="saveChanges()" />
 	</div>
 </template>

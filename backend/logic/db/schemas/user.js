@@ -42,7 +42,14 @@ export default {
 		autoSkipDisliked: { type: Boolean, default: true, required: true },
 		activityLogPublic: { type: Boolean, default: false, required: true },
 		anonymousSongRequests: { type: Boolean, default: false, required: true },
-		activityWatch: { type: Boolean, default: false, required: true }
+		activityWatch: { type: Boolean, default: false, required: true },
+		defaultStationPrivacy: {
+			type: String,
+			enum: ["public", "unlisted", "private"],
+			default: "private",
+			required: true
+		},
+		defaultPlaylistPrivacy: { type: String, enum: ["public", "private"], default: "public", required: true }
 	},
-	documentVersion: { type: Number, default: 4, required: true }
+	documentVersion: { type: Number, default: 5, required: true }
 };

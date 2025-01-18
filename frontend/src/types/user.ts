@@ -48,5 +48,7 @@ export interface User {
 		activityLogPublic: boolean;
 		anonymousSongRequests: boolean;
 		activityWatch: boolean;
+		defaultStationPrivacy: "public" | "unlisted" | "private";
+		defaultPlaylistPrivacy: "public" | "private";
 	};
 }

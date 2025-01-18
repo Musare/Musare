@@ -836,6 +836,8 @@ export default {
 	 * @param {boolean} preferences.activityLogPublic - whether or not a user's activity log can be publicly viewed
 	 * @param {boolean} preferences.anonymousSongRequests - whether or not a user's requested songs will be anonymous
 	 * @param {boolean} preferences.activityWatch - whether or not a user is using the ActivityWatch integration
+	 * @param {boolean} preferences.defaultStationPrivacy - default station privacy
+	 * @param {boolean} preferences.defaultPlaylistPrivacy - default playlist privacy
 	 * @param {Function} cb - gets called with the result
 	 */
 	updatePreferences: isLoginRequired(async function updatePreferences(session, preferences, cb) {

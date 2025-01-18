@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref, onBeforeUnmount } from "vue";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
 import validation from "@/validation";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
+import { useUserPreferencesStore } from "@/stores/userPreferences";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
 
@@ -12,15 +14,18 @@ const props = defineProps({
 	admin: { type: Boolean, default: false }
 });
 
-const playlist = ref({
-	displayName: "",
-	privacy: "public",
-	songs: []
-});
-
 const { openModal, closeCurrentModal } = useModalsStore();
 
 const { socket } = useWebsocketsStore();
+
+const userPreferencesStore = useUserPreferencesStore();
+const { defaultPlaylistPrivacy } = storeToRefs(userPreferencesStore);
+
+const playlist = ref({
+	displayName: "",
+	privacy: defaultPlaylistPrivacy.value,
+	songs: []
+});
 
 const createPlaylist = () => {
 	const { displayName } = playlist.value;
