@@ -7,7 +7,7 @@ import fs from "fs";
 import * as readline from "node:readline";
 import packageJson from "./package.json" with { type: "json" };
 
-const REQUIRED_CONFIG_VERSION = 12;
+const REQUIRED_CONFIG_VERSION = 13;
 
 // eslint-disable-next-line
 Array.prototype.remove = function (item) {
