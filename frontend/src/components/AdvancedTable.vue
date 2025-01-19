@@ -1598,7 +1598,7 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 					<thead>
 						<tr>
 							<draggable-list
-								v-model:list="orderedColumns"
+								v-model:list="sortedFilteredColumns"
 								item-key="name"
 								@update="columnOrderChanged"
 								tag="th"
