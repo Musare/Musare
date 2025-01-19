@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref } from "vue";
+import { defineAsyncComponent, onMounted, ref } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { useConfigStore } from "@/stores/config";
@@ -60,11 +60,6 @@ const confirmPasswordMatch = () =>
 		else new Toast(res.message);
 	});
 
-const confirmOIDCLink = () => {
-	// TODO
-	step.value = "remove-account";
-};
-
 const remove = () =>
 	socket.dispatch("users.remove", res => {
 		if (res.status === "success") {
@@ -77,6 +72,10 @@ const remove = () =>
 
 		return new Toast(res.message);
 	});
+
+onMounted(() => {
+	if (oidcAuthentication.value) step.value = "remove-account";
+});
 </script>
 
 <template>
@@ -85,7 +84,7 @@ const remove = () =>
 		class="confirm-account-removal-modal"
 	>
 		<template #body>
-			<div id="steps">
+			<div v-if="!oidcAuthentication" id="steps">
 				<p
 					class="step"
 					:class="{ selected: step === 'confirm-identity' }"
@@ -96,19 +95,10 @@ const remove = () =>
 				<p
 					class="step"
 					:class="{
-						selected: step === 'export-data'
-					}"
-				>
-					2
-				</p>
-				<span class="divider"></span>
-				<p
-					class="step"
-					:class="{
 						selected: step === 'remove-account'
 					}"
 				>
-					3
+					2
 				</p>
 			</div>
 
@@ -171,32 +161,6 @@ const remove = () =>
 						</p>
 					</div>
 				</div>
-			</div>
-
-			<div
-				class="content-box"
-				v-else-if="oidcAuthentication && step === 'confirm-identity'"
-			>
-				<h2 class="content-box-title">Verify your OIDC</h2>
-				<p class="content-box-description">
-					Check your account is still linked to remove your account.
-				</p>
-
-				<div class="content-box-inputs">
-					<a class="button is-oidc" @click="confirmOIDCLink()">
-						<div class="icon">
-							<img
-								class="invert"
-								src="/assets/social/github.svg"
-							/>
-						</div>
-						&nbsp; Check whether OIDC is linked
-					</a>
-				</div>
-			</div>
-
-			<div v-if="step === 'export-data'">
-				DOWNLOAD A BACKUP OF YOUR DATA BEFORE ITS PERMENATNELY DELETED
 			</div>
 
 			<div
