@@ -67,7 +67,7 @@ const copyToClipboard = async () => {
 		await navigator.clipboard.writeText(
 			configStore.urls.client + route.fullPath
 		);
-	} catch (err) {
+	} catch {
 		new Toast("Failed to copy to clipboard.");
 	}
 };
