@@ -208,25 +208,21 @@ onMounted(() => {
 			</label>
 		</p>
 
-		<div class="control is-grouped input-with-label">
-			<div class="control select">
-				<select v-model="localDefaultStationPrivacy">
-					<option value="public">Public</option>
-					<option value="unlisted">Unlisted</option>
-					<option value="private">Private</option>
-				</select>
-			</div>
-			<label class="label"> Default station privacy </label>
+		<label class="label">Default station privacy</label>
+		<div class="control select">
+			<select v-model="localDefaultStationPrivacy">
+				<option value="public">Public</option>
+				<option value="unlisted">Unlisted</option>
+				<option value="private">Private</option>
+			</select>
 		</div>
 
-		<div class="control is-grouped input-with-label">
-			<div class="control select">
-				<select v-model="localDefaultPlaylistPrivacy">
-					<option value="public">Public</option>
-					<option value="private">Private</option>
-				</select>
-			</div>
-			<label class="label"> Default playlist privacy </label>
+		<label class="label">Default playlist privacy</label>
+		<div class="control select">
+			<select v-model="localDefaultPlaylistPrivacy">
+				<option value="public">Public</option>
+				<option value="private">Private</option>
+			</select>
 		</div>
 		<SaveButton ref="saveButton" @clicked="saveChanges()" />
 	</div>
