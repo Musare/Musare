@@ -104,85 +104,87 @@ watch(validation, newValidation => {
 
 <template>
 	<div class="content security-tab">
-		<h4 class="section-title">Change password</h4>
+		<template v-if="!oidcAuthentication">
+			<h4 class="section-title">Change password</h4>
 
-		<p class="section-description">
-			You will need to know your previous password
-		</p>
+			<p class="section-description">
+				You will need to know your previous password
+			</p>
 
-		<hr class="section-horizontal-rule" />
+			<hr class="section-horizontal-rule" />
 
-		<p class="control is-expanded margin-top-zero">
-			<label for="old-password">Previous password</label>
-		</p>
+			<p class="control is-expanded margin-top-zero">
+				<label for="old-password">Previous password</label>
+			</p>
 
-		<div id="password-visibility-container">
-			<input
-				class="input"
-				id="old-password"
-				ref="oldPassword"
-				type="password"
-				placeholder="Enter your old password here..."
-				v-model="validation.oldPassword.value"
-			/>
-			<a @click="togglePasswordVisibility('oldPassword')">
-				<i class="material-icons">
-					{{
-						!validation.oldPassword.visible
-							? "visibility"
-							: "visibility_off"
-					}}
-				</i>
-			</a>
-		</div>
+			<div id="password-visibility-container">
+				<input
+					class="input"
+					id="old-password"
+					ref="oldPassword"
+					type="password"
+					placeholder="Enter your old password here..."
+					v-model="validation.oldPassword.value"
+				/>
+				<a @click="togglePasswordVisibility('oldPassword')">
+					<i class="material-icons">
+						{{
+							!validation.oldPassword.visible
+								? "visibility"
+								: "visibility_off"
+						}}
+					</i>
+				</a>
+			</div>
 
-		<p class="control is-expanded">
-			<label for="new-password">New password</label>
-		</p>
+			<p class="control is-expanded">
+				<label for="new-password">New password</label>
+			</p>
 
-		<div id="password-visibility-container">
-			<input
-				class="input"
-				id="new-password"
-				type="password"
-				ref="newPassword"
-				placeholder="Enter new password here..."
-				v-model="validation.newPassword.value"
-				@keyup.enter="changePassword()"
-				@keypress="onInput('newPassword')"
-				@paste="onInput('newPassword')"
-			/>
+			<div id="password-visibility-container">
+				<input
+					class="input"
+					id="new-password"
+					type="password"
+					ref="newPassword"
+					placeholder="Enter new password here..."
+					v-model="validation.newPassword.value"
+					@keyup.enter="changePassword()"
+					@keypress="onInput('newPassword')"
+					@paste="onInput('newPassword')"
+				/>
 
-			<a @click="togglePasswordVisibility('newPassword')">
-				<i class="material-icons">
-					{{
-						!validation.newPassword.visible
-							? "visibility"
-							: "visibility_off"
-					}}
-				</i>
-			</a>
-		</div>
+				<a @click="togglePasswordVisibility('newPassword')">
+					<i class="material-icons">
+						{{
+							!validation.newPassword.visible
+								? "visibility"
+								: "visibility_off"
+						}}
+					</i>
+				</a>
+			</div>
 
-		<transition name="fadein-helpbox">
-			<input-help-box
-				:entered="validation.newPassword.entered"
-				:valid="validation.newPassword.valid"
-				:message="validation.newPassword.message"
-			/>
-		</transition>
+			<transition name="fadein-helpbox">
+				<input-help-box
+					:entered="validation.newPassword.entered"
+					:valid="validation.newPassword.valid"
+					:message="validation.newPassword.message"
+				/>
+			</transition>
 
-		<p class="control">
-			<button
-				id="change-password-button"
-				class="button is-success"
-				@click.prevent="changePassword()"
-			>
-				Change password
-			</button>
-		</p>
+			<p class="control">
+				<button
+					id="change-password-button"
+					class="button is-success"
+					@click.prevent="changePassword()"
+				>
+					Change password
+				</button>
+			</p>
 
-		<div class="section-margin-bottom" />
+			<div class="section-margin-bottom" />
+		</template>
 
 		<div>
 			<h4 class="section-title">Log out everywhere</h4>
