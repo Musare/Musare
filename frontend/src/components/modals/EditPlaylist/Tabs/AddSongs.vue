@@ -259,7 +259,7 @@ watch(
 								@click="
 									addYouTubeSongToPlaylist(
 										playlist._id,
-										result.id,
+										`youtube:${result.id}`,
 										index
 									)
 								"
