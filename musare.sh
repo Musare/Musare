@@ -173,7 +173,7 @@ runDockerCommand()
 
     if [[ ${2} == "build" && ${buildServices} != "" ]]; then
         # shellcheck disable=SC2086
-        ${dockerCompose} build ${buildServices}
+        ${dockerCompose} build --pull ${buildServices}
     fi
 
     if [[ ${2} == "ps" || ${2} == "logs" ]]; then
