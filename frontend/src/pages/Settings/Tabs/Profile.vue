@@ -27,7 +27,9 @@ const { originalUser, modifiedUser } = storeToRefs(settingsStore);
 const { updateOriginalUser } = settingsStore;
 
 const changeName = () => {
-	modifiedUser.value.name = modifiedUser.value.name.replaceAll(/ +/g, " ").trim();
+	modifiedUser.value.name = modifiedUser.value.name
+		.replaceAll(/ +/g, " ")
+		.trim();
 	const { name } = modifiedUser.value;
 
 	if (!validation.isLength(name, 1, 64))
@@ -140,7 +142,8 @@ const changeAvatar = () => {
 
 const saveChanges = () => {
 	const nameChanged = modifiedUser.value.name !== originalUser.value.name;
-	const locationChanged = modifiedUser.value.location !== originalUser.value.location;
+	const locationChanged =
+		modifiedUser.value.location !== originalUser.value.location;
 	const bioChanged = modifiedUser.value.bio !== originalUser.value.bio;
 	const avatarChanged =
 		modifiedUser.value.avatar.type !== originalUser.value.avatar.type ||

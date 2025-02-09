@@ -119,7 +119,8 @@ const changeUsername = () => {
 };
 
 const saveChanges = () => {
-	const usernameChanged = modifiedUser.value.username !== originalUser.value.username;
+	const usernameChanged =
+		modifiedUser.value.username !== originalUser.value.username;
 	const emailAddressChanged =
 		modifiedUser.value.email.address !== originalUser.value.email.address;
 
