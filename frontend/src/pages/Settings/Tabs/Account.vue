@@ -26,7 +26,7 @@ const { socket } = useWebsocketsStore();
 const saveButton = ref();
 
 const { userId } = storeToRefs(userAuthStore);
-const { originalUser, modifiedUser } = settingsStore;
+const { originalUser, modifiedUser } = storeToRefs(settingsStore);
 
 const validation = reactive({
 	username: {
@@ -50,7 +50,7 @@ const onInput = inputName => {
 };
 
 const changeEmail = () => {
-	const email = modifiedUser.email.address;
+	const email = modifiedUser.value.email.address;
 	if (!_validation.isLength(email, 3, 254))
 		return new Toast("Email must have between 3 and 254 characters.");
 	if (
@@ -79,7 +79,7 @@ const changeEmail = () => {
 };
 
 const changeUsername = () => {
-	const { username } = modifiedUser;
+	const { username } = modifiedUser.value;
 
 	if (!_validation.isLength(username, 2, 32))
 		return new Toast("Username must have between 2 and 32 characters.");
@@ -119,9 +119,9 @@ const changeUsername = () => {
 };
 
 const saveChanges = () => {
-	const usernameChanged = modifiedUser.username !== originalUser.username;
+	const usernameChanged = modifiedUser.value.username !== originalUser.value.username;
 	const emailAddressChanged =
-		modifiedUser.email.address !== originalUser.email.address;
+		modifiedUser.value.email.address !== originalUser.value.email.address;
 
 	if (usernameChanged) changeUsername();
 
@@ -141,7 +141,7 @@ const removeActivities = () => {
 };
 
 watch(
-	() => modifiedUser.username,
+	() => modifiedUser.value.username,
 	value => {
 		// const value = newModifiedUser.username;
 
@@ -151,7 +151,7 @@ watch(
 			validation.username.valid = false;
 		} else if (
 			!_validation.regex.azAZ09_.test(value) &&
-			value !== originalUser.username // Sometimes a username pulled from OIDC won't succeed validation
+			value !== originalUser.value.username // Sometimes a username pulled from OIDC won't succeed validation
 		) {
 			validation.username.message =
 				"Invalid format. Allowed characters: a-z, A-Z, 0-9 and _.";
@@ -168,7 +168,7 @@ watch(
 );
 
 watch(
-	() => modifiedUser.email.address,
+	() => modifiedUser.value.email?.address,
 	value => {
 		// const value = newModifiedUser.email.address;
 
