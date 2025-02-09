@@ -1,5 +1,20 @@
 # Changelog
 
+## [v3.12.0] - 2025-02-09
+
+This release includes all changes from v3.12.0-rc1, in addition to the following.
+Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
+
+### Changed
+
+- refactor: Hide OIDC sub from admin users list if OIDC disabled
+
+### Fixed
+
+- fix: Pull images during musare.sh build
+- fix: Reordering AdvancedTable table headers ineffective
+- fix: Settings page had race condition where inputs wouldn't be filled
+
 ## [v3.12.0-rc1] - 2025-01-19
 
 ### **Breaking Changes**
