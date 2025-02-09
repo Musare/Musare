@@ -14,7 +14,7 @@ const REQUIRED_DOCUMENT_VERSIONS = {
 	report: 7,
 	song: 10,
 	station: 10,
-	user: 4,
+	user: 5,
 	youtubeApiRequest: 1,
 	youtubeVideo: [1, 2],
 	youtubeChannel: 1,
@@ -446,7 +446,7 @@ class _DBModule extends CoreClass {
 
 					// If a filter or property exists for a special property, add some custom pipeline steps
 					(pipeline, next) => {
-						const { properties, queries, specialProperties } = payload;
+						const { properties, queries, specialProperties = {} } = payload;
 
 						async.eachLimit(
 							Object.entries(specialProperties),

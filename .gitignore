@@ -2,7 +2,6 @@ Thumbs.db
 .DS_Store
 *.swp
 .idea/
-.vscode/
 .vagrant/
 
 .env
@@ -13,6 +12,7 @@ startMongo.cmd
 .redis
 *.rdb
 backups/
+compose.override.yml
 docker-compose.override.yml
 
 npm-debug.log

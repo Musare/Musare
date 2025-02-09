@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref } from "vue";
 import Toast from "toasters";
+import { storeToRefs } from "pinia";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
+import { useUserPreferencesStore } from "@/stores/userPreferences";
 import validation from "@/validation";
 
 const Modal = defineAsyncComponent(() => import("@/components/Modal.vue"));
@@ -16,15 +18,19 @@ const { socket } = useWebsocketsStore();
 
 const { closeCurrentModal } = useModalsStore();
 
+const userPreferencesStore = useUserPreferencesStore();
+const { defaultStationPrivacy } = storeToRefs(userPreferencesStore);
+
 const newStation = ref({
 	name: "",
 	displayName: "",
-	description: ""
+	description: "",
+	privacy: defaultStationPrivacy.value
 });
 
 const submitModal = () => {
 	newStation.value.name = newStation.value.name.toLowerCase();
-	const { name, displayName, description } = newStation.value;
+	const { name, displayName, description, privacy } = newStation.value;
 
 	if (!name || !displayName || !description)
 		return new Toast("Please fill in all fields");
@@ -62,7 +68,8 @@ const submitModal = () => {
 			name,
 			type: props.official ? "official" : "community",
 			displayName,
-			description
+			description,
+			privacy
 		},
 		res => {
 			if (res.status === "success") {
@@ -107,8 +114,15 @@ const submitModal = () => {
 					class="input"
 					type="text"
 					placeholder="Description..."
-					@keyup.enter="submitModal()"
 				/>
+			</p>
+			<label class="label">Privacy</label>
+			<p class="control select">
+				<select v-model="newStation.privacy">
+					<option value="public">Public</option>
+					<option value="unlisted">Unlisted</option>
+					<option value="private">Private</option>
+				</select>
 			</p>
 		</template>
 		<template #footer>

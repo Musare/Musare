@@ -1,5 +1,67 @@
 # Changelog
 
+## [v3.12.0] - 2025-02-09
+
+This release includes all changes from v3.12.0-rc1, in addition to the following.
+Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
+
+### Changed
+
+- refactor: Hide OIDC sub from admin users list if OIDC disabled
+
+### Fixed
+
+- fix: Pull images during musare.sh build
+- fix: Reordering AdvancedTable table headers ineffective
+- fix: Settings page had race condition where inputs wouldn't be filled
+
+## [v3.12.0-rc1] - 2025-01-19
+
+### **Breaking Changes**
+
+This release includes breaking changes to our docker setup, in particular the
+usage of named volumes and the removal of many redundant configuration options.
+
+In addition to this, GitHub authentication has been removed. If your instance
+has GitHub users, keep this in mind. If a user only has GitHub currently, you
+could instruct them to set a password before updating, or they can reset their
+password after updating if this is enabled on your instance.
+
+Before updating or pulling changes please make a full backup,
+and after updating restore using the [Utility Script](./.wiki/Utility_Script.md).
+Please refer to the [Configuration documentation](.wiki/Configuration.md)
+for more information on how you should now configure docker.
+
+Upgrade instructions can be found at [.wiki/Upgrading](.wiki/Upgrading.md).
+
+### Added
+
+- feat: Add env config change check to musare.sh update
+- chore: Add backend debug
+- chore: Add vscode settings and extensions
+- feat: OIDC authentication
+- feat: Add default station and playlist privacy preferences
+- feat: Add privacy option to create station modal
+- feat: Add configuration option to retrict site to logged in users
+
+### Changed
+
+- refactor: Use node alpine docker images
+- refactor: Use non-root user in docker
+- refactor: Separates docker environment builds and combines modes into APP_ENV
+- refactor: Remove unnecessary configuration options
+- refactor: Split docker networks
+- refactor: Improve musare.sh handling and styling
+- chore: Update to node 22
+- refactor: Move users actions logic to module jobs
+- refactor: Remove GitHub authentication
+
+### Fixed
+
+- fix: Station undefined in autorequestExcludedMediaSources
+- fix: Advanced table hidden columns table header visible
+- fix: Adding song to playlist from YouTube search in EditPlaylist wouldn't work
+
 ## [v3.11.0] - 2024-03-02
 
 This release includes all changes from v3.11.0-rc1, in addition to the following.

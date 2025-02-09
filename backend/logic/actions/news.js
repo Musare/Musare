@@ -1,5 +1,6 @@
 import async from "async";
 
+import isLoginSometimesRequired from "../hooks/loginSometimesRequired";
 import { useHasPermission } from "../hooks/hasPermission";
 
 // eslint-disable-next-line
@@ -166,7 +167,7 @@ export default {
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {Function} cb - gets called with the result
 	 */
-	async getPublished(session, cb) {
+	getPublished: isLoginSometimesRequired(async function getPublished(session, cb) {
 		const newsModel = await DBModule.runJob("GET_MODEL", { modelName: "news" }, this);
 		async.waterfall(
 			[
@@ -186,7 +187,7 @@ export default {
 				return cb({ status: "success", data: { news } });
 			}
 		);
-	},
+	}),
 
 	/**
 	 * Gets a news item by id
@@ -194,7 +195,7 @@ export default {
 	 * @param {string} newsId - the news item id
 	 * @param {Function} cb - gets called with the result
 	 */
-	async getNewsFromId(session, newsId, cb) {
+	getNewsFromId: isLoginSometimesRequired(async function getNewsFromId(session, newsId, cb) {
 		const newsModel = await DBModule.runJob("GET_MODEL", { modelName: "news" }, this);
 
 		async.waterfall(
@@ -215,7 +216,8 @@ export default {
 				return cb({ status: "success", data: { news } });
 			}
 		);
-	},
+	}),
+
 	/**
 	 * Creates a news item
 	 * @param {object} session - the session object automatically added by the websocket
@@ -257,7 +259,7 @@ export default {
 	 * @param {boolean} newUser - whether the user requesting the newest news is a new user
 	 * @param {Function} cb - gets called with the result
 	 */
-	async newest(session, newUser, cb) {
+	newest: isLoginSometimesRequired(async function newest(session, newUser, cb) {
 		const newsModel = await DBModule.runJob("GET_MODEL", { modelName: "news" }, this);
 		const query = { status: "published" };
 		if (newUser) query.showToNewUsers = true;
@@ -274,7 +276,7 @@ export default {
 				return cb({ status: "success", data: { news } });
 			}
 		);
-	},
+	}),
 
 	/**
 	 * Removes a news item

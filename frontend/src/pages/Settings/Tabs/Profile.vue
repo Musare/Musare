@@ -22,13 +22,15 @@ const { socket } = useWebsocketsStore();
 const saveButton = ref();
 
 const { userId } = storeToRefs(userAuthStore);
-const { originalUser, modifiedUser } = settingsStore;
+const { originalUser, modifiedUser } = storeToRefs(settingsStore);
 
 const { updateOriginalUser } = settingsStore;
 
 const changeName = () => {
-	modifiedUser.name = modifiedUser.name.replaceAll(/ +/g, " ").trim();
-	const { name } = modifiedUser;
+	modifiedUser.value.name = modifiedUser.value.name
+		.replaceAll(/ +/g, " ")
+		.trim();
+	const { name } = modifiedUser.value;
 
 	if (!validation.isLength(name, 1, 64))
 		return new Toast("Name must have between 1 and 64 characters.");
@@ -62,7 +64,7 @@ const changeName = () => {
 };
 
 const changeLocation = () => {
-	const { location } = modifiedUser;
+	const { location } = modifiedUser.value;
 
 	if (!validation.isLength(location, 0, 50))
 		return new Toast("Location must have between 0 and 50 characters.");
@@ -92,7 +94,7 @@ const changeLocation = () => {
 };
 
 const changeBio = () => {
-	const { bio } = modifiedUser;
+	const { bio } = modifiedUser.value;
 
 	if (!validation.isLength(bio, 0, 200))
 		return new Toast("Bio must have between 0 and 200 characters.");
@@ -117,7 +119,7 @@ const changeBio = () => {
 };
 
 const changeAvatar = () => {
-	const { avatar } = modifiedUser;
+	const { avatar } = modifiedUser.value;
 
 	saveButton.value.status = "disabled";
 
@@ -139,12 +141,13 @@ const changeAvatar = () => {
 };
 
 const saveChanges = () => {
-	const nameChanged = modifiedUser.name !== originalUser.name;
-	const locationChanged = modifiedUser.location !== originalUser.location;
-	const bioChanged = modifiedUser.bio !== originalUser.bio;
+	const nameChanged = modifiedUser.value.name !== originalUser.value.name;
+	const locationChanged =
+		modifiedUser.value.location !== originalUser.value.location;
+	const bioChanged = modifiedUser.value.bio !== originalUser.value.bio;
 	const avatarChanged =
-		modifiedUser.avatar.type !== originalUser.avatar.type ||
-		modifiedUser.avatar.color !== originalUser.avatar.color;
+		modifiedUser.value.avatar.type !== originalUser.value.avatar.type ||
+		modifiedUser.value.avatar.color !== originalUser.value.avatar.color;
 
 	if (nameChanged) changeName();
 	if (locationChanged) changeLocation();

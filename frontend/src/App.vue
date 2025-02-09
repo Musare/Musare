@@ -49,7 +49,9 @@ const {
 	changeAutoSkipDisliked,
 	changeActivityLogPublic,
 	changeAnonymousSongRequests,
-	changeActivityWatch
+	changeActivityWatch,
+	changeDefaultStationPrivacy,
+	changeDefaultPlaylistPrivacy
 } = userPreferencesStore;
 const { activeModals } = storeToRefs(modalsStore);
 const { openModal, closeCurrentModal } = modalsStore;
@@ -197,6 +199,12 @@ onMounted(async () => {
 						preferences.anonymousSongRequests
 					);
 					changeActivityWatch(preferences.activityWatch);
+					changeDefaultStationPrivacy(
+						preferences.defaultStationPrivacy
+					);
+					changeDefaultPlaylistPrivacy(
+						preferences.defaultPlaylistPrivacy
+					);
 				}
 			}
 		);
@@ -248,11 +256,11 @@ onMounted(async () => {
 
 		router.isReady().then(() => {
 			if (
-				configStore.githubAuthentication &&
-				localStorage.getItem("github_redirect")
+				configStore.oidcAuthentication &&
+				localStorage.getItem("oidc_redirect")
 			) {
-				router.push(localStorage.getItem("github_redirect"));
-				localStorage.removeItem("github_redirect");
+				router.push(localStorage.getItem("oidc_redirect"));
+				localStorage.removeItem("oidc_redirect");
 			}
 		});
 	}, true);
@@ -1641,6 +1649,14 @@ button.delete:focus {
 	.button {
 		height: 36px;
 		border-radius: 0 @border-radius @border-radius 0;
+	}
+}
+
+.input-with-label {
+	column-gap: 8px;
+
+	.label {
+		align-items: center;
 	}
 }
 

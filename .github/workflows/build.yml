@@ -1,0 +1,22 @@
+name: Musare Build
+
+on: [ push, pull_request, workflow_dispatch ]
+
+env:
+    COMPOSE_PROJECT_NAME: musare
+    APP_ENV: production
+    MONGO_ROOT_PASSWORD: PASSWORD_HERE
+    MONGO_USER_USERNAME: musare
+    MONGO_USER_PASSWORD: OTHER_PASSWORD_HERE
+    MONGO_VERSION: 5.0
+    REDIS_PASSWORD: PASSWORD
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - name: Build Musare
+              run: |
+                  cp .env.example .env
+                  ./musare.sh build

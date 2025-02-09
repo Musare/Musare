@@ -3,10 +3,10 @@ import config from "config";
 import async from "async";
 import mongoose from "mongoose";
 
-import axios from "axios";
 import bcrypt from "bcrypt";
 import sha256 from "sha256";
 import isLoginRequired from "../hooks/loginRequired";
+import isLoginSometimesRequired from "../hooks/loginSometimesRequired";
 import { hasPermission, useHasPermission } from "../hooks/hasPermission";
 
 // eslint-disable-next-line
@@ -19,8 +19,7 @@ const CacheModule = moduleManager.modules.cache;
 const MailModule = moduleManager.modules.mail;
 const PunishmentsModule = moduleManager.modules.punishments;
 const ActivitiesModule = moduleManager.modules.activities;
-const PlaylistsModule = moduleManager.modules.playlists;
-const MediaModule = moduleManager.modules.media;
+const UsersModule = moduleManager.modules.users;
 
 CacheModule.runJob("SUB", {
 	channel: "user.updatePreferences",
@@ -88,39 +87,6 @@ CacheModule.runJob("SUB", {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets => {
 			sockets.forEach(socket => {
 				socket.dispatch("event:user.password.linked");
-			});
-		});
-	}
-});
-
-CacheModule.runJob("SUB", {
-	channel: "user.unlinkPassword",
-	cb: userId => {
-		WSModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets => {
-			sockets.forEach(socket => {
-				socket.dispatch("event:user.password.unlinked");
-			});
-		});
-	}
-});
-
-CacheModule.runJob("SUB", {
-	channel: "user.linkGithub",
-	cb: userId => {
-		WSModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets => {
-			sockets.forEach(socket => {
-				socket.dispatch("event:user.github.linked");
-			});
-		});
-	}
-});
-
-CacheModule.runJob("SUB", {
-	channel: "user.unlinkGithub",
-	cb: userId => {
-		WSModule.runJob("SOCKETS_FROM_USER", { userId }).then(sockets => {
-			sockets.forEach(socket => {
-				socket.dispatch("event:user.github.unlinked");
 			});
 		});
 	}
@@ -195,7 +161,6 @@ CacheModule.runJob("SUB", {
 				"name",
 				"username",
 				"avatar",
-				"services.github.id",
 				"role",
 				"email.address",
 				"email.verified",
@@ -203,7 +168,7 @@ CacheModule.runJob("SUB", {
 				"services.password.password"
 			],
 			(err, user) => {
-				const newUser = { ...user._doc, hasPassword: !!user.services.password.password };
+				const newUser = user._doc;
 				delete newUser.services.password;
 				WSModule.runJob("EMIT_TO_ROOMS", {
 					rooms: ["admin.users", `edit-user.${data.userId}`],
@@ -276,26 +241,8 @@ export default {
 									"services.password.password",
 									"services.password.reset.code",
 									"services.password.reset.expires",
-									"services.password.set.code",
-									"services.password.set.expires",
-									"services.github.access_token",
 									"email.verificationToken"
 								],
-								specialProperties: {
-									hasPassword: [
-										{
-											$addFields: {
-												hasPassword: {
-													$cond: [
-														{ $eq: [{ $type: "$services.password.password" }, "string"] },
-														true,
-														false
-													]
-												}
-											}
-										}
-									]
-								},
 								specialQueries: {}
 							},
 							this
@@ -331,205 +278,22 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	remove: isLoginRequired(async function remove(session, cb) {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-		const dataRequestModel = await DBModule.runJob("GET_MODEL", { modelName: "dataRequest" }, this);
-		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
-		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
-		const activityModel = await DBModule.runJob("GET_MODEL", { modelName: "activity" }, this);
-
-		const dataRequestEmail = await MailModule.runJob("GET_SCHEMA", { schemaName: "dataRequest" }, this);
-
-		const songsToAdjustRatings = [];
+		const { userId } = session;
 
 		async.waterfall(
 			[
-				// activities related to the user
 				next => {
-					activityModel.deleteMany({ userId: session.userId }, next);
-				},
-
-				// user's stations
-				(res, next) => {
-					stationModel.find({ owner: session.userId }, (err, stations) => {
-						if (err) return next(err);
-
-						return async.each(
-							stations,
-							(station, callback) => {
-								// delete the station
-								stationModel.deleteOne({ _id: station._id }, err => {
-									if (err) return callback(err);
-
-									CacheModule.runJob("HDEL", { table: "stations", key: station._id });
-
-									// if applicable, delete the corresponding playlist for the station
-									if (station.playlist)
-										return PlaylistsModule.runJob("DELETE_PLAYLIST", {
-											playlistId: station.playlist
-										})
-											.then(() => callback())
-											.catch(callback);
-
-									return callback();
-								});
-							},
-							err => next(err)
-						);
-					});
-				},
-
-				// remove user as station DJ
-				next => {
-					stationModel.updateMany({ djs: session.userId }, { $pull: { djs: session.userId } }, next);
-				},
-
-				(res, next) => {
-					playlistModel.findOne({ createdBy: session.userId, type: "user-liked" }, next);
-				},
-
-				// get all liked songs (as the global rating values for these songs will need adjusted)
-				(playlist, next) => {
-					if (!playlist) return next();
-
-					playlist.songs.forEach(song =>
-						songsToAdjustRatings.push({ songId: song._id, mediaSource: song.mediaSource })
-					);
-
-					return next();
-				},
-
-				next => {
-					playlistModel.findOne({ createdBy: session.userId, type: "user-disliked" }, next);
-				},
-
-				// get all disliked songs (as the global rating values for these songs will need adjusted)
-				(playlist, next) => {
-					if (!playlist) return next();
-
-					playlist.songs.forEach(song => songsToAdjustRatings.push({ mediaSource: song.mediaSource }));
-
-					return next();
-				},
-
-				// user's playlists
-				next => {
-					playlistModel.deleteMany({ createdBy: session.userId }, next);
-				},
-
-				(res, next) => {
-					async.each(
-						songsToAdjustRatings,
-						(song, next) => {
-							const { mediaSource } = song;
-
-							MediaModule.runJob("RECALCULATE_RATINGS", { mediaSource })
-								.then(() => next())
-								.catch(next);
-						},
-						err => next(err)
-					);
-				},
-
-				// user object
-				next => {
-					userModel.deleteMany({ _id: session.userId }, next);
-				},
-
-				// session
-				(res, next) => {
-					CacheModule.runJob("PUB", {
-						channel: "user.removeSessions",
-						value: session.userId
-					});
-
-					async.waterfall(
-						[
-							next => {
-								CacheModule.runJob("HGETALL", { table: "sessions" }, this)
-									.then(sessions => {
-										next(null, sessions);
-									})
-									.catch(next);
-							},
-
-							(sessions, next) => {
-								if (!sessions) return next(null, [], {});
-
-								const keys = Object.keys(sessions);
-
-								return next(null, keys, sessions);
-							},
-
-							(keys, sessions, next) => {
-								// temp fix, need to wait properly for the SUB/PUB refactor (on wekan)
-								const { userId } = session;
-								setTimeout(
-									() =>
-										async.each(
-											keys,
-											(sessionId, callback) => {
-												const session = sessions[sessionId];
-
-												if (session && session.userId === userId) {
-													CacheModule.runJob(
-														"HDEL",
-														{
-															table: "sessions",
-															key: sessionId
-														},
-														this
-													)
-														.then(() => callback(null))
-														.catch(callback);
-												} else callback();
-											},
-											err => {
-												next(err);
-											}
-										),
-									50
-								);
-							}
-						],
-						next
-					);
-				},
-
-				// request data removal for user
-				next => {
-					dataRequestModel.create({ userId: session.userId, type: "remove" }, next);
-				},
-
-				(request, next) => {
-					WSModule.runJob("EMIT_TO_ROOM", {
-						room: "admin.users",
-						args: ["event:admin.dataRequests.created", { data: { request } }]
-					});
-
-					return next();
-				},
-
-				next => userModel.find({ role: "admin" }, next),
-
-				// send email to all admins of a data removal request
-				(users, next) => {
-					if (!config.get("sendDataRequestEmails")) return next();
-					if (users.length === 0) return next();
-
-					const to = [];
-					users.forEach(user => to.push(user.email.address));
-
-					return dataRequestEmail(to, session.userId, "remove", err => next(err));
+					UsersModule.runJob("REMOVE_USER", { userId })
+						.then(() => next())
+						.catch(err => next(err));
 				}
 			],
 			async err => {
 				if (err && err !== true) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"USER_REMOVE",
-						`Removing data and account for user "${session.userId}" failed. "${err}"`
-					);
+					err = await UtilsModule.runJob("GET_ERROR", { error: err });
+
+					this.log("ERROR", "USER_REMOVE", `Removing data and account for user "${userId}" failed. "${err}"`);
+
 					return cb({ status: "error", message: err });
 				}
 
@@ -541,7 +305,7 @@ export default {
 
 				CacheModule.runJob("PUB", {
 					channel: "user.removeAccount",
-					value: session.userId
+					value: userId
 				});
 
 				return cb({
@@ -559,196 +323,17 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	adminRemove: useHasPermission("users.remove", async function adminRemove(session, userId, cb) {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-		const dataRequestModel = await DBModule.runJob("GET_MODEL", { modelName: "dataRequest" }, this);
-		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
-		const playlistModel = await DBModule.runJob("GET_MODEL", { modelName: "playlist" }, this);
-		const activityModel = await DBModule.runJob("GET_MODEL", { modelName: "activity" }, this);
-
-		const dataRequestEmail = await MailModule.runJob("GET_SCHEMA", { schemaName: "dataRequest" }, this);
-
-		const songsToAdjustRatings = [];
-
 		async.waterfall(
 			[
 				next => {
 					if (!userId) return next("You must provide a userId to remove.");
 					return next();
 				},
-				// activities related to the user
-				next => {
-					activityModel.deleteMany({ userId }, next);
-				},
-
-				// user's stations
-				(res, next) => {
-					stationModel.find({ owner: userId }, (err, stations) => {
-						if (err) return next(err);
-
-						return async.each(
-							stations,
-							(station, callback) => {
-								// delete the station
-								stationModel.deleteOne({ _id: station._id }, err => {
-									if (err) return callback(err);
-
-									// if applicable, delete the corresponding playlist for the station
-									if (station.playlist)
-										return PlaylistsModule.runJob("DELETE_PLAYLIST", {
-											playlistId: station.playlist
-										})
-											.then(() => callback())
-											.catch(callback);
-
-									return callback();
-								});
-							},
-							err => next(err)
-						);
-					});
-				},
-
-				// remove user as station DJ
-				next => {
-					stationModel.updateMany({ djs: userId }, { $pull: { djs: userId } }, next);
-				},
-
-				(res, next) => {
-					playlistModel.findOne({ createdBy: userId, type: "user-liked" }, next);
-				},
-
-				// get all liked songs (as the global rating values for these songs will need adjusted)
-				(playlist, next) => {
-					if (!playlist) return next();
-
-					playlist.songs.forEach(song =>
-						songsToAdjustRatings.push({ songId: song._id, mediaSource: song.mediaSource })
-					);
-
-					return next();
-				},
 
 				next => {
-					playlistModel.findOne({ createdBy: userId, type: "user-disliked" }, next);
-				},
-
-				// get all disliked songs (as the global rating values for these songs will need adjusted)
-				(playlist, next) => {
-					if (!playlist) return next();
-
-					playlist.songs.forEach(song => songsToAdjustRatings.push({ mediaSource: song.mediaSource }));
-
-					return next();
-				},
-
-				// user's playlists
-				next => {
-					playlistModel.deleteMany({ createdBy: userId }, next);
-				},
-
-				(res, next) => {
-					async.each(
-						songsToAdjustRatings,
-						(song, next) => {
-							const { mediaSource } = song;
-
-							MediaModule.runJob("RECALCULATE_RATINGS", { mediaSource })
-								.then(() => next())
-								.catch(next);
-						},
-						err => next(err)
-					);
-				},
-
-				// user object
-				next => {
-					userModel.deleteMany({ _id: userId }, next);
-				},
-
-				// session
-				(res, next) => {
-					CacheModule.runJob("PUB", {
-						channel: "user.removeSessions",
-						value: userId
-					});
-
-					async.waterfall(
-						[
-							next => {
-								CacheModule.runJob("HGETALL", { table: "sessions" }, this)
-									.then(sessions => {
-										next(null, sessions);
-									})
-									.catch(next);
-							},
-
-							(sessions, next) => {
-								if (!sessions) return next(null, [], {});
-
-								const keys = Object.keys(sessions);
-
-								return next(null, keys, sessions);
-							},
-
-							(keys, sessions, next) => {
-								// temp fix, need to wait properly for the SUB/PUB refactor (on wekan)
-								setTimeout(
-									() =>
-										async.each(
-											keys,
-											(sessionId, callback) => {
-												const session = sessions[sessionId];
-
-												if (session && session.userId === userId) {
-													CacheModule.runJob(
-														"HDEL",
-														{
-															table: "sessions",
-															key: sessionId
-														},
-														this
-													)
-														.then(() => callback(null))
-														.catch(callback);
-												} else callback();
-											},
-											err => {
-												next(err);
-											}
-										),
-									50
-								);
-							}
-						],
-						next
-					);
-				},
-
-				// request data removal for user
-				next => {
-					dataRequestModel.create({ userId, type: "remove" }, next);
-				},
-
-				(request, next) => {
-					WSModule.runJob("EMIT_TO_ROOM", {
-						room: "admin.users",
-						args: ["event:admin.dataRequests.created", { data: { request } }]
-					});
-
-					return next();
-				},
-
-				next => userModel.find({ role: "admin" }, next),
-
-				// send email to all admins of a data removal request
-				(users, next) => {
-					if (!config.get("sendDataRequestEmails")) return next();
-					if (users.length === 0) return next();
-
-					const to = [];
-					users.forEach(user => to.push(user.email.address));
-
-					return dataRequestEmail(to, userId, "remove", err => next(err));
+					UsersModule.runJob("REMOVE_USER", { userId })
+						.then(() => next())
+						.catch(err => next(err));
 				}
 			],
 			async err => {
@@ -803,8 +388,7 @@ export default {
 				// otherwise compare the requested password and the actual users password
 				(user, next) => {
 					if (!user) return next("User not found");
-					if (!user.services.password || !user.services.password.password)
-						return next("The account you are trying to access uses GitHub to log in.");
+					if (!user.services.password || !user.services.password.password) return next("Invalid password");
 
 					return bcrypt.compare(sha256(password), user.services.password.password, (err, match) => {
 						if (err) return next(err);
@@ -865,170 +449,12 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	async register(session, username, email, password, recaptcha, cb) {
-		email = email.toLowerCase().trim();
-		const verificationToken = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 64 }, this);
-
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-		const verifyEmailSchema = await MailModule.runJob("GET_SCHEMA", { schemaName: "verifyEmail" }, this);
-
 		async.waterfall(
 			[
 				next => {
-					if (config.get("registrationDisabled") === true)
-						return next("Registration is not allowed at this time.");
-					if (config.get("experimental.registration_email_whitelist")) {
-						const experimentalRegistrationEmailWhitelist = config.get(
-							"experimental.registration_email_whitelist"
-						);
-						if (!Array.isArray(experimentalRegistrationEmailWhitelist)) return next();
-
-						let anyPassed = false;
-
-						experimentalRegistrationEmailWhitelist.forEach(regex => {
-							const newRegex = new RegExp(regex);
-							if (newRegex.test(email)) anyPassed = true;
-						});
-
-						if (!anyPassed) next("Your email is not allowed to register.");
-					}
-					return next();
-				},
-
-				next => {
-					if (!DBModule.passwordValid(password))
-						return next("Invalid password. Check if it meets all the requirements.");
-					return next();
-				},
-
-				// verify the request with google recaptcha
-				next => {
-					if (config.get("apis.recaptcha.enabled") === true)
-						axios
-							.post("https://www.google.com/recaptcha/api/siteverify", {
-								data: {
-									secret: config.get("apis").recaptcha.secret,
-									response: recaptcha
-								}
-							})
-							.then(res => next(null, res.data))
-							.catch(err => next(err));
-					else next(null, null);
-				},
-
-				// check if the response from Google recaptcha is successful
-				// if it is, we check if a user with the requested username already exists
-				(body, next) => {
-					if (config.get("apis.recaptcha.enabled") === true)
-						if (body.success !== true) return next("Response from recaptcha was not successful.");
-
-					return userModel.findOne({ username: new RegExp(`^${username}$`, "i") }, next);
-				},
-
-				// if the user already exists, respond with that
-				// otherwise check if a user with the requested email already exists
-				(user, next) => {
-					if (user) return next("A user with that username already exists.");
-					return userModel.findOne({ "email.address": email }, next);
-				},
-
-				// if the user already exists, respond with that
-				// otherwise, generate a salt to use with hashing the new users password
-				(user, next) => {
-					if (user) return next("A user with that email already exists.");
-					return bcrypt.genSalt(10, next);
-				},
-
-				// hash the password
-				(salt, next) => {
-					bcrypt.hash(sha256(password), salt, next);
-				},
-
-				(hash, next) => {
-					UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 12 }, this).then(_id => {
-						next(null, hash, _id);
-					});
-				},
-
-				// create the user object
-				(hash, _id, next) => {
-					next(null, {
-						_id,
-						name: username,
-						username,
-						email: {
-							address: email,
-							verificationToken
-						},
-						services: {
-							password: {
-								password: hash
-							}
-						}
-					});
-				},
-
-				// generate the url for gravatar avatar
-				(user, next) => {
-					UtilsModule.runJob("CREATE_GRAVATAR", { email: user.email.address }, this).then(url => {
-						const avatarColors = ["blue", "orange", "green", "purple", "teal"];
-						user.avatar = {
-							type: "initials",
-							color: avatarColors[Math.floor(Math.random() * avatarColors.length)],
-							url
-						};
-						next(null, user);
-					});
-				},
-
-				// save the new user to the database
-				(user, next) => {
-					userModel.create(user, next);
-				},
-
-				// respond with the new user
-				(user, next) => {
-					verifyEmailSchema(email, username, verificationToken, err => {
-						next(err, user._id);
-					});
-				},
-
-				// create a liked songs playlist for the new user
-				(userId, next) => {
-					PlaylistsModule.runJob("CREATE_USER_PLAYLIST", {
-						userId,
-						displayName: "Liked Songs",
-						type: "user-liked"
-					})
-						.then(likedSongsPlaylist => {
-							next(null, likedSongsPlaylist, userId);
-						})
+					UsersModule.runJob("REGISTER", { username, email, password, recaptcha })
+						.then(({ userId }) => next(null, userId))
 						.catch(err => next(err));
-				},
-
-				// create a disliked songs playlist for the new user
-				(likedSongsPlaylist, userId, next) => {
-					PlaylistsModule.runJob("CREATE_USER_PLAYLIST", {
-						userId,
-						displayName: "Disliked Songs",
-						type: "user-disliked"
-					})
-						.then(dislikedSongsPlaylist => {
-							next(null, { likedSongsPlaylist, dislikedSongsPlaylist }, userId);
-						})
-						.catch(err => next(err));
-				},
-
-				// associate liked + disliked songs playlist to the user object
-				({ likedSongsPlaylist, dislikedSongsPlaylist }, userId, next) => {
-					userModel.updateOne(
-						{ _id: userId },
-						{ $set: { likedSongsPlaylist, dislikedSongsPlaylist } },
-						{ runValidators: true },
-						err => {
-							if (err) return next(err);
-							return next(null, userId);
-						}
-					);
 				}
 			],
 			async (err, userId) => {
@@ -1141,6 +567,12 @@ export default {
 		return async.waterfall(
 			[
 				next => {
+					if (config.get("apis.oidc.enabled")) return next("Confirming passwords is disabled.");
+
+					return next();
+				},
+
+				next => {
 					if (!password || password === "") return next("Please provide a valid password.");
 					return next();
 				},
@@ -1194,63 +626,6 @@ export default {
 				return cb({
 					status: "error",
 					message: "Unfortunately your password doesn't match."
-				});
-			}
-		);
-	}),
-
-	/**
-	 * Checks if user's github access token has expired or not (ie. if their github account is still linked)
-	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {Function} cb - gets called with the result
-	 */
-	confirmGithubLink: isLoginRequired(async function confirmGithubLink(session, cb) {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-
-		return async.waterfall(
-			[
-				next => {
-					if (!config.get("apis.github.enabled")) return next("GitHub authentication is disabled.");
-					return userModel.findOne({ _id: session.userId }, (err, user) => next(err, user));
-				},
-
-				(user, next) => {
-					if (!user.services.github) return next("You don't have GitHub linked to your account.");
-
-					return axios
-						.get(`https://api.github.com/user/emails`, {
-							headers: {
-								"User-Agent": "request",
-								Authorization: `token ${user.services.github.access_token}`
-							}
-						})
-						.then(res => next(null, res))
-						.catch(err => next(err));
-				},
-
-				(res, next) => next(null, res.status === 200)
-			],
-			async (err, linked) => {
-				if (err) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"USER_CONFIRM_GITHUB_LINK",
-						`Couldn't confirm github link for user "${session.userId}". "${err}"`
-					);
-					return cb({ status: "error", message: err });
-				}
-
-				this.log(
-					"SUCCESS",
-					"USER_CONFIRM_GITHUB_LINK",
-					`GitHub is ${linked ? "linked" : "not linked"} for user "${session.userId}".`
-				);
-
-				return cb({
-					status: "success",
-					data: { linked },
-					message: "Successfully checked if GitHub accounty was linked."
 				});
 			}
 		);
@@ -1462,6 +837,8 @@ export default {
 	 * @param {boolean} preferences.activityLogPublic - whether or not a user's activity log can be publicly viewed
 	 * @param {boolean} preferences.anonymousSongRequests - whether or not a user's requested songs will be anonymous
 	 * @param {boolean} preferences.activityWatch - whether or not a user is using the ActivityWatch integration
+	 * @param {boolean} preferences.defaultStationPrivacy - default station privacy
+	 * @param {boolean} preferences.defaultPlaylistPrivacy - default playlist privacy
 	 * @param {Function} cb - gets called with the result
 	 */
 	updatePreferences: isLoginRequired(async function updatePreferences(session, preferences, cb) {
@@ -1608,7 +985,7 @@ export default {
 	 * @param {string} identifier - the ObjectId or username of the user we are trying to find
 	 * @param {Function} cb - gets called with the result
 	 */
-	getBasicUser: async function getBasicUser(session, identifier, cb) {
+	getBasicUser: isLoginSometimesRequired(async function getBasicUser(session, identifier, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 
 		async.waterfall(
@@ -1649,7 +1026,7 @@ export default {
 				});
 			}
 		);
-	},
+	}),
 
 	/**
 	 * Gets a list of long jobs, including onprogress events when those long jobs have progress
@@ -1885,9 +1262,7 @@ export default {
 							email: {
 								address: user.email.address,
 								verified: user.email.verified
-							},
-							hasPassword: !!user.services.password,
-							services: { github: user.services.github }
+							}
 						}
 					});
 				}
@@ -1968,7 +1343,7 @@ export default {
 				};
 
 				if (user.services.password && user.services.password.password) sanitisedUser.password = true;
-				if (user.services.github && user.services.github.id) sanitisedUser.github = true;
+				if (user.services.oidc && user.services.oidc.sub) sanitisedUser.oidc = true;
 
 				this.log("SUCCESS", "FIND_BY_SESSION", `User found. "${user.username}".`);
 				return cb({
@@ -1987,8 +1362,6 @@ export default {
 	 * @param {Function} cb - gets called with the result
 	 */
 	updateUsername: isLoginRequired(async function updateUsername(session, updatingUserId, newUsername, cb) {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-
 		async.waterfall(
 			[
 				next => {
@@ -1998,32 +1371,10 @@ export default {
 						.catch(() => next("Invalid permissions."));
 				},
 
-				next => userModel.findOne({ _id: updatingUserId }, next),
-
-				(user, next) => {
-					if (!user) return next("User not found.");
-					if (user.username === newUsername)
-						return next("New username can't be the same as the old username.");
-					return next(null);
-				},
-
 				next => {
-					userModel.findOne({ username: new RegExp(`^${newUsername}$`, "i") }, next);
-				},
-
-				(user, next) => {
-					if (!user) return next();
-					if (user._id.toString() === updatingUserId) return next();
-					return next("That username is already in use.");
-				},
-
-				next => {
-					userModel.updateOne(
-						{ _id: updatingUserId },
-						{ $set: { username: newUsername } },
-						{ runValidators: true },
-						next
-					);
+					UsersModule.runJob("UPDATE_USERNAME", { userId: updatingUserId, username: newUsername })
+						.then(() => next())
+						.catch(err => next(err));
 				}
 			],
 			async err => {
@@ -2075,10 +1426,6 @@ export default {
 	 */
 	updateEmail: isLoginRequired(async function updateEmail(session, updatingUserId, newEmail, cb) {
 		newEmail = newEmail.toLowerCase();
-		const verificationToken = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 64 }, this);
-
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-		const verifyEmailSchema = await MailModule.runJob("GET_SCHEMA", { schemaName: "verifyEmail" }, this);
 
 		async.waterfall(
 			[
@@ -2089,56 +1436,10 @@ export default {
 						.catch(() => next("Invalid permissions."));
 				},
 
-				next => userModel.findOne({ _id: updatingUserId }, next),
-
-				(user, next) => {
-					if (!user) return next("User not found.");
-					if (user.email.address === newEmail)
-						return next("New email can't be the same as your the old email.");
-					return next();
-				},
-
 				next => {
-					userModel.findOne({ "email.address": newEmail }, next);
-				},
-
-				(user, next) => {
-					if (!user) return next();
-					if (user._id === updatingUserId) return next();
-					return next("That email is already in use.");
-				},
-
-				// regenerate the url for gravatar avatar
-				next => {
-					UtilsModule.runJob("CREATE_GRAVATAR", { email: newEmail }, this).then(url => {
-						next(null, url);
-					});
-				},
-
-				(newAvatarUrl, next) => {
-					userModel.updateOne(
-						{ _id: updatingUserId },
-						{
-							$set: {
-								"avatar.url": newAvatarUrl,
-								"email.address": newEmail,
-								"email.verified": false,
-								"email.verificationToken": verificationToken
-							}
-						},
-						{ runValidators: true },
-						next
-					);
-				},
-
-				(res, next) => {
-					userModel.findOne({ _id: updatingUserId }, next);
-				},
-
-				(user, next) => {
-					verifyEmailSchema(newEmail, user.username, verificationToken, err => {
-						next(err);
-					});
+					UsersModule.runJob("UPDATE_EMAIL", { userId: updatingUserId, email: newEmail })
+						.then(() => next())
+						.catch(err => next(err));
 				}
 			],
 			async err => {
@@ -2532,6 +1833,12 @@ export default {
 		async.waterfall(
 			[
 				next => {
+					if (config.get("apis.oidc.enabled")) return next("Updating password is disabled.");
+
+					return next();
+				},
+
+				next => {
 					userModel.findOne({ _id: session.userId }, next);
 				},
 
@@ -2596,313 +1903,6 @@ export default {
 	}),
 
 	/**
-	 * Requests a password for a session
-	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} email - the email of the user that requests a password reset
-	 * @param {Function} cb - gets called with the result
-	 */
-	requestPassword: isLoginRequired(async function requestPassword(session, cb) {
-		const code = await UtilsModule.runJob("GENERATE_RANDOM_STRING", { length: 8 }, this);
-		const passwordRequestSchema = await MailModule.runJob(
-			"GET_SCHEMA",
-			{
-				schemaName: "passwordRequest"
-			},
-			this
-		);
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-		async.waterfall(
-			[
-				next => {
-					userModel.findOne({ _id: session.userId }, next);
-				},
-
-				(user, next) => {
-					if (!user) return next("User not found.");
-					if (user.services.password && user.services.password.password)
-						return next("You already have a password set.");
-					return next(null, user);
-				},
-
-				(user, next) => {
-					const expires = new Date();
-					expires.setDate(expires.getDate() + 1);
-					userModel.findOneAndUpdate(
-						{ "email.address": user.email.address },
-						{
-							$set: {
-								"services.password": {
-									set: { code, expires }
-								}
-							}
-						},
-						{ runValidators: true },
-						next
-					);
-				},
-
-				(user, next) => {
-					passwordRequestSchema(user.email.address, user.username, code, next);
-				}
-			],
-			async err => {
-				if (err && err !== true) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-
-					this.log(
-						"ERROR",
-						"REQUEST_PASSWORD",
-						`UserId '${session.userId}' failed to request password. '${err}'`
-					);
-
-					return cb({ status: "error", message: err });
-				}
-
-				this.log(
-					"SUCCESS",
-					"REQUEST_PASSWORD",
-					`UserId '${session.userId}' successfully requested a password.`
-				);
-
-				return cb({
-					status: "success",
-					message: "Successfully requested password."
-				});
-			}
-		);
-	}),
-
-	/**
-	 * Verifies a password code
-	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} code - the password code
-	 * @param {Function} cb - gets called with the result
-	 */
-	verifyPasswordCode: isLoginRequired(async function verifyPasswordCode(session, code, cb) {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-		async.waterfall(
-			[
-				next => {
-					if (!code || typeof code !== "string") return next("Invalid code.");
-					return userModel.findOne(
-						{
-							"services.password.set.code": code,
-							_id: session.userId
-						},
-						next
-					);
-				},
-
-				(user, next) => {
-					if (!user) return next("Invalid code.");
-					if (user.services.password.set.expires < new Date()) return next("That code has expired.");
-					return next(null);
-				}
-			],
-			async err => {
-				if (err && err !== true) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "VERIFY_PASSWORD_CODE", `Code '${code}' failed to verify. '${err}'`);
-					cb({ status: "error", message: err });
-				} else {
-					this.log("SUCCESS", "VERIFY_PASSWORD_CODE", `Code '${code}' successfully verified.`);
-					cb({
-						status: "success",
-						message: "Successfully verified password code."
-					});
-				}
-			}
-		);
-	}),
-
-	/**
-	 * Adds a password to a user with a code
-	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {string} code - the password code
-	 * @param {string} newPassword - the new password code
-	 * @param {Function} cb - gets called with the result
-	 */
-	changePasswordWithCode: isLoginRequired(async function changePasswordWithCode(session, code, newPassword, cb) {
-		const userModel = await DBModule.runJob(
-			"GET_MODEL",
-			{
-				modelName: "user"
-			},
-			this
-		);
-		async.waterfall(
-			[
-				next => {
-					if (!code || typeof code !== "string") return next("Invalid code.");
-					return userModel.findOne({ "services.password.set.code": code }, next);
-				},
-
-				(user, next) => {
-					if (!user) return next("Invalid code.");
-					if (!user.services.password.set.expires > new Date()) return next("That code has expired.");
-					return next();
-				},
-
-				next => {
-					if (!DBModule.passwordValid(newPassword))
-						return next("Invalid password. Check if it meets all the requirements.");
-					return next();
-				},
-
-				next => {
-					bcrypt.genSalt(10, next);
-				},
-
-				// hash the password
-				(salt, next) => {
-					bcrypt.hash(sha256(newPassword), salt, next);
-				},
-
-				(hashedPassword, next) => {
-					userModel.updateOne(
-						{ "services.password.set.code": code },
-						{
-							$set: {
-								"services.password.password": hashedPassword
-							},
-							$unset: { "services.password.set": "" }
-						},
-						{ runValidators: true },
-						next
-					);
-				}
-			],
-			async err => {
-				if (err && err !== true) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log("ERROR", "ADD_PASSWORD_WITH_CODE", `Code '${code}' failed to add password. '${err}'`);
-					return cb({ status: "error", message: err });
-				}
-
-				this.log("SUCCESS", "ADD_PASSWORD_WITH_CODE", `Code '${code}' successfully added password.`);
-
-				CacheModule.runJob("PUB", {
-					channel: "user.linkPassword",
-					value: session.userId
-				});
-
-				CacheModule.runJob("PUB", {
-					channel: "user.updated",
-					value: { userId: session.userId }
-				});
-
-				return cb({
-					status: "success",
-					message: "Successfully added password."
-				});
-			}
-		);
-	}),
-
-	/**
-	 * Unlinks password from user
-	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {Function} cb - gets called with the result
-	 */
-	unlinkPassword: isLoginRequired(async function unlinkPassword(session, cb) {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-		async.waterfall(
-			[
-				next => {
-					userModel.findOne({ _id: session.userId }, next);
-				},
-
-				(user, next) => {
-					if (!user) return next("Not logged in.");
-					if (!config.get("apis.github.enabled")) return next("Unlinking password is disabled.");
-					if (!user.services.github || !user.services.github.id)
-						return next("You can't remove password login without having GitHub login.");
-					return userModel.updateOne({ _id: session.userId }, { $unset: { "services.password": "" } }, next);
-				}
-			],
-			async err => {
-				if (err && err !== true) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"UNLINK_PASSWORD",
-						`Unlinking password failed for userId '${session.userId}'. '${err}'`
-					);
-					return cb({ status: "error", message: err });
-				}
-
-				this.log("SUCCESS", "UNLINK_PASSWORD", `Unlinking password successful for userId '${session.userId}'.`);
-
-				CacheModule.runJob("PUB", {
-					channel: "user.unlinkPassword",
-					value: session.userId
-				});
-
-				CacheModule.runJob("PUB", {
-					channel: "user.updated",
-					value: { userId: session.userId }
-				});
-
-				return cb({
-					status: "success",
-					message: "Successfully unlinked password."
-				});
-			}
-		);
-	}),
-
-	/**
-	 * Unlinks GitHub from user
-	 * @param {object} session - the session object automatically added by the websocket
-	 * @param {Function} cb - gets called with the result
-	 */
-	unlinkGitHub: isLoginRequired(async function unlinkGitHub(session, cb) {
-		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
-		async.waterfall(
-			[
-				next => {
-					userModel.findOne({ _id: session.userId }, next);
-				},
-
-				(user, next) => {
-					if (!user) return next("Not logged in.");
-					if (!user.services.password || !user.services.password.password)
-						return next("You can't remove GitHub login without having password login.");
-					return userModel.updateOne({ _id: session.userId }, { $unset: { "services.github": "" } }, next);
-				}
-			],
-			async err => {
-				if (err && err !== true) {
-					err = await UtilsModule.runJob("GET_ERROR", { error: err }, this);
-					this.log(
-						"ERROR",
-						"UNLINK_GITHUB",
-						`Unlinking GitHub failed for userId '${session.userId}'. '${err}'`
-					);
-					return cb({ status: "error", message: err });
-				}
-
-				this.log("SUCCESS", "UNLINK_GITHUB", `Unlinking GitHub successful for userId '${session.userId}'.`);
-
-				CacheModule.runJob("PUB", {
-					channel: "user.unlinkGithub",
-					value: session.userId
-				});
-
-				CacheModule.runJob("PUB", {
-					channel: "user.updated",
-					value: { userId: session.userId }
-				});
-
-				return cb({
-					status: "success",
-					message: "Successfully unlinked GitHub."
-				});
-			}
-		);
-	}),
-
-	/**
 	 * Requests a password reset for an email
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param {string} email - the email of the user that requests a password reset
@@ -2921,8 +1921,13 @@ export default {
 		async.waterfall(
 			[
 				next => {
-					if (!config.get("mail.enabled")) return next("Password resets are disabled.");
+					if (!config.get("mail.enabled") || config.get("apis.oidc.enabled"))
+						return next("Password resets are disabled.");
 
+					return next();
+				},
+
+				next => {
 					if (!email || typeof email !== "string") return next("Invalid email.");
 					email = email.toLowerCase();
 					return userModel.findOne({ "email.address": email }, next);
@@ -2930,8 +1935,6 @@ export default {
 
 				(user, next) => {
 					if (!user) return next("User not found.");
-					if (!user.services.password || !user.services.password.password)
-						return next("User does not have a password set, and probably uses GitHub to log in.");
 					return next(null, user);
 				},
 
@@ -3002,12 +2005,17 @@ export default {
 
 			async.waterfall(
 				[
+					next => {
+						if (!config.get("mail.enabled") || config.get("apis.oidc.enabled"))
+							return next("Password resets are disabled.");
+
+						return next();
+					},
+
 					next => userModel.findOne({ _id: userId }, next),
 
 					(user, next) => {
 						if (!user) return next("User not found.");
-						if (!user.services.password || !user.services.password.password)
-							return next("User does not have a password set, and probably uses GitHub to log in.");
 						return next();
 					},
 
@@ -3070,6 +2078,13 @@ export default {
 		async.waterfall(
 			[
 				next => {
+					if (!config.get("mail.enabled") || config.get("apis.oidc.enabled"))
+						return next("Password resets are disabled.");
+
+					return next();
+				},
+
+				next => {
 					if (!code || typeof code !== "string") return next("Invalid code.");
 					return userModel.findOne({ "services.password.reset.code": code }, next);
 				},
@@ -3108,6 +2123,13 @@ export default {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 		async.waterfall(
 			[
+				next => {
+					if (!config.get("mail.enabled") || config.get("apis.oidc.enabled"))
+						return next("Password resets are disabled.");
+
+					return next();
+				},
+
 				next => {
 					if (!code || typeof code !== "string") return next("Invalid code.");
 					return userModel.findOne({ "services.password.reset.code": code }, next);

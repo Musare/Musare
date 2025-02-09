@@ -58,27 +58,6 @@ onMounted(() => {
 			value: true
 		})
 	);
-
-	socket.on("event:user.password.unlinked", () =>
-		updateOriginalUser({
-			property: "password",
-			value: false
-		})
-	);
-
-	socket.on("event:user.github.linked", () =>
-		updateOriginalUser({
-			property: "github",
-			value: true
-		})
-	);
-
-	socket.on("event:user.github.unlinked", () =>
-		updateOriginalUser({
-			property: "github",
-			value: false
-		})
-	);
 });
 </script>
 
@@ -214,13 +193,19 @@ onMounted(() => {
 		margin: 24px 0;
 		height: fit-content;
 
-		.control:not(:first-of-type) {
+		.control.checkbox-control:not(:first-of-type),
+		.control.input-with-label {
 			margin: 10px 0;
+		}
+
+		.select {
+			margin: 0 !important;
 		}
 
 		label {
 			font-size: 14px;
 			color: var(--dark-grey-2);
+			font-weight: 500;
 		}
 
 		textarea {

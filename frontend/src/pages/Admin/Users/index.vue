@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { defineAsyncComponent, ref, onMounted } from "vue";
 import { useRoute } from "vue-router";
+import { storeToRefs } from "pinia";
 import { useModalsStore } from "@/stores/modals";
 import { useUserAuthStore } from "@/stores/userAuth";
 import { TableColumn, TableFilter, TableEvents } from "@/types/advancedTable";
+import { useConfigStore } from "@/stores/config";
 
 const AdvancedTable = defineAsyncComponent(
 	() => import("@/components/AdvancedTable.vue")
@@ -11,6 +13,9 @@ const AdvancedTable = defineAsyncComponent(
 const ProfilePicture = defineAsyncComponent(
 	() => import("@/components/ProfilePicture.vue")
 );
+
+const configStore = useConfigStore();
+const { oidcAuthentication } = storeToRefs(configStore);
 
 const route = useRoute();
 
@@ -63,20 +68,18 @@ const columns = ref<TableColumn[]>([
 		minWidth: 230,
 		defaultWidth: 230
 	},
-	{
-		name: "githubId",
-		displayName: "GitHub ID",
-		properties: ["services.github.id"],
-		sortProperty: "services.github.id",
-		minWidth: 115,
-		defaultWidth: 115
-	},
-	{
-		name: "hasPassword",
-		displayName: "Has Password",
-		properties: ["hasPassword"],
-		sortProperty: "hasPassword"
-	},
+	...(oidcAuthentication.value
+		? [
+				{
+					name: "oidcSub",
+					displayName: "OIDC sub",
+					properties: ["services.oidc.sub"],
+					sortProperty: "services.oidc.sub",
+					minWidth: 115,
+					defaultWidth: 115
+				}
+			]
+		: []),
 	{
 		name: "role",
 		displayName: "Role",
@@ -132,20 +135,17 @@ const filters = ref<TableFilter[]>([
 		filterTypes: ["contains", "exact", "regex"],
 		defaultFilterType: "contains"
 	},
-	{
-		name: "githubId",
-		displayName: "GitHub ID",
-		property: "services.github.id",
-		filterTypes: ["contains", "exact", "regex"],
-		defaultFilterType: "contains"
-	},
-	{
-		name: "hasPassword",
-		displayName: "Has Password",
-		property: "hasPassword",
-		filterTypes: ["boolean"],
-		defaultFilterType: "boolean"
-	},
+	...(oidcAuthentication.value
+		? [
+				{
+					name: "oidcSub",
+					displayName: "OIDC sub",
+					property: "services.oidc.sub",
+					filterTypes: ["contains", "exact", "regex"],
+					defaultFilterType: "contains"
+				}
+			]
+		: []),
 	{
 		name: "role",
 		displayName: "Role",
@@ -279,17 +279,12 @@ onMounted(() => {
 					slotProps.item._id
 				}}</span>
 			</template>
-			<template #column-githubId="slotProps">
+			<template v-if="oidcAuthentication" #column-oidcSub="slotProps">
 				<span
-					v-if="slotProps.item.services.github"
-					:title="slotProps.item.services.github.id"
-					>{{ slotProps.item.services.github.id }}</span
+					v-if="slotProps.item.services.oidc"
+					:title="slotProps.item.services.oidc.sub"
+					>{{ slotProps.item.services.oidc.sub }}</span
 				>
-			</template>
-			<template #column-hasPassword="slotProps">
-				<span :title="slotProps.item.hasPassword">{{
-					slotProps.item.hasPassword
-				}}</span>
 			</template>
 			<template #column-role="slotProps">
 				<span :title="slotProps.item.role">{{

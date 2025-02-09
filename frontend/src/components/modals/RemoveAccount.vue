@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref, onMounted } from "vue";
-import { useRoute } from "vue-router";
+import { defineAsyncComponent, onMounted, ref } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { useConfigStore } from "@/stores/config";
-import { useSettingsStore } from "@/stores/settings";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useModalsStore } from "@/stores/modals";
 
@@ -13,19 +11,14 @@ const QuickConfirm = defineAsyncComponent(
 	() => import("@/components/QuickConfirm.vue")
 );
 
-const props = defineProps({
-	modalUuid: { type: String, required: true },
-	githubLinkConfirmed: { type: Boolean, default: false }
+defineProps({
+	modalUuid: { type: String, required: true }
 });
 
 const configStore = useConfigStore();
-const { cookie, githubAuthentication, messages } = storeToRefs(configStore);
-const settingsStore = useSettingsStore();
-const route = useRoute();
+const { cookie, oidcAuthentication, messages } = storeToRefs(configStore);
 
 const { socket } = useWebsocketsStore();
-
-const { isPasswordLinked, isGithubLinked } = settingsStore;
 
 const { closeCurrentModal } = useModalsStore();
 
@@ -67,28 +60,6 @@ const confirmPasswordMatch = () =>
 		else new Toast(res.message);
 	});
 
-const confirmGithubLink = () =>
-	socket.dispatch("users.confirmGithubLink", res => {
-		if (res.status === "success") {
-			if (res.data.linked) step.value = "remove-account";
-			else {
-				new Toast(
-					`Your GitHub account isn't linked. Please re-link your account and try again.`
-				);
-				step.value = "relink-github";
-			}
-		} else new Toast(res.message);
-	});
-
-const relinkGithub = () => {
-	localStorage.setItem(
-		"github_redirect",
-		`${window.location.pathname + window.location.search}${
-			!route.query.removeAccount ? "&removeAccount=relinked-github" : ""
-		}`
-	);
-};
-
 const remove = () =>
 	socket.dispatch("users.remove", res => {
 		if (res.status === "success") {
@@ -102,8 +73,8 @@ const remove = () =>
 		return new Toast(res.message);
 	});
 
-onMounted(async () => {
-	if (props.githubLinkConfirmed === true) confirmGithubLink();
+onMounted(() => {
+	if (oidcAuthentication.value) step.value = "remove-account";
 });
 </script>
 
@@ -113,7 +84,7 @@ onMounted(async () => {
 		class="confirm-account-removal-modal"
 	>
 		<template #body>
-			<div id="steps">
+			<div v-if="!oidcAuthentication" id="steps">
 				<p
 					class="step"
 					:class="{ selected: step === 'confirm-identity' }"
@@ -124,41 +95,17 @@ onMounted(async () => {
 				<p
 					class="step"
 					:class="{
-						selected:
-							(isPasswordLinked && step === 'export-data') ||
-							step === 'relink-github'
+						selected: step === 'remove-account'
 					}"
 				>
 					2
-				</p>
-				<span class="divider"></span>
-				<p
-					class="step"
-					:class="{
-						selected:
-							(isPasswordLinked && step === 'remove-account') ||
-							step === 'export-data'
-					}"
-				>
-					3
-				</p>
-				<span class="divider" v-if="!isPasswordLinked"></span>
-				<p
-					class="step"
-					:class="{ selected: step === 'remove-account' }"
-					v-if="!isPasswordLinked"
-				>
-					4
 				</p>
 			</div>
 
 			<div
 				class="content-box"
 				id="password-linked"
-				v-if="
-					step === 'confirm-identity' &&
-					(isPasswordLinked || !githubAuthentication)
-				"
+				v-if="!oidcAuthentication && step === 'confirm-identity'"
 			>
 				<h2 class="content-box-title">Enter your password</h2>
 				<p class="content-box-description">
@@ -214,63 +161,6 @@ onMounted(async () => {
 						</p>
 					</div>
 				</div>
-			</div>
-
-			<div
-				class="content-box"
-				v-else-if="
-					githubAuthentication &&
-					isGithubLinked &&
-					step === 'confirm-identity'
-				"
-			>
-				<h2 class="content-box-title">Verify your GitHub</h2>
-				<p class="content-box-description">
-					Check your account is still linked to remove your account.
-				</p>
-
-				<div class="content-box-inputs">
-					<a class="button is-github" @click="confirmGithubLink()">
-						<div class="icon">
-							<img
-								class="invert"
-								src="/assets/social/github.svg"
-							/>
-						</div>
-						&nbsp; Check GitHub is linked
-					</a>
-				</div>
-			</div>
-
-			<div
-				class="content-box"
-				v-if="githubAuthentication && step === 'relink-github'"
-			>
-				<h2 class="content-box-title">Re-link GitHub</h2>
-				<p class="content-box-description">
-					Re-link your GitHub account in order to verify your
-					identity.
-				</p>
-
-				<div class="content-box-inputs">
-					<a
-						class="button is-github"
-						@click="relinkGithub()"
-						:href="`${configStore.urls.api}/auth/github/link`"
-					>
-						<div class="icon">
-							<img
-								class="invert"
-								src="/assets/social/github.svg"
-							/>
-						</div>
-						&nbsp; Re-link GitHub to account
-					</a>
-				</div>
-			</div>
-
-			<div v-if="step === 'export-data'">
-				DOWNLOAD A BACKUP OF YOUR DATA BEFORE ITS PERMENATNELY DELETED
 			</div>
 
 			<div

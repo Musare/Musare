@@ -4,33 +4,22 @@ on: [ push, pull_request, workflow_dispatch ]
 
 env:
     COMPOSE_PROJECT_NAME: musare
-    RESTART_POLICY: unless-stopped
-    CONTAINER_MODE: production
-    BACKEND_HOST: 127.0.0.1
-    BACKEND_PORT: 8080
-    FRONTEND_HOST: 127.0.0.1
-    FRONTEND_PORT: 80
-    FRONTEND_MODE: production
-    MONGO_HOST: 127.0.0.1
-    MONGO_PORT: 27017
+    APP_ENV: development
     MONGO_ROOT_PASSWORD: PASSWORD_HERE
     MONGO_USER_USERNAME: musare
     MONGO_USER_PASSWORD: OTHER_PASSWORD_HERE
-    MONGO_DATA_LOCATION: .db
     MONGO_VERSION: 5.0
-    REDIS_HOST: 127.0.0.1
-    REDIS_PORT: 6379
     REDIS_PASSWORD: PASSWORD
-    REDIS_DATA_LOCATION: .redis
 
 jobs:
     tests:
         runs-on: ubuntu-latest
         steps:
-            - uses: actions/checkout@v3
+            - uses: actions/checkout@v4
             - name: Build Musare
               run: |
                   cp .env.example .env
+                  sed -i 's/APP_ENV=production/APP_ENV=development/g' .env
                   ./musare.sh build
             - name: Start Musare
               run: ./musare.sh start

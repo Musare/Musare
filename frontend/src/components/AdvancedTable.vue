@@ -182,11 +182,32 @@ const bulkPopup = ref();
 const rowElements = ref([]);
 
 const lastPage = computed(() => Math.ceil(count.value / pageSize.value));
-const sortedFilteredColumns = computed(() =>
-	orderedColumns.value.filter(
-		column => shownColumns.value.indexOf(column.name) !== -1
-	)
-);
+const sortedFilteredColumns = computed({
+	get: () =>
+		orderedColumns.value.filter(
+			column => shownColumns.value.indexOf(column.name) !== -1
+		),
+	set: newValue =>
+		orderedColumns.value.sort((columnA, columnB) => {
+			// Always places updatedPlaceholder column in the first position
+			if (columnA.name === "updatedPlaceholder") return -1;
+			if (columnB.name === "updatedPlaceholder") return 1;
+			// Always places select column in the second position
+			if (columnA.name === "select") return -1;
+			if (columnB.name === "select") return 1;
+			// Always places placeholder column in the last position
+			if (columnA.name === "placeholder") return 1;
+			if (columnB.name === "placeholder") return -1;
+
+			const indexA = newValue.indexOf(columnA);
+			const indexB = newValue.indexOf(columnB);
+
+			// If either of the columns is not visible, use default ordering
+			if (indexA === -1 || indexB === -1) return 0;
+
+			return indexA - indexB;
+		})
+});
 const hidableSortedColumns = computed(() =>
 	orderedColumns.value.filter(column => column.hidable)
 );
@@ -1598,7 +1619,7 @@ watch(selectedRows, (newSelectedRows, oldSelectedRows) => {
 					<thead>
 						<tr>
 							<draggable-list
-								v-model:list="orderedColumns"
+								v-model:list="sortedFilteredColumns"
 								item-key="name"
 								@update="columnOrderChanged"
 								tag="th"

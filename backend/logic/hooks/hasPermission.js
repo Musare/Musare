@@ -63,7 +63,7 @@ permissions.moderator = {
 	"stations.remove": false,
 	"users.get": true,
 	"users.ban": true,
-	"users.requestPasswordReset": config.get("mail.enabled"),
+	"users.requestPasswordReset": config.get("mail.enabled") && !config.get("apis.oidc.enabled"),
 	"users.resendVerifyEmail": config.get("mail.enabled"),
 	"users.update": true,
 	"youtube.requestSetAdmin": true,

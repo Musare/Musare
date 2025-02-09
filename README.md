@@ -71,7 +71,7 @@ A production demonstration instance of Musare can be found at [demo.musare.com](
   - Activity logs
   - Profile page showing public playlists and activity logs
   - Text or gravatar profile pictures
-  - Email or Github login/registration
+  - Email or OIDC login/registration
   - Preferences to tailor site usage
   - Password reset
   - Data deletion management

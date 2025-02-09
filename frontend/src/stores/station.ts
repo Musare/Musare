@@ -93,7 +93,7 @@ export const useStationStore = defineStore("station", {
 			const {
 				autorequestDisallowRecentlyPlayedEnabled,
 				autorequestDisallowRecentlyPlayedNumber
-			} = this.station.requests;
+			} = this.station?.requests ?? {};
 
 			// If the station is set to disallow recently played songs, and station history is enabled, exclude the last X history songs
 			if (

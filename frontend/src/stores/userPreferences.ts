@@ -7,12 +7,16 @@ export const useUserPreferencesStore = defineStore("userPreferences", {
 		activityLogPublic: boolean;
 		anonymousSongRequests: boolean;
 		activityWatch: boolean;
+		defaultStationPrivacy: "public" | "unlisted" | "private";
+		defaultPlaylistPrivacy: "public" | "private";
 	} => ({
 		nightmode: false,
 		autoSkipDisliked: true,
 		activityLogPublic: false,
 		anonymousSongRequests: false,
-		activityWatch: false
+		activityWatch: false,
+		defaultStationPrivacy: "private",
+		defaultPlaylistPrivacy: "public"
 	}),
 	actions: {
 		changeNightmode(nightmode) {
@@ -30,6 +34,12 @@ export const useUserPreferencesStore = defineStore("userPreferences", {
 		},
 		changeActivityWatch(activityWatch) {
 			this.activityWatch = activityWatch;
+		},
+		changeDefaultStationPrivacy(defaultStationPrivacy) {
+			this.defaultStationPrivacy = defaultStationPrivacy;
+		},
+		changeDefaultPlaylistPrivacy(defaultPlaylistPrivacy) {
+			this.defaultPlaylistPrivacy = defaultPlaylistPrivacy;
 		}
 	}
 });

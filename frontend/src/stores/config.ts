@@ -8,7 +8,7 @@ export const useConfigStore = defineStore("config", {
 			enabled: boolean;
 			key: string;
 		};
-		githubAuthentication: boolean;
+		oidcAuthentication: boolean;
 		messages: Record<string, string>;
 		christmas: boolean;
 		footerLinks: Record<string, string | boolean>;
@@ -17,6 +17,7 @@ export const useConfigStore = defineStore("config", {
 		registrationDisabled: boolean;
 		mailEnabled: boolean;
 		discogsEnabled: boolean;
+		passwordResetEnabled: boolean;
 		experimental: {
 			changable_listen_mode: string[] | boolean;
 			media_session: boolean;
@@ -32,7 +33,7 @@ export const useConfigStore = defineStore("config", {
 			enabled: false,
 			key: ""
 		},
-		githubAuthentication: false,
+		oidcAuthentication: false,
 		messages: {
 			accountRemoval:
 				"Your account will be deactivated instantly and your data will shortly be deleted by an admin."
@@ -44,6 +45,7 @@ export const useConfigStore = defineStore("config", {
 		registrationDisabled: false,
 		mailEnabled: true,
 		discogsEnabled: true,
+		passwordResetEnabled: true,
 		experimental: {
 			changable_listen_mode: [],
 			media_session: false,

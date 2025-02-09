@@ -28,9 +28,5 @@ export const useSettingsStore = defineStore("settings", {
 			this.originalUser = user;
 			this.modifiedUser = JSON.parse(JSON.stringify(user));
 		}
-	},
-	getters: {
-		isGithubLinked: state => state.originalUser.github,
-		isPasswordLinked: state => state.originalUser.password
 	}
 });

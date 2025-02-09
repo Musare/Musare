@@ -812,7 +812,7 @@ const getYouTubeData = type => {
 
 			if (title) setValue({ title });
 			else throw new Error("No title found");
-		} catch (e) {
+		} catch {
 			new Toast(
 				"Unable to fetch YouTube video title. Try starting the video."
 			);
@@ -830,7 +830,7 @@ const getYouTubeData = type => {
 
 			if (author) setValue({ addArtist: author });
 			else throw new Error("No video author found");
-		} catch (e) {
+		} catch {
 			new Toast(
 				"Unable to fetch YouTube video author. Try starting the video."
 			);
@@ -847,7 +847,7 @@ const getSoundCloudData = type => {
 				if (title) setValue({ title });
 				else throw new Error("No title found");
 			});
-		} catch (e) {
+		} catch {
 			new Toast("Unable to fetch SoundCloud track title.");
 		}
 	}
@@ -866,7 +866,7 @@ const getSoundCloudData = type => {
 				if (artworkUrl) setValue({ thumbnail: artworkUrl });
 				else throw new Error("No thumbnail found");
 			});
-		} catch (e) {
+		} catch {
 			new Toast("Unable to fetch SoundCloud track artwork.");
 		}
 	}
@@ -879,7 +879,7 @@ const getSoundCloudData = type => {
 				if (user) setValue({ addArtist: user.username });
 				else throw new Error("No artist found");
 			});
-		} catch (e) {
+		} catch {
 			new Toast("Unable to fetch SoundCloud track artist.");
 		}
 	}

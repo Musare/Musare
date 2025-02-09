@@ -137,16 +137,7 @@ const router = createRouter({
 			path: "/reset_password",
 			component: () => import("@/pages/ResetPassword.vue"),
 			meta: {
-				configRequired: "mailEnabled"
-			}
-		},
-		{
-			path: "/set_password",
-			props: { mode: "set" },
-			component: () => import("@/pages/ResetPassword.vue"),
-			meta: {
-				configRequired: "mailEnabled",
-				loginRequired: true
+				configRequired: "passwordResetEnabled"
 			}
 		},
 		{
@@ -387,7 +378,9 @@ createSocket().then(async socket => {
 			changeNightmode,
 			changeActivityLogPublic,
 			changeAnonymousSongRequests,
-			changeActivityWatch
+			changeActivityWatch,
+			changeDefaultStationPrivacy,
+			changeDefaultPlaylistPrivacy
 		} = useUserPreferencesStore();
 
 		if (preferences.autoSkipDisliked !== undefined)
@@ -405,6 +398,12 @@ createSocket().then(async socket => {
 
 		if (preferences.activityWatch !== undefined)
 			changeActivityWatch(preferences.activityWatch);
+
+		if (preferences.defaultStationPrivacy !== undefined)
+			changeDefaultStationPrivacy(preferences.defaultStationPrivacy);
+
+		if (preferences.defaultPlaylistPrivacy !== undefined)
+			changeDefaultPlaylistPrivacy(preferences.defaultPlaylistPrivacy);
 	});
 
 	socket.on("keep.event:user.role.updated", res => {

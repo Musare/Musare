@@ -1,6 +1,7 @@
 import async from "async";
 
 import isLoginRequired from "../hooks/loginRequired";
+import isLoginSometimesRequired from "../hooks/loginSometimesRequired";
 
 // eslint-disable-next-line
 import moduleManager from "../../index";
@@ -37,7 +38,7 @@ export default {
 	 * @param {string} userId - the id of the user in question
 	 * @param {Function} cb - callback
 	 */
-	async length(session, userId, cb) {
+	length: isLoginSometimesRequired(async function length(session, userId, cb) {
 		const activityModel = await DBModule.runJob("GET_MODEL", { modelName: "activity" }, this);
 
 		async.waterfall(
@@ -66,7 +67,7 @@ export default {
 				});
 			}
 		);
-	},
+	}),
 
 	/**
 	 * Gets a set of activities
@@ -76,7 +77,7 @@ export default {
 	 * @param {number} offset - how many activities to skip (keeps frontend and backend in sync)
 	 * @param {Function} cb - callback
 	 */
-	async getSet(session, userId, set, offset, cb) {
+	getSet: isLoginSometimesRequired(async function getSet(session, userId, set, offset, cb) {
 		const userModel = await DBModule.runJob("GET_MODEL", { modelName: "user" }, this);
 		const activityModel = await DBModule.runJob("GET_MODEL", { modelName: "activity" }, this);
 
@@ -121,7 +122,7 @@ export default {
 				return cb({ status: "success", data: { activities } });
 			}
 		);
-	},
+	}),
 
 	/**
 	 * Hides an activity for a user

@@ -773,7 +773,7 @@ class _SpotifyModule extends CoreClass {
 						result
 					}
 				});
-			} catch (err) {
+			} catch {
 				this.publishProgress({
 					status: "working",
 					message: `Failed to get alternative artist source for ${artistId}`,
@@ -862,7 +862,7 @@ class _SpotifyModule extends CoreClass {
 						result
 					}
 				});
-			} catch (err) {
+			} catch {
 				this.publishProgress({
 					status: "working",
 					message: `Failed to get alternative album source for ${albumId}`,
@@ -935,7 +935,7 @@ class _SpotifyModule extends CoreClass {
 						result
 					}
 				});
-			} catch (err) {
+			} catch {
 				this.publishProgress({
 					status: "working",
 					message: `Failed to get alternative media for ${mediaSource}`,

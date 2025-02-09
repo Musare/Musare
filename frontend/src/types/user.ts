@@ -24,13 +24,13 @@ export interface User {
 				expires: Date;
 			};
 		};
-		github?: {
-			id: number;
+		oidc?: {
+			sub: string;
 			access_token: string;
 		};
 	};
 	password?: boolean;
-	github?: boolean;
+	oidc?: boolean;
 	statistics: {
 		songsRequested: number;
 	};
@@ -48,5 +48,7 @@ export interface User {
 		activityLogPublic: boolean;
 		anonymousSongRequests: boolean;
 		activityWatch: boolean;
+		defaultStationPrivacy: "public" | "unlisted" | "private";
+		defaultPlaylistPrivacy: "public" | "private";
 	};
 }

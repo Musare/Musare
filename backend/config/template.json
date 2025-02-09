@@ -1,5 +1,5 @@
 {
-	"configVersion": 12,
+	"configVersion": 13,
 	"migration": false,
 	"secret": "CHANGE_ME",
 	"url": {

@@ -575,15 +575,17 @@ class _WSModule extends CoreClass {
 						enabled: config.get("apis.recaptcha.enabled"),
 						key: config.get("apis.recaptcha.key")
 					},
-					githubAuthentication: config.get("apis.github.enabled"),
+					oidcAuthentication: config.get("apis.oidc.enabled"),
 					messages: config.get("messages"),
 					christmas: config.get("christmas"),
 					footerLinks: config.get("footerLinks"),
 					primaryColor: config.get("primaryColor"),
 					shortcutOverrides: config.get("shortcutOverrides"),
-					registrationDisabled: config.get("registrationDisabled"),
+					registrationDisabled:
+						config.get("registrationDisabled") === true || config.get("apis.oidc.enabled") === true,
 					mailEnabled: config.get("mail.enabled"),
 					discogsEnabled: config.get("apis.discogs.enabled"),
+					passwordResetEnabled: config.get("mail.enabled") && !config.get("apis.oidc.enabled"),
 					experimental: {
 						changable_listen_mode: config.get("experimental.changable_listen_mode"),
 						media_session: config.get("experimental.media_session"),

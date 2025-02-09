@@ -5,9 +5,9 @@ import config from "config";
 import fs from "fs";
 
 import * as readline from "node:readline";
-import packageJson from "./package.json" assert { type: "json" };
+import packageJson from "./package.json" with { type: "json" };
 
-const REQUIRED_CONFIG_VERSION = 12;
+const REQUIRED_CONFIG_VERSION = 13;
 
 // eslint-disable-next-line
 Array.prototype.remove = function (item) {
@@ -194,7 +194,10 @@ class ModuleManager {
 	 */
 	onFail(module) {
 		if (this.modulesNotInitialized.indexOf(module) !== -1) {
-			this.log("ERROR", "A module failed to initialize!");
+			this.log(
+				"ERROR",
+				`Module "${module.name}" failed to initialize at stage ${module.getStage()}! Check error above.`
+			);
 		}
 	}
 
@@ -260,6 +263,7 @@ if (!config.get("migration")) {
 	moduleManager.addModule("stations");
 	moduleManager.addModule("media");
 	moduleManager.addModule("tasks");
+	moduleManager.addModule("users");
 	moduleManager.addModule("utils");
 	moduleManager.addModule("youtube");
 	if (config.get("experimental.soundcloud")) moduleManager.addModule("soundcloud");

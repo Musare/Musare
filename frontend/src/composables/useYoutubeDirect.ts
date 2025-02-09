@@ -40,7 +40,7 @@ export const useYoutubeDirect = () => {
 					return youtubeVideoIdMatch.groups.youtubeId;
 				}
 			}
-		} catch (error) {
+		} catch {
 			return null;
 		}
 

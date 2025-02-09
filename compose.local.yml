@@ -1,0 +1,12 @@
+services:
+  backend:
+    volumes:
+      - ./.git:/opt/.git:ro
+      - ./types:/opt/types
+      - ./backend:/opt/app
+
+  frontend:
+    volumes:
+      - ./.git:/opt/.git:ro
+      - ./types:/opt/types
+      - ./frontend:/opt/app

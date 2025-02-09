@@ -3,7 +3,6 @@ import { defineAsyncComponent, ref, watch, reactive } from "vue";
 import Toast from "toasters";
 import { storeToRefs } from "pinia";
 import { useConfigStore } from "@/stores/config";
-import { useSettingsStore } from "@/stores/settings";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserAuthStore } from "@/stores/userAuth";
 import _validation from "@/validation";
@@ -16,8 +15,7 @@ const QuickConfirm = defineAsyncComponent(
 );
 
 const configStore = useConfigStore();
-const { githubAuthentication, sitename } = storeToRefs(configStore);
-const settingsStore = useSettingsStore();
+const { oidcAuthentication } = storeToRefs(configStore);
 const userAuthStore = useUserAuthStore();
 
 const { socket } = useWebsocketsStore();
@@ -40,7 +38,6 @@ const validation = reactive({
 const newPassword = ref();
 const oldPassword = ref();
 
-const { isPasswordLinked, isGithubLinked } = settingsStore;
 const { userId } = storeToRefs(userAuthStore);
 
 const togglePasswordVisibility = refName => {
@@ -57,6 +54,8 @@ const onInput = inputName => {
 	validation[inputName].entered = true;
 };
 const changePassword = () => {
+	if (oidcAuthentication.value) return null;
+
 	const newPassword = validation.newPassword.value;
 
 	if (validation.oldPassword.value === "")
@@ -79,16 +78,6 @@ const changePassword = () => {
 			}
 		}
 	);
-};
-const unlinkPassword = () => {
-	socket.dispatch("users.unlinkPassword", res => {
-		new Toast(res.message);
-	});
-};
-const unlinkGitHub = () => {
-	socket.dispatch("users.unlinkGitHub", res => {
-		new Toast(res.message);
-	});
 };
 const removeSessions = () => {
 	socket.dispatch(`users.removeSessions`, userId.value, res => {
@@ -115,7 +104,7 @@ watch(validation, newValidation => {
 
 <template>
 	<div class="content security-tab">
-		<div v-if="isPasswordLinked">
+		<template v-if="!oidcAuthentication">
 			<h4 class="section-title">Change password</h4>
 
 			<p class="section-description">
@@ -195,73 +184,7 @@ watch(validation, newValidation => {
 			</p>
 
 			<div class="section-margin-bottom" />
-		</div>
-
-		<div v-if="!isPasswordLinked">
-			<h4 class="section-title">Add a password</h4>
-			<p class="section-description">
-				Add a password, as an alternative to signing in with GitHub
-			</p>
-
-			<hr class="section-horizontal-rule" />
-
-			<router-link to="/set_password" class="button is-default"
-				><i class="material-icons icon-with-button">create</i>Set
-				Password
-			</router-link>
-
-			<div class="section-margin-bottom" />
-		</div>
-
-		<div v-if="!isGithubLinked && githubAuthentication">
-			<h4 class="section-title">Link your GitHub account</h4>
-			<p class="section-description">
-				Link your {{ sitename }} account with GitHub
-			</p>
-
-			<hr class="section-horizontal-rule" />
-
-			<a
-				class="button is-github"
-				:href="`${configStore.urls.api}/auth/github/link`"
-			>
-				<div class="icon">
-					<img class="invert" src="/assets/social/github.svg" />
-				</div>
-				&nbsp; Link GitHub to account
-			</a>
-
-			<div class="section-margin-bottom" />
-		</div>
-
-		<div v-if="isPasswordLinked && isGithubLinked">
-			<h4 class="section-title">Remove login methods</h4>
-			<p class="section-description">
-				Remove your password as a login method or unlink GitHub
-			</p>
-
-			<hr class="section-horizontal-rule" />
-
-			<div class="row">
-				<quick-confirm
-					v-if="isPasswordLinked && githubAuthentication"
-					@confirm="unlinkPassword()"
-				>
-					<a class="button is-danger">
-						<i class="material-icons icon-with-button">close</i>
-						Remove password
-					</a>
-				</quick-confirm>
-				<quick-confirm v-if="isGithubLinked" @confirm="unlinkGitHub()">
-					<a class="button is-danger">
-						<i class="material-icons icon-with-button">link_off</i>
-						Remove GitHub from account
-					</a>
-				</quick-confirm>
-			</div>
-
-			<div class="section-margin-bottom" />
-		</div>
+		</template>
 
 		<div>
 			<h4 class="section-title">Log out everywhere</h4>

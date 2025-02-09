@@ -12,41 +12,22 @@ After updating values in `.env`, containers should be restarted or rebuilt.
 If you are using a different setup, you will need to define the relevant
 environment variables yourself.
 
-In the table below, the `[SERVICE]_HOST` properties refer to the IP address that
-the Docker container listens on. Setting this to `127.0.0.1` for will only expose
-the configured port to localhost, whereas setting this to `0.0.0.0` will expose the
-port on all interfaces.  
-The `[SERVICE]_PORT` properties refer to the external Docker container port, used
-to access services from outside the container. Changing this does not require any
-changes to configuration within container. For example, setting the `MONGO_PORT`
-to `21018` will allow you to access the mongo database through that port on your
-machine, even though the application within the container is listening on `21017`.
-
 | Property | Description |
 | --- | --- |
 | `COMPOSE_PROJECT_NAME` | Should be a unique name for this installation, especially if you have multiple instances of Musare on the same machine. |
-| `RESTART_POLICY` | Restart policy for Docker containers, values can be found [here](https://docs.docker.com/config/containers/start-containers-automatically/). |
-| `CONTAINER_MODE` | Should be either `production` or `development`.  |
 | `DOCKER_COMMAND` | Should be either `docker` or `podman`.  |
-| `BACKEND_HOST` | Backend container host. Only used for development mode. |
-| `BACKEND_PORT` | Backend container port. Only used for development mode. |
-| `FRONTEND_HOST` | Frontend container host. |
-| `FRONTEND_PORT` | Frontend container port. |
+| `CONTAINER_MODE` | Should be either `production` or `local`.  |
+| `APP_ENV` | Should be either `production` or `development`.  |
+| `BACKEND_DEBUG` | Should be either `true` or `false`. If enabled backend will await debugger connection and trigger to start. |
+| `BACKEND_DEBUG_PORT` | Backend container debug port, if enabled. |
 | `FRONTEND_CLIENT_PORT` | Should be the port on which the frontend will be accessible from, usually port `80`, or `443` if using SSL. Only used when running in development mode. |
 | `FRONTEND_DEV_PORT` | Should be the port where Vite's dev server will be accessible from, should always be port `81` for Docker since nginx listens on port 80, and is recommended to be port `80` for non-Docker. Only used when running in development mode. |
-| `FRONTEND_MODE` | Should be either `production` or `development`. |
 | `FRONTEND_PROD_DEVTOOLS` | Whether to enable Vue dev tools in production builds. [^1] |
-| `MONGO_HOST` | Mongo container host. |
-| `MONGO_PORT` | Mongo container port. |
 | `MONGO_ROOT_PASSWORD` | Password of the root/admin user for MongoDB. |
 | `MONGO_USER_USERNAME` | Application username for MongoDB. |
 | `MONGO_USER_PASSWORD` | Application password for MongoDB. |
-| `MONGO_DATA_LOCATION` | The location where MongoDB stores its data. Usually the `.db` folder inside the `Musare` folder. |
 | `MONGO_VERSION` | The MongoDB version to use for scripts and docker compose. Must be numerical. Currently supported MongoDB versions are 4.0+. Always make a backup before changing this value. |
-| `REDIS_HOST` | Redis container host. |
-| `REDIS_PORT` | Redis container port. |
 | `REDIS_PASSWORD` | Redis password. |
-| `REDIS_DATA_LOCATION` | The location where Redis stores its data. Usually the `.redis` folder inside the `Musare` folder. |
 | `BACKUP_LOCATION` | Directory to store musare.sh backups. Defaults to `/backups` in script location. |
 | `BACKUP_NAME` | Name of musare.sh backup files. Defaults to `musare-$(date +"%Y-%m-%d-%s").dump`. |
 | `MUSARE_SITENAME` | Should be the name of the site. [^1] |
@@ -111,10 +92,11 @@ For more information on configuration files please refer to the
 | `apis.recaptcha.enabled` | Whether to enable ReCaptcha in the regular (email) registration form. |
 | `apis.recaptcha.key` | ReCaptcha Site v3 key, obtained from [here](https://www.google.com/recaptcha/admin). |
 | `apis.recaptcha.secret` | ReCaptcha Site v3 secret, obtained with key. |
-| `apis.github.enabled` | Whether to enable GitHub authentication. |
-| `apis.github.client` | GitHub OAuth Application client, obtained from [here](https://github.com/settings/developers). |
-| `apis.github.secret` | GitHub OAuth Application secret, obtained with client. |
-| `apis.github.redirect_uri` | The backend url with `/auth/github/authorize/callback` appended, for example `http://localhost/backend/auth/github/authorize/callback`. This is configured based on the `url` config option by default. |
+| `apis.oidc.enabled` | Whether to enable OIDC authentication. |
+| `apis.oidc.client_id` | OIDC client id. |
+| `apis.oidc.client_secret` | OIDC client secret. |
+| `apis.oidc.openid_configuration_url` | The URL that points to the openid_configuration resource of the OIDC provider. |
+| `apis.oidc.redirect_uri` | The backend url with `/auth/oidc/authorize/callback` appended, for example `http://localhost/backend/auth/oidc/authorize/callback`. This is configured based on the `url` config option by default, so this is optional. |
 | `apis.discogs.enabled` | Whether to enable Discogs API usage. |
 | `apis.discogs.client` | Discogs Application client, obtained from [here](https://www.discogs.com/settings/developers). |
 | `apis.discogs.secret` | Discogs Application secret, obtained with client. |
@@ -142,6 +124,7 @@ For more information on configuration files please refer to the
 | `primaryColor` | Primary color of the application, in hex format. |
 | `registrationDisabled` | If set to `true`, users can't register accounts. |
 | `sendDataRequestEmails` | If `true` all admin users will be sent an email if a data request is received. Requires mail to be enabled and configured. |
+| `restrictToUsers` | If `true` only logged-in users will be able to visit user profiles, see news, see stations on the homepage or enter stations (even public stations) - any interactive thing except logging in/registering, and some public config info (site name, experimental features enabled, footer mail/oidc/password enabled, account removal message, etc.) |
 | `skipConfigVersionCheck` | Skips checking if the config version is outdated or not. Should almost always be set to false. |
 | `skipDbDocumentsVersionCheck` | Skips checking if there are any DB documents outdated or not. Should almost always be set to false. |
 | `debug.stationIssue` | If set to `true` it will enable the `/debug_station` API endpoint on the backend, which provides information useful to debugging stations not skipping, as well as capture all jobs specified in `debug.captureJobs`. |
@@ -168,18 +151,47 @@ For more information on configuration files please refer to the
 | `experimental.soundcloud` | Experimental SoundCloud integration. |
 | `experimental.spotify` | Experimental Spotify integration. |
 
-## Docker-compose override
+## Docker
 
-You may want to override the docker-compose files in some specific cases.  
-For this, you can create a `docker-compose.override.yml` file.
+Below are some snippets that may help you get started with Docker.
+For more information please see the [Docker documentation](https://docs.docker.com).
 
-For example, to expose the backend port:
+### Compose override
+
+You may want to override the docker compose files in some specific cases.
+For this, you can create a `compose.override.yml` file.
+An example is available at [compose.override.yml.example](../compose.override.yml.example).
+
+For example, to expose the frontend port:
+
+```yml
+services:
+  frontend:
+    ports:
+      - "127.0.0.1:1234:80"
+```
+
+...and to expose the backend debug port:
 
 ```yml
 services:
   backend:
     ports:
-      - "${BACKEND_HOST}:${BACKEND_PORT}:8080"
+      - "127.0.0.1:9229:9229"
 ```
 
-This assumes that you have also set `BACKEND_PORT` inside your `.env` file.
+### Daemon configuration
+
+The below is an example `daemon.json` configured to bind to a specific IP,
+and setup log rotation.
+
+```json
+{
+  "ip": "127.0.0.1",
+  "log-driver": "json-file",
+  "log-opts": {
+    "max-size": "10m",
+    "max-file": "10"
+  }
+}
+```

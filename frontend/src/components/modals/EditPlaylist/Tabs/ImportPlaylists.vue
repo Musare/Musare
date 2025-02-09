@@ -151,7 +151,7 @@ const onMusarePlaylistFileChange = () => {
 					"An error occured whilst parsing the playlist file. Is it valid?"
 				);
 			else importMusarePlaylistFileContents.value = parsed;
-		} catch (err) {
+		} catch {
 			new Toast(
 				"An error occured whilst parsing the playlist file. Is it valid?"
 			);
