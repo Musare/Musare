@@ -216,10 +216,10 @@ CacheModule.runJob("SUB", {
 CacheModule.runJob("SUB", {
 	channel: "station.toggleSkipVote",
 	cb: res => {
-		const { stationId, voted, userId } = res;
+		const { stationId, voted, userId, currentSongId } = res;
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `station.${stationId}`,
-			args: ["event:station.toggleSkipVote", { data: { voted, userId } }]
+			args: ["event:station.toggleSkipVote", { data: { voted, userId, currentSongId } }]
 		});
 	}
 });
@@ -1205,9 +1205,10 @@ export default {
 	 * Toggle votes to skip a station
 	 * @param {object} session - the session object automatically added by the websocket
 	 * @param stationId - the station id
+	 * @param currentSongIdOrCallback - the current song id, or callback for backwards compatibility
 	 *  @param {Function} cb - gets called with the result
 	 */
-	toggleSkipVote: isLoginRequired(async function toggleSkipVote(session, stationId, cb) {
+	toggleSkipVote: isLoginRequired(async function toggleSkipVote(session, stationId, currentSongIdOrCallback, cb) {
 		const stationModel = await DBModule.runJob("GET_MODEL", { modelName: "station" }, this);
 
 		async.waterfall(
@@ -1230,14 +1231,20 @@ export default {
 
 				(station, next) => {
 					if (!station.currentSong) return next("There is currently no song to skip.");
+					if (!cb && currentSongIdOrCallback !== station.currentSong._id)
+						return next("Song has changed while skipping.");
 					const query = {};
 					const voted = station.currentSong.skipVotes.indexOf(session.userId) !== -1;
 					if (!voted) query.$push = { "currentSong.skipVotes": session.userId };
 					else query.$pull = { "currentSong.skipVotes": session.userId };
-					return stationModel.updateOne({ _id: stationId }, query, err => {
-						if (err) next(err);
-						else next(null, !voted);
-					});
+					return stationModel.updateOne(
+						{ _id: stationId, "currentSong._id": currentSongIdOrCallback },
+						query,
+						err => {
+							if (err) next(err);
+							else next(null, !voted);
+						}
+					);
 				},
 
 				(voted, next) => {
@@ -1264,21 +1271,21 @@ export default {
 						"STATIONS_TOGGLE_SKIP_VOTE",
 						`Toggling skip vote on "${stationId}" failed. "${err}"`
 					);
-					return cb({ status: "error", message: err });
+					return (cb ?? currentSongIdOrCallback)({ status: "error", message: err });
 				}
 				this.log("SUCCESS", "STATIONS_TOGGLE_SKIP_VOTE", `Toggling skip vote on "${stationId}" successful.`);
 
 				CacheModule.runJob("PUB", {
 					channel: "station.toggleSkipVote",
-					value: { stationId, voted, userId: session.userId }
+					value: { stationId, voted, userId: session.userId, currentSongId: currentSongIdOrCallback }
 				});
 
-				return cb({
+				return (cb ?? currentSongIdOrCallback)({
 					status: "success",
 					message: voted
 						? "Successfully voted to skip the song."
 						: "Successfully removed vote to skip the song.",
-					data: { voted }
+					data: { voted, currentSongId: currentSongIdOrCallback }
 				});
 			}
 		);
