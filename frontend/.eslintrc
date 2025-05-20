@@ -27,7 +27,8 @@
 	],
 	"globals": {
 		"grecaptcha": "readonly",
-		"history": "readonly"
+		"history": "readonly",
+		"YT": "readonly"
 	},
 	"rules": {
 		"no-console": 0,
