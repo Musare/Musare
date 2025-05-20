@@ -25,6 +25,7 @@ export const useUserAuthStore = defineStore("userAuth", {
 		gotData: boolean;
 		gotPermissions: boolean;
 		permissions: Record<string, boolean>;
+		stationPermissions: Record<string, Record<string, boolean>>;
 	} => ({
 		userIdMap: {},
 		userIdRequested: {},
@@ -41,7 +42,8 @@ export const useUserAuthStore = defineStore("userAuth", {
 		},
 		gotData: false,
 		gotPermissions: false,
-		permissions: {}
+		permissions: {},
+		stationPermissions: {}
 	}),
 	actions: {
 		register(user: {
@@ -298,6 +300,21 @@ export const useUserAuthStore = defineStore("userAuth", {
 					this.permissions = res.data.permissions;
 					this.gotPermissions = true;
 					resolve(this.permissions);
+				});
+			});
+		},
+		hasPermissionForStation(stationId: string, permission: string) {
+			return !!(
+				this.stationPermissions[stationId] &&
+				this.stationPermissions[stationId][permission]
+			);
+		},
+		updatePermissionsForStation(stationId: string) {
+			return new Promise(resolve => {
+				const { socket } = useWebsocketsStore();
+				socket.dispatch("utils.getPermissions", stationId, res => {
+					this.stationPermissions[stationId] = res.data.permissions;
+					resolve(this.stationPermissions[stationId]);
 				});
 			});
 		},
