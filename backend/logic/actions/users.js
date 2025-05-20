@@ -50,13 +50,15 @@ CacheModule.runJob("SUB", {
 	cb: res => {
 		WSModule.runJob("SOCKETS_FROM_USER", { userId: res.userId }, this).then(sockets => {
 			sockets.forEach(socket => {
-				socket.dispatch("event:user.orderOfPlaylists.updated", { data: { order: res.orderOfPlaylists } });
+				socket.dispatch("event:user.orderOfPlaylists.updated", {
+					data: { order: res.orderOfPlaylists, userId: res.userId }
+				});
 			});
 		});
 
 		WSModule.runJob("EMIT_TO_ROOM", {
 			room: `profile.${res.userId}.playlists`,
-			args: ["event:user.orderOfPlaylists.updated", { data: { order: res.orderOfPlaylists } }]
+			args: ["event:user.orderOfPlaylists.updated", { data: { order: res.orderOfPlaylists, userId: res.userId } }]
 		});
 	}
 });
