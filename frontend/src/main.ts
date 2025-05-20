@@ -243,7 +243,8 @@ const router = createRouter({
 		{
 			name: "station",
 			path: "/:id",
-			component: () => import("@/pages//Station/index.vue")
+			props: true,
+			component: () => import("@/pages/NewStation/index.vue")
 		}
 	]
 });
