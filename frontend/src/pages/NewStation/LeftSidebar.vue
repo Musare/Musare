@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { computed, defineAsyncComponent, reactive, ref } from "vue";
+import { computed, defineAsyncComponent, reactive } from "vue";
 import Toast from "toasters";
 import { Station } from "@/types/station";
 import { useUserAuthStore } from "@/stores/userAuth";
@@ -15,6 +15,12 @@ const props = defineProps<{
 
 const Button = defineAsyncComponent(
 	() => import("@/pages/NewStation/Components/Button.vue")
+);
+const Input = defineAsyncComponent(
+	() => import("@/pages/NewStation/Components/Input.vue")
+);
+const InputGroup = defineAsyncComponent(
+	() => import("@/pages/NewStation/Components/InputGroup.vue")
 );
 const Pill = defineAsyncComponent(
 	() => import("@/pages/NewStation/Components/Pill.vue")
@@ -192,43 +198,27 @@ const searchForDjs = (page: number) => {
 				<p style="font-size: 14px">
 					Search for a user to promote to DJ.
 				</p>
-				<div style="display: flex">
-					<input
-						type="text"
-						style="
-							line-height: 18px;
-							font-size: 12px;
-							padding: 5px 10px;
-							background-color: var(--light-grey-2);
-							border-radius: 5px 0 0 5px;
-							border: solid 1px var(--light-grey-1);
-							flex-grow: 1;
-							border-right-width: 0;
-						"
+				<InputGroup
+					is="form"
+					@submit.prevent="searchForDjs(1)"
+					@reset.prevent="resetDjsSearch"
+				>
+					<Input
+						class="input_group__expanding"
 						v-model="djSearch.query"
-						@keyup.enter="searchForDjs(1)"
-					/>
+						required
+					>
+						Query
+					</Input>
 					<Button
+						type="reset"
 						icon="restart_alt"
 						square
-						style="
-							border-right-width: 0;
-							background-color: var(--light-grey-2);
-							border-color: var(--light-grey-1);
-							color: var(--primary-color);
-							border-radius: 0;
-						"
-						@click.prevent="resetDjsSearch()"
+						grey
 						title="Reset search"
 					/>
-					<Button
-						icon="search"
-						square
-						style="border-radius: 0 5px 5px 0; flex-shrink: 0"
-						@click.prevent="searchForDjs(1)"
-						title="Search"
-					/>
-				</div>
+					<Button type="submit" icon="search" square title="Search" />
+				</InputGroup>
 
 				<UserItem
 					v-for="dj in djSearch.results"
