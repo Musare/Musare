@@ -69,10 +69,11 @@ const mediaPausedAt = computed(() =>
 const mediaTimePaused = computed(() =>
 	isSourceControlled.value ? props.sourceTimePaused : playerTimePaused.value
 );
+const isSourcePaused = computed(
+	() => isSourceControlled.value && !!props.sourcePausedAt
+);
 const isMediaPaused = computed(
-	() =>
-		!!playerPausedAt.value ||
-		(isSourceControlled.value && !!props.sourcePausedAt)
+	() => !!playerPausedAt.value || isSourcePaused.value
 );
 const playerState = computed(() => {
 	if (!props.source) return "no_song";
@@ -218,6 +219,7 @@ const resumePlayer = () => {
 		playerPausedAt.value?.diff() ?? 0
 	);
 	playerPausedAt.value = null;
+	isAutomaticallyPaused.value = false;
 
 	applySourceState();
 };
@@ -288,7 +290,7 @@ const onYoutubeStateChange = (event: YT.OnStateChangeEvent) => {
 		return;
 	}
 
-	if (isSourceControlled.value && !!props.sourcePausedAt) {
+	if (isSourcePaused.value) {
 		seekPlayer();
 
 		pauseMedia();
@@ -305,8 +307,6 @@ const onYoutubeStateChange = (event: YT.OnStateChangeEvent) => {
 	if (!playerPausedAt.value && !isAutomaticallyPaused.value) {
 		return;
 	}
-
-	isAutomaticallyPaused.value = false;
 
 	resumePlayer();
 };
@@ -384,23 +384,50 @@ onBeforeUnmount(() => {
 
 <template>
 	<div class="media-player">
-		<YoutubePlayer
-			v-show="sourceType === 'youtube'"
-			ref="youtubePlayer"
-			:video-id="sourceId"
-			@ready="onYoutubeReady"
-			@error="onYoutubeError"
-			@state-change="onYoutubeStateChange"
-		/>
-		<iframe
-			v-if="experimental.soundcloud"
-			v-show="sourceType === 'soundcloud'"
-			ref="soundcloudPlayer"
-			style="width: 100%; height: 100%; min-height: 200px"
-			scrolling="no"
-			frameborder="no"
-			allow="autoplay"
-		></iframe>
+		<div class="media-player__player">
+			<YoutubePlayer
+				v-show="sourceType === 'youtube'"
+				ref="youtubePlayer"
+				:video-id="sourceId"
+				@ready="onYoutubeReady"
+				@error="onYoutubeError"
+				@state-change="onYoutubeStateChange"
+			/>
+			<iframe
+				v-if="experimental.soundcloud"
+				v-show="sourceType === 'soundcloud'"
+				ref="soundcloudPlayer"
+				style="width: 100%; height: 100%; min-height: 200px"
+				scrolling="no"
+				frameborder="no"
+				allow="autoplay"
+			></iframe>
+			<div v-if="isSourcePaused" class="media-player__overlay">
+				<slot name="sourcePausedReason" />
+			</div>
+			<div
+				v-else-if="playerPausedAt"
+				class="media-player__overlay"
+				@click.prevent="resumePlayer"
+			>
+				<p><strong>Playback paused</strong></p>
+				<p>Click here to continue playback.</p>
+			</div>
+			<div
+				v-else-if="isAutomaticallyPaused"
+				class="media-player__overlay"
+			>
+				<img
+					class="media-player__bouncer"
+					src="/assets/notes-transparent.png"
+				/>
+				<p><strong>Unable to play</strong></p>
+				<p>
+					This media is unavailable for you, please try another
+					source.
+				</p>
+			</div>
+		</div>
 		<div class="media-player__controls">
 			<button
 				v-if="playerPausedAt || isAutomaticallyPaused"
@@ -423,6 +450,38 @@ onBeforeUnmount(() => {
 	display: flex;
 	flex-direction: column;
 	flex-grow: 1;
+
+	&__player {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		aspect-ratio: 16/9;
+		overflow: hidden;
+		border: solid 1px var(--light-grey-1);
+		border-radius: 5px;
+	}
+
+	&__overlay {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		width: 100%;
+		height: 100%;
+		background: var(--primary-color);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		padding: 10px;
+		gap: 5px;
+
+		:deep(p) {
+			color: var(--white);
+			text-align: center;
+		}
+	}
 
 	&__controls {
 		display: flex;

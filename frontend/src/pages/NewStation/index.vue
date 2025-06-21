@@ -523,7 +523,30 @@ onBeforeUnmount(() => {
 						sync-player-time-enabled
 						@not-allowed="automaticallySkipVote"
 						@not-found="automaticallySkipVote"
-					/>
+					>
+						<template #sourcePausedReason>
+							<p>
+								<strong
+									>This station is currently paused.</strong
+								>
+							</p>
+							<p
+								v-if="
+									hasPermissionForStation(
+										station._id,
+										'stations.playback.toggle'
+									)
+								"
+							>
+								To continue playback click the resume station
+								button below.
+							</p>
+							<p v-else>
+								It can only be resumed by a station owner,
+								station DJ or a site admin/moderator.
+							</p>
+						</template>
+					</MediaPlayer>
 					<h3
 						style="
 							margin: 0px;
