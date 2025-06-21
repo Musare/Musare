@@ -154,13 +154,13 @@ onMounted(() => {
 							v-if="index > 0"
 							icon="vertical_align_top"
 							label="Move to top of queue"
-							@click="() => moveToQueueTop(media, index)"
+							@click="moveToQueueTop(media, index)"
 						/>
 						<DropdownListItem
 							v-if="queue.length - 1 !== index"
 							icon="vertical_align_bottom"
 							label="Move to bottom of queue"
-							@click="() => moveToQueueBottom(media, index)"
+							@click="moveToQueueBottom(media, index)"
 						/>
 						<!-- TODO: Quick confirm -->
 						<DropdownListItem
@@ -172,7 +172,7 @@ onMounted(() => {
 							"
 							icon="delete"
 							label="Remove from queue"
-							@click="() => removeFromQueue(media, index)"
+							@click="removeFromQueue(media, index)"
 						/>
 					</template>
 				</MediaItem>

@@ -82,7 +82,7 @@ const createPlaylist = () => {
 				<label class="dropdown-list-item__action">
 					<Checkbox
 						:model-value="existsInPlaylist(playlist)"
-						@click.prevent="() => toggleInPlaylist(playlist)"
+						@click.prevent="toggleInPlaylist(playlist)"
 					/>
 					{{ playlist.displayName }}
 				</label>

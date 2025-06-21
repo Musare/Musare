@@ -702,6 +702,7 @@ onBeforeUnmount(() => {
 	--light-grey-2: #ececec;
 	--red: rgb(249, 49, 0);
 
+	&,
 	h1,
 	h2,
 	h3,
