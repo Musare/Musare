@@ -22,16 +22,19 @@ onMounted(() => {
 
 <template>
 	<div class="tbs">
-		<ul>
+		<ul class="tbs__selectors">
 			<li
 				v-for="tab in tabs"
 				:key="`tab-option-${tab}`"
-				:class="{ 'tbs__li--selected': selected === tab }"
+				class="tbs__selector"
+				:class="{ 'tbs__selector--selected': selected === tab }"
 			>
 				<button @click.prevent="selectTab(tab)">
 					{{ tab }}
 				</button>
 			</li>
+			<li class="tbs__divider"></li>
+			<li class="tbs__placeholder"></li>
 		</ul>
 		<div class="tbs__tb">
 			<template v-for="tab in tabs" :key="`tab-${tab}`">
@@ -51,61 +54,69 @@ onMounted(() => {
 	border: solid 1px var(--light-grey-1);
 	overflow: hidden;
 
-	ul {
+	&__selectors {
 		display: flex;
 		flex-shrink: 0;
 		overflow-x: auto;
+		background-color: var(--light-grey-2);
 		border-bottom: solid 1px var(--light-grey-1);
+	}
 
-		li {
+	&__selector {
+		display: inline-flex;
+		flex: 0 1 160px;
+
+		button {
 			display: inline-flex;
-			flex: 1 0 0;
+			justify-content: center;
+			flex-grow: 1;
+			font-size: 14px !important;
+			font-weight: 600 !important;
+			text-align: center;
+			outline: none;
+			border-radius: 0;
+			padding: 5px 10px;
+			line-height: 20px;
+			border: none;
+			border-left: solid 1px var(--light-grey-1);
+			background-color: var(--light-grey-2);
+			color: var(--black);
+			cursor: pointer;
+			transition: filter ease-in-out 0.2s;
+			white-space: nowrap;
 
-			button {
-				display: inline-flex;
-				justify-content: center;
-				flex-grow: 1;
-				font-size: 14px;
-				text-align: center;
-				outline: none;
-				border-radius: 0;
-				padding: 5px 10px;
-				line-height: 18px;
-				font-weight: 600;
-				border: solid 1px var(--light-grey-2);
-				background-color: var(--light-grey-2);
-				color: var(--black);
-				cursor: pointer;
-				transition: filter ease-in-out 0.2s;
-				white-space: nowrap;
-
-				&:hover {
-					filter: brightness(90%);
-				}
+			&:hover {
+				filter: brightness(90%);
 			}
+		}
 
-			&.tbs__li--selected button {
-				border: solid 1px var(--white);
+		&:first-child button {
+			border-left-color: var(--light-grey-2);
+		}
+
+		&--selected {
+			button {
 				background-color: var(--white);
 				color: var(--primary-color);
 			}
 
 			&:first-child button {
-				border-radius: 5px 0 0 0;
-			}
-
-			&:last-child button {
-				border-radius: 0 5px 0 0;
-			}
-
-			&:only-child button {
-				border-radius: 5px 5px 0 0;
-			}
-
-			&:not(:first-child):not(:only-child) {
-				border-left: solid 1px var(--light-grey-1);
+				border-left-color: var(--white);
 			}
 		}
+	}
+
+	&__divider {
+		display: inline-flex;
+		background-color: var(--light-grey-1);
+		flex: 1 0 0;
+		max-width: 1px;
+	}
+
+	&__placeholder {
+		display: inline-flex;
+		background-color: transparent;
+		flex: 1 0 0;
 	}
 
 	&__tb {
