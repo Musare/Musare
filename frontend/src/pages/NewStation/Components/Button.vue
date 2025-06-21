@@ -6,13 +6,16 @@ withDefaults(
 		square?: boolean;
 		inverse?: boolean;
 		danger?: boolean;
+		grey?: boolean;
 	}>(),
 	{
+		type: "button",
 		icon: null,
 		disabled: false,
 		square: false,
 		inverse: false,
-		danger: false
+		danger: false,
+		grey: false
 	}
 );
 </script>
@@ -23,7 +26,8 @@ withDefaults(
 			btn: true,
 			'btn--square': square,
 			'btn--inverse': inverse,
-			'btn--danger': danger
+			'btn--danger': danger,
+			'btn--grey': grey
 		}"
 		:disabled="disabled"
 	>
@@ -76,6 +80,12 @@ withDefaults(
 
 	&--danger {
 		--primary-color: var(--red);
+	}
+
+	&--grey {
+		background-color: var(--light-grey-2);
+		color: var(--primary-color);
+		border-color: var(--light-grey-1);
 	}
 
 	&__icon {
