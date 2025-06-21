@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 withDefaults(
 	defineProps<{
+		type?: HTMLButtonElement["type"];
 		icon?: string;
 		disabled?: boolean;
 		square?: boolean;
@@ -22,6 +23,7 @@ withDefaults(
 
 <template>
 	<button
+		:type="type"
 		:class="{
 			btn: true,
 			'btn--square': square,
