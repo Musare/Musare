@@ -303,12 +303,12 @@ handleLinting()
     if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *docs* ]]; then
         echo -e "${CYAN}Running docs lint...${NC}"
         # shellcheck disable=SC2086
-        ${docker} run --rm -v "${scriptLocation}":/workdir ghcr.io/igorshubovych/markdownlint-cli:latest ".wiki" "*.md" ${fix}
+        ${docker} run --rm -v "${scriptLocation}":/workdir --pull always ghcr.io/igorshubovych/markdownlint-cli:latest ".wiki" "*.md" ${fix}
         docsExitValue=$?
     fi
     if [[ ${servicesString:2:4} == "all" || "${servicesString:2}" == *shell* ]]; then
         echo -e "${CYAN}Running shell lint...${NC}"
-        ${docker} run --rm -v "${scriptLocation}":/mnt koalaman/shellcheck:stable ./*.sh ./**/*.sh
+        ${docker} run --rm -v "${scriptLocation}":/mnt --pull always koalaman/shellcheck:stable ./*.sh ./**/*.sh
         shellExitValue=$?
     fi
     set -e
