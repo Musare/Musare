@@ -7,7 +7,6 @@ import {
 import Toast from "toasters";
 import { PlaylistModel } from "@musare_types/models/Playlist";
 import { storeToRefs } from "pinia";
-import { Song } from "@/types/song";
 import { useWebsocketsStore } from "@/stores/websockets";
 import { useUserPlaylistsStore } from "@/pages/NewStation/stores/userPlaylists";
 import { useModalsStore } from "@/stores/modals";
@@ -19,7 +18,7 @@ const DropdownList = defineAsyncComponent(
 );
 
 const props = defineProps<{
-	media: Song;
+	mediaSource: string;
 }>();
 
 const { openModal } = useModalsStore();
@@ -30,15 +29,13 @@ const { socket } = useWebsocketsStore();
 const dropdown = ref();
 
 const existsInPlaylist = (playlist: PlaylistModel & { weight: number }) =>
-	!!playlist.songs.find(
-		media => media.mediaSource === props.media.mediaSource
-	);
+	!!playlist.songs.find(media => media.mediaSource === props.mediaSource);
 
 const addToPlaylist = (playlist: PlaylistModel & { weight: number }) => {
 	socket.dispatch(
 		"playlists.addSongToPlaylist",
 		false,
-		props.media.mediaSource,
+		props.mediaSource,
 		playlist._id,
 		(res: AddSongToPlaylistResponse) => new Toast(res.message)
 	);
@@ -47,7 +44,7 @@ const addToPlaylist = (playlist: PlaylistModel & { weight: number }) => {
 const removeFromPlaylist = (playlist: PlaylistModel & { weight: number }) => {
 	socket.dispatch(
 		"playlists.removeSongFromPlaylist",
-		props.media.mediaSource,
+		props.mediaSource,
 		playlist._id,
 		(res: RemoveSongFromPlaylistResponse) => new Toast(res.message)
 	);

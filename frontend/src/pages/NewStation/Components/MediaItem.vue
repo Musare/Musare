@@ -143,7 +143,9 @@ defineExpose({
 
 				<template v-if="loggedIn">
 					<DropdownListItem>
-						<AddToPlaylistDropdown :media="media">
+						<AddToPlaylistDropdown
+							:media-source="media.mediaSource"
+						>
 							<button class="dropdown-list-item__action">
 								<span
 									class="material-icons dropdown-list-item__icon"
