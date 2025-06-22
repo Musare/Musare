@@ -134,6 +134,7 @@ defineExpose({
 				</template>
 			</p>
 		</div>
+		<slot name="featuredAction" />
 		<DropdownList ref="actions">
 			<Button icon="more_horiz" square inverse title="Actions" />
 
@@ -186,6 +187,7 @@ defineExpose({
 <style lang="less" scoped>
 .media-item {
 	display: flex;
+	align-items: center;
 	flex-shrink: 0;
 	height: 48px;
 	background-color: var(--white);
