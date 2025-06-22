@@ -1019,7 +1019,7 @@ class _SongsModule extends CoreClass {
 
 					(filterArray, next) => {
 						const page = payload.page ? payload.page : 1;
-						const pageSize = 15;
+						const pageSize = 10;
 						const skipAmount = pageSize * (page - 1);
 						const query = { $or: filterArray };
 

@@ -39,6 +39,12 @@ const Queue = defineAsyncComponent(
 const Button = defineAsyncComponent(
 	() => import("@/pages/NewStation/Components/Button.vue")
 );
+const Tabs = defineAsyncComponent(
+	() => import("@/pages/NewStation/Components/Tabs.vue")
+);
+const Search = defineAsyncComponent(
+	() => import("@/pages/NewStation/Search.vue")
+);
 
 const props = defineProps<{
 	id: string;
@@ -633,17 +639,14 @@ onBeforeUnmount(() => {
 					</h3>
 					<Queue :station="station" />
 				</section>
-				<section
-					style="
-						display: flex;
-						flex-direction: column;
-						flex-grow: 1;
-						padding: 20px;
-						background-color: var(--white);
-						border-radius: 5px;
-						border: solid 1px var(--light-grey-1);
-					"
-				></section>
+				<Tabs
+					:tabs="['Search', 'Explore', 'Settings']"
+					style="flex-grow: 1"
+				>
+					<template #Search>
+						<Search :station="station" />
+					</template>
+				</Tabs>
 			</section>
 			<RightSidebar />
 		</div>
