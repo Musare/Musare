@@ -140,6 +140,7 @@ onMounted(() => {
 				<MediaItem
 					:media="media"
 					:ref="el => (mediaItems[`media-item-${index}`] = el)"
+					show-requested
 				>
 					<template
 						v-if="

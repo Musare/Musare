@@ -619,6 +619,7 @@ onBeforeUnmount(() => {
 					<MediaItem
 						v-if="station.currentSong"
 						:media="station.currentSong"
+						show-requested
 					/>
 					<h3
 						style="

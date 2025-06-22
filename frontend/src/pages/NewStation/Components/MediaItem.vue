@@ -24,9 +24,15 @@ const UserLink = defineAsyncComponent(
 
 // TODO: Experimental: soundcloud
 
-const props = defineProps<{
-	media: any;
-}>();
+const props = withDefaults(
+	defineProps<{
+		media: any;
+		showRequested?: boolean;
+	}>(),
+	{
+		showRequested: false
+	}
+);
 
 const { openModal } = useModalsStore();
 
@@ -87,32 +93,38 @@ defineExpose({
 			<p class="media-item__artists" :title="media.artists?.join(', ')">
 				{{ media.artists?.join(", ") }}
 			</p>
-			<p
-				v-if="media.requestedBy || media.requestedType"
-				class="media-item__requested"
-			>
+			<p class="media-item__details">
 				<strong>
 					{{ dayjs.duration(media.duration, "s").formatDuration() }}
 				</strong>
-				<span class="media-item__divider">&middot;</span>
-				<UserLink
-					v-if="media.requestedBy"
-					:key="media.mediaSource"
-					:user-id="media.requestedBy"
-				/>
-				<span v-else>Station</span>
-				<span>
-					<template v-if="media.requestedType === 'autofill'">
-						requested automatically
-					</template>
-					<template v-else-if="media.requestedType === 'autorequest'">
-						autorequested
-					</template>
-					<template v-else>requested</template>
-				</span>
-				<span :title="dayjs(media.requestedAt).format()">{{
-					dayjs(media.requestedAt).fromNow()
-				}}</span>
+				<template
+					v-if="
+						showRequested &&
+						(media.requestedBy || media.requestedType)
+					"
+				>
+					<span class="media-item__divider">&middot;</span>
+					<UserLink
+						v-if="media.requestedBy"
+						:key="media.mediaSource"
+						:user-id="media.requestedBy"
+					/>
+					<span v-else>Station</span>
+					<span>
+						<template v-if="media.requestedType === 'autofill'">
+							requested automatically
+						</template>
+						<template
+							v-else-if="media.requestedType === 'autorequest'"
+						>
+							autorequested
+						</template>
+						<template v-else>requested</template>
+					</span>
+					<span :title="dayjs(media.requestedAt).format()">{{
+						dayjs(media.requestedAt).fromNow()
+					}}</span>
+				</template>
 			</p>
 		</div>
 		<DropdownList ref="actions">
@@ -213,7 +225,7 @@ defineExpose({
 		white-space: nowrap;
 	}
 
-	&__requested {
+	&__details {
 		display: inline-flex;
 		align-items: center;
 		gap: 2px;
