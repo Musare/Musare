@@ -89,6 +89,13 @@ defineExpose({
 		<div class="media-item__content">
 			<p class="media-item__title" :title="media.title">
 				{{ media.title }}
+				<i
+					v-if="media.verified"
+					class="material-icons media-item__verified"
+					title="Verified media"
+				>
+					check_circle
+				</i>
 			</p>
 			<p class="media-item__artists" :title="media.artists?.join(', ')">
 				{{ media.artists?.join(", ") }}
@@ -211,6 +218,11 @@ defineExpose({
 		overflow: hidden;
 		text-overflow: ellipsis;
 		white-space: nowrap;
+	}
+
+	&__verified {
+		color: var(--primary-color);
+		font-size: 12px !important;
 	}
 
 	&__artists {
