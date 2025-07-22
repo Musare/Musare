@@ -19,7 +19,7 @@ let PunishmentsModule;
 class _WSModule extends CoreClass {
 	// eslint-disable-next-line require-jsdoc
 	constructor() {
-		super("ws", { concurrency: 2 });
+		super("ws", { concurrency: 20 });
 
 		WSModule = this;
 	}
