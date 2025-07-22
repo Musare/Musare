@@ -3,6 +3,21 @@ import { useConfigStore } from "@/stores/config";
 import { useUserAuthStore } from "@/stores/userAuth";
 import utils from "@/utils";
 
+const measureStart = name => {
+	performance.mark(`${name}-started`);
+	console.log(`[MEASURE] START: ${name}`);
+};
+
+const measureFinish = name => {
+	performance.mark(`${name}-finished`);
+	const measure = performance.measure(
+		`${name}-duration`,
+		`${name}-started`,
+		`${name}-finished`
+	);
+	console.log(`[MEASURE] FINISH: ${name} - ${measure.duration.toFixed(0)}ms`);
+};
+
 export default class SocketHandler {
 	socket?: WebSocket;
 
@@ -29,6 +44,10 @@ export default class SocketHandler {
 	CB_REFS: Record<string, (...args: any[]) => void>;
 
 	PROGRESS_CB_REFS: Record<string, (...args: any[]) => void>;
+
+	CB_REF_MAP: { [CB_REF: string]: string };
+
+	debugPerformance: boolean = false;
 
 	data: {
 		dispatch?: Record<string, (...args: any[]) => any>;
@@ -61,6 +80,13 @@ export default class SocketHandler {
 		// references for when a dispatch event is ready to callback from server to client
 		this.CB_REFS = {};
 		this.PROGRESS_CB_REFS = {};
+		this.CB_REF_MAP = {};
+
+		// Enable performance debugging with: localStorage.setItem("debug_ws_performance", "true");
+		if (localStorage.getItem("debug_ws_performance") === "true") {
+			console.log("Debugging WebSocket performance");
+			this.debugPerformance = true;
+		}
 
 		this.init();
 
@@ -86,6 +112,11 @@ export default class SocketHandler {
 
 			if (name === "CB_REF") {
 				const CB_REF = data.shift(0);
+				if (this.debugPerformance) {
+					const namespaceAction = this.CB_REF_MAP[CB_REF];
+					delete this.CB_REF_MAP[CB_REF];
+					measureFinish(`WS-DISPATCH ${namespaceAction}`);
+				}
 				this.CB_REFS[CB_REF](...data);
 				return delete this.CB_REFS[CB_REF];
 			}
@@ -166,6 +197,12 @@ export default class SocketHandler {
 
 		const lastArg = args[args.length - 1];
 		const CB_REF = utils.guid();
+
+		if (this.debugPerformance) {
+			const [namespaceAction] = args;
+			measureStart(`WS-DISPATCH ${namespaceAction}`);
+			this.CB_REF_MAP[CB_REF] = namespaceAction;
+		}
 
 		if (typeof lastArg === "function") {
 			this.CB_REFS[CB_REF] = lastArg;
