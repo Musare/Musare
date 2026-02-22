@@ -331,7 +331,8 @@ update itself before continuing with update
 and/or become out of sync after socket reconnection
 - fix: Site becomes unusable upon socket reconnection
 - fix: Profile page activity sets not loaded on scroll
-- fix: Adding/removing media from liked/disliked playlist does not emit ratings update
+- fix: Adding/removing media from liked/disliked playlist does not emit ratings
+update
 - fix: Edit Song parsing YouTube duration as int rather than float
 - fix: Updating YouTube ID in Edit Song does not always update duration
 

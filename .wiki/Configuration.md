@@ -15,9 +15,9 @@ environment variables yourself.
 | Property | Description |
 | --- | --- |
 | `COMPOSE_PROJECT_NAME` | Should be a unique name for this installation, especially if you have multiple instances of Musare on the same machine. |
-| `DOCKER_COMMAND` | Should be either `docker` or `podman`.  |
-| `CONTAINER_MODE` | Should be either `production` or `local`.  |
-| `APP_ENV` | Should be either `production` or `development`.  |
+| `DOCKER_COMMAND` | Should be either `docker` or `podman`. |
+| `CONTAINER_MODE` | Should be either `production` or `local`. |
+| `APP_ENV` | Should be either `production` or `development`. |
 | `BACKEND_DEBUG` | Should be either `true` or `false`. If enabled backend will await debugger connection and trigger to start. |
 | `BACKEND_DEBUG_PORT` | Backend container debug port, if enabled. |
 | `FRONTEND_CLIENT_PORT` | Should be the port on which the frontend will be accessible from, usually port `80`, or `443` if using SSL. Only used when running in development mode. |
